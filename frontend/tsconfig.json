@@ -28,3 +28,28 @@
   "include": ["src", "vite-env.d.ts"],
   "exclude": ["node_modules", "dist"]
 }
+
+// {
+//   "compilerOptions": {
+//     "target": "ES2020",
+//     "module": "ESNext",
+//     "moduleResolution": "Node",
+//     "strict": true,
+//     "jsx": "react-jsx",
+//     "lib": ["ES2020", "DOM", "DOM.Iterable"],
+//     "useDefineForClassFields": true,
+//     "outDir": "./lib",
+//     "rootDir": "./src",
+//     "baseUrl": "./",
+//     "paths": {
+//       "@/*": ["src/*"]
+//     },
+//     "types": ["vite/client"],
+//     "skipLibCheck": true,
+//     "esModuleInterop": true,
+//     "forceConsistentCasingInFileNames": true
+//   },
+//   "include": ["src", "vite-env.d.ts"],
+//   "exclude": ["node_modules", "dist"]
+// }
+

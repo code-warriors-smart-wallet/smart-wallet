@@ -53,12 +53,12 @@ git clone https://github.com/YOUR_USERNAME/smart-wallet.git
 
 3. Create a MongoDB database (MongoDB Atlas) and import the data in the [sample_data](./sample_data) folder.
 
-4. Replace `YOUR_SECRET` placeholder in below `.env` files with your credentials.
-    - [api-gateway/.env](api-gateway/.env)
-    - [user-service/.env](user-service/.env)
-    - [finops-service/.env](finops-service/.env)
-    - [notification-service/.env](notification-service/.env)
-    - [frontend/.env](frontend/.env)
+4. Create `.env` files according to below `.env.example` files and replace `YOUR_SECRET` placeholder with your credentials.
+    - [api-gateway/.env.example](api-gateway/.env.example)
+    - [user-service/.env.example](user-service/.env.example)
+    - [finops-service/.env.example](finops-service/.env.example)
+    - [notification-service/.env.example](notification-service/.env.example)
+    - [frontend/.env.example](frontend/.env.example)
 
 5. Run below command in the root directory to install dependencies. 
 ```bash

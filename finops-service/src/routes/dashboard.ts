@@ -751,6 +751,121 @@ dashboardRouter.get('/credit-card/:spaceid', authenticate, async (req: Request, 
     }
 })
 
+dashboardRouter.get('/saving-goal/:spaceid', authenticate, async (req: Request, res: Response) => {
+    try {
+        const userId: string = (req as any).user.id;
+        const { spaceid } = req.params;
+
+        const categories = await Cat.aggregate([
+            { $match: { spaces: SpaceType.SAVING_GOAL } },
+
+            { $unwind: "$subCategories" },
+
+            {
+                $project: {
+                    parentCategoryId: "$_id",
+                    parentCategory: 1,
+                    spaces: 1,
+                    subCategoryId: "$subCategories._id",
+                    subCategoryName: "$subCategories.name",
+                    transactionTypes: "$subCategories.transactionTypes"
+                }
+            }
+        ])
+
+        const savingCategoryId = categories.find(cat => cat.subCategoryName === "Saving").subCategoryId;
+        const withdrawCategoryId = categories.find(cat => cat.subCategoryName === "Withdraw").subCategoryId;
+
+        const savedAmount = await Transaction.aggregate([
+            {
+                $match: {
+                    to: new ObjectId(spaceid),
+                    type: TransactionType.SAVING,
+                    scategory: savingCategoryId
+                }
+            },
+            {
+                $group: {
+                    _id: null, // null means group all documents that matched
+                    total: { $sum: "$amount" }
+                }
+            },
+            {
+                $project: {
+                    _id: 0,
+                    amount: { $toDouble: "$total" }
+                }
+            }
+
+        ])
+
+        const withdrawAmount = await Transaction.aggregate([
+            {
+                $match: {
+                    from: new ObjectId(spaceid),
+                    type: TransactionType.WITHDRAW,
+                    scategory: withdrawCategoryId
+                }
+            },
+            {
+                $group: {
+                    _id: null, // null means group all documents that matched
+                    total: { $sum: "$amount" }
+                }
+            },
+            {
+                $project: {
+                    _id: 0,
+                    amount: { $toDouble: "$total" }
+                }
+            }
+        ])
+
+        const goal = await Space.find({
+            _id: spaceid,
+        })
+
+        // const loanPrincipalTransaction = await Transaction.findOne({
+        //     from: spaceid,
+        //     type: TransactionType.LOAN_PRINCIPAL
+        // })
+
+        const recentTransactions = await Transaction.find({
+            $and: [
+                { userId: userId },
+                {
+                    $or: [
+                        { from: spaceid },
+                        { to: spaceid }
+                    ]
+                }
+            ]
+        }).sort({ date: -1 }).limit(5).lean()
+
+        res.status(200).json({
+            success: true,
+            data: {
+                object: {
+                    goal: goal.length > 0 ? goal[0] : {},
+                    savedAmount: savedAmount.length > 0 ? savedAmount[0].amount : 0,
+                    withdrawAmount: withdrawAmount.length > 0 ? withdrawAmount[0].amount : 0,
+                    recentTransactions: recentTransactions
+                },
+                message: 'Data retreived successfully!'
+            },
+            error: null
+        });
+
+    } catch (error) {
+        const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+        res.status(500).json({
+            success: false,
+            error: { message: 'Error finding dashboard info: ' + errorMessage },
+            data: null
+        });
+    }
+})
+
 dashboardRouter.get("/all", authenticate, async (req: Request, res: Response) => {
     const userId: string = (req as any).user.id;
     // const { userId } = req.params

@@ -32,6 +32,15 @@ spaceRouter.post('/', authenticate, async (req: Request, res: Response) => {
                 loanStartDate: req.body.loanStartDate,
                 loanEndDate: req.body.loanEndDate
             }
+        } else if (req.body.type == SpaceType.SAVING_GOAL) {
+            spaceModal = {
+                type: req.body.type,
+                name: req.body.name,
+                ownerId: userId,
+                isDefault: false,
+                targetAmount: req.body.targetAmount,
+                desiredDate: req.body.desiredDate,
+            }
         } else {
             spaceModal = {
                 type: req.body.type,
@@ -107,6 +116,37 @@ spaceRouter.post('/', authenticate, async (req: Request, res: Response) => {
                 spaceId: space._id,
             }
             await Transaction.create(transaction)
+        } else if (req.body.type == SpaceType.SAVING_GOAL) {
+            const scategories = await Cat.aggregate([
+                { $match: { spaces: SpaceType.SAVING_GOAL } },
+
+                { $unwind: "$subCategories" },
+
+                {
+                    $project: {
+                        parentCategoryId: "$_id",
+                        parentCategory: 1,
+                        subCategoryId: "$subCategories._id",
+                        subCategoryName: "$subCategories.name",
+                        transactionTypes: "$subCategories.transactionTypes"
+                    }
+                }
+            ]);
+
+            const scategory = scategories.find(cat => cat.transactionTypes.includes(TransactionType.SAVING))
+            let transaction = {
+                type: TransactionType.SAVING,
+                amount: req.body.savedAlready,
+                from: req.body.from,
+                to: space._id,
+                date: `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`,
+                note: "",
+                pcategory: scategory?.parentCategoryId,
+                scategory: scategory?.subCategoryId,
+                userId: userId,
+                spaceId: space._id,
+            }
+            await Transaction.create(transaction)
         }
 
         const spaces = await Space.find(
@@ -168,6 +208,15 @@ spaceRouter.put('/:id', authenticate, async (req: Request, res: Response) => {
                 loanPrincipal: req.body.loanPrincipal,
                 loanStartDate: req.body.loanStartDate,
                 loanEndDate: req.body.loanEndDate
+            }
+        } else if (req.body.type == SpaceType.SAVING_GOAL) {
+            spaceModal = {
+                type: req.body.type,
+                name: req.body.name,
+                ownerId: userId,
+                isDefault: false,
+                targetAmount: req.body.targetAmount,
+                desiredDate: req.body.desiredDate,
             }
         } else {
             spaceModal = {

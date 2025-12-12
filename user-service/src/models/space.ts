@@ -6,6 +6,7 @@ export enum SpaceType {
    CREDIT_CARD = 'CREDIT_CARD',
    LOAN_LENT = 'LOAN_LENT',
    LOAN_BORROWED = 'LOAN_BORROWED',
+   SAVING_GOAL = 'SAVING_GOAL'
 }
 
 export interface ISpace extends Document {
@@ -20,7 +21,9 @@ export interface ISpace extends Document {
    creditCardLimit: Schema.Types.Decimal128
    creditCardStatementDate: Schema.Types.Date,
    creditCardDueDate: Schema.Types.Date,
-   color: string
+   color: string,
+   targetAmount: Schema.Types.Decimal128,
+   desiredDate: Schema.Types.Date,
    // collaborators: IUser[]
 }
 
@@ -42,6 +45,8 @@ const SpaceSchema: Schema = new Schema({
    // description: { type: String },
    // isIndividual: { type: Boolean },
    isDefault: { type: Boolean, default: false },
+   targetAmount: { type: Schema.Types.Decimal128},
+   desiredDate: { type: Schema.Types.Date},
    // collaborators: {type: []}
 }, {
    timestamps: true

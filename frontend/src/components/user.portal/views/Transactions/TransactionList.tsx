@@ -59,6 +59,13 @@ function TransactionList({ transactions, categories, onClick }: { transactions: 
                                                                 <FaArrowDown className="text-green-500" /> :
                                                                 <RiPercentLine className="text-red-500" />
 
+                                                    ) : standardSpaceType === SpaceType.SAVING_GOAL ? (
+                                                        t.type === TransactionType.WITHDRAW ?
+                                                            <FaArrowUp className="text-red-500" /> :
+                                                            t.type === TransactionType.SAVING ?
+                                                                <FaArrowDown className="text-green-500" /> :
+                                                                <RiPercentLine className="text-red-500" />
+
                                                     ) : (
                                                         <FaMoneyBillWave className="text-purple-500" />
                                                     )

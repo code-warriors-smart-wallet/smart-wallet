@@ -73,8 +73,8 @@ export const refreshAccessToken = async () => {
         console.log(">>> Refresh token pass")
     } catch (error) {
         console.log(">>> Refresh token expired. navigate to login: ", error)
-        // dispatch(logout());
-        // window.location.href = '/login'; 
+        dispatch(logout());
+        window.location.href = '/login'; 
         toast.info("Your session has expired. Please login.")
     }
 };

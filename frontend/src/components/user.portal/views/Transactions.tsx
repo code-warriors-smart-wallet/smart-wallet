@@ -10,7 +10,7 @@ import { useSelector } from "react-redux";
 import { RootState } from "../../../redux/store/store";
 import { CategoryService } from "../../../services/category.service";
 import { TransactionService } from "../../../services/transaction.service";
-import { FaArrowAltCircleDown, FaArrowAltCircleUp, FaCreditCard, FaEdit, FaInfoCircle, FaMoneyBillWave, FaTimes, FaTrash, FaUniversity } from "react-icons/fa"
+import { FaArrowAltCircleDown, FaArrowAltCircleUp, FaCreditCard, FaEdit, FaMoneyBillWave, FaTimes, FaTrash, FaUniversity, FaBullseye  } from "react-icons/fa"
 import TransactionList from "./Transactions/TransactionList";
 
 export enum TransactionType {
@@ -23,7 +23,8 @@ export enum TransactionType {
    BALANCE_DECREASE = "BALANCE_DECREASE",
    REPAYMENT_PAID = "REPAYMENT_PAID",
    REPAYMENT_RECEIVED = "REPAYMENT_RECEIVED",
-
+   SAVING = "SAVING",
+   WITHDRAW = "WITHDRAW",
 }
 
 export interface transactionTypeInfo {
@@ -124,6 +125,22 @@ export const transactionTypesInfo: transactionTypeInfo[] = [
             type: TransactionType.LOAN_CHARGES,
             toSpaces: ["ACTIVE_SPACE"],
             fromSpaces: [SpaceType.CASH, SpaceType.BANK]
+         }
+      ]
+   },
+   {
+      spaceType: SpaceType.SAVING_GOAL,
+      icon: <FaBullseye  />,
+      transactionTypes: [
+         {
+            type: TransactionType.SAVING,
+            toSpaces: ["ACTIVE_SPACE"],
+            fromSpaces: [SpaceType.CASH, SpaceType.BANK]
+         },
+         {
+            type: TransactionType.WITHDRAW,
+            fromSpaces: ["ACTIVE_SPACE"],
+            toSpaces: [SpaceType.CASH, SpaceType.BANK]
          }
       ]
    },

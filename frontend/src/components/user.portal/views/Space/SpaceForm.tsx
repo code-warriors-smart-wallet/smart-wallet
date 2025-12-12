@@ -14,7 +14,7 @@ interface SpaceFormProps {
     onSubmit: (e: React.FormEvent<HTMLFormElement>) => void
     onAddOrEdit: () => void,
     onCancel: () => void,
-    editSpaceId: string|null|undefined
+    editSpaceId: string | null | undefined
 }
 
 function SpaceForm({ inputs, onInputChange, spaces, onSubmit, onAddOrEdit, onCancel, editSpaceId }: SpaceFormProps) {
@@ -30,7 +30,7 @@ function SpaceForm({ inputs, onInputChange, spaces, onSubmit, onAddOrEdit, onCan
                 className="relative w-full max-w-lg rounded-lg bg-bg-light-secondary dark:bg-bg-dark-secondary shadow-sm p-3"
             >
                 <div className="flex shrink-0 items-center pb-4 text-xl font-medium text-text-light-primary dark:text-text-dark-primary">
-                    {editSpaceId ? "Edit Space" : "New Space" }
+                    {editSpaceId ? "Edit Space" : "New Space"}
                 </div>
                 <form className="border-t border-b border-border-light-primary dark:border-border-dark-primary" onSubmit={onSubmit}>
                     <div className="my-3">
@@ -199,6 +199,52 @@ function SpaceForm({ inputs, onInputChange, spaces, onSubmit, onAddOrEdit, onCan
                                     />
                                 </div>
                             </>
+                        )
+                    }
+                    {
+                        (inputs.type === SpaceType.SAVING_GOAL) && (
+                            <>
+                                <div className="my-3">
+                                    <label className="text-text-light-primary dark:text-text-dark-primary">Target amount:</label>
+                                    <Input
+                                        name="targetAmount"
+                                        type="number"
+                                        placeholder="Enter target amount"
+                                        value={inputs.targetAmount?.toString() || ""}
+                                        onChange={onInputChange}
+                                        className="mt-1 mb-1"
+                                    />
+                                </div>
+                                {
+                                    !editSpaceId && (
+                                        <div className="my-3">
+                                            <label className="text-text-light-primary dark:text-text-dark-primary">Saved already:</label>
+                                            <Input
+                                                name="savedAlready"
+                                                type="number"
+                                                placeholder="Enter the amount you saved already"
+                                                value={inputs.savedAlready?.toString() || ""}
+                                                onChange={onInputChange}
+                                                className="mt-1 mb-1"
+                                            />
+                                        </div>
+                                    )
+                                }
+                                <div className={`my-3`}>
+                                    <label className="text-text-light-primary dark:text-text-dark-primary">Desired date</label>
+                                    <Input
+                                        name="desiredDate"
+                                        type="date"
+                                        placeholder="Enter date"
+                                        value={inputs.desiredDate?.toString() || ""}
+                                        onChange={onInputChange}
+                                        className="mt-1 mb-1"
+                                        min={today}
+                                        id="desiredDate"
+                                    />
+                                </div>
+                            </>
+
                         )
                     }
                 </form>

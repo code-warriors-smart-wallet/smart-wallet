@@ -404,6 +404,19 @@
       "_id": {
         "$oid": "68c8d8d5dfe13cdc534c9f18"
       }
+    },
+    {
+      "name": "Electricity",
+      "color": "#a1242c",
+      "transactionTypes": [
+        "EXPENSE"
+      ],
+      "userId": {
+        "$oid": "68c5440e4d0529b8889893ac"
+      },
+      "_id": {
+        "$oid": "69181132c89f8a7a250ab716"
+      }
     }
   ],
   "color": "#8E44AD",
@@ -598,6 +611,19 @@
       "_id": {
         "$oid": "68c8d8d5dfe13cdc534c9f20"
       }
+    },
+    {
+      "name": "rent",
+      "color": "#b8feff",
+      "transactionTypes": [
+        "INCOME"
+      ],
+      "userId": {
+        "$oid": "68c5440e4d0529b8889893ac"
+      },
+      "_id": {
+        "$oid": "68d00d6641840cb27f683709"
+      }
     }
   ],
   "color": "#1ABC9C",
@@ -608,5 +634,81 @@
   "updatedAt": {
     "$date": "2025-09-21T14:36:22.290Z"
   }
-}
-]
+},
+{
+  "_id": {
+    "$oid": "68d00ea20d3ddd76d3fec4eb"
+  },
+  "parentCategory": "education",
+  "subCategories": [
+    {
+      "name": "class fees",
+      "color": "#d83312",
+      "transactionTypes": [
+        "EXPENSE"
+      ],
+      "userId": {
+        "$oid": "68c5440e4d0529b8889893ac"
+      },
+      "_id": {
+        "$oid": "68d00ea20d3ddd76d3fec4ec"
+      }
+    },
+    {
+      "name": "books",
+      "color": "#00ff04",
+      "transactionTypes": [
+        "EXPENSE"
+      ],
+      "userId": {
+        "$oid": "68c5440e4d0529b8889893ac"
+      },
+      "_id": {
+        "$oid": "691843ff7667852a34e501f8"
+      }
+    }
+  ],
+  "spaces": [
+    "CASH"
+  ],
+  "color": "#c60530",
+  "createdAt": {
+    "$date": "2025-09-21T14:41:38.499Z"
+  },
+  "updatedAt": {
+    "$date": "2025-11-15T09:12:31.184Z"
+  },
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "6918a033bba7ec9f0eca22df"
+  },
+  "parentCategory": "Saving Goal",
+  "subCategories": [
+    {
+      "name": "Saving",
+      "color": "#6b32a8",
+      "_id": {
+        "$oid": "68c8d8d5dfe13cdc534c9f3a"
+      },
+      "transactionTypes": [
+        "SAVING"
+      ]
+    },
+    {
+      "name": "Withdraw",
+      "color": "#32a89c",
+      "_id": {
+        "$oid": "68c8d8d5dfe13cdc534c9f3b"
+      },
+      "transactionTypes": [
+        "WITHDRAW"
+      ]
+    }
+  ],
+  "spaces": [
+    "SAVING_GOAL"
+  ],
+  "color": "#6b32a9"
+}]

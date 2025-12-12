@@ -50,8 +50,8 @@ export interface PlanInfo {
 
 export interface ApiResponse {
     success: boolean,
-    error: {message: string} | null, 
-    data: {message: string, object?: any} | null
+    error: { message: string } | null,
+    data: { message: string, object?: any } | null
 }
 
 export enum UserRole {
@@ -74,31 +74,34 @@ export interface SpaceInfo {
     type: string,
     id: string,
     loanPrincipal?: number,
-    loanStartDate?: string|null,
-    loanEndDate?: string|null,
+    loanStartDate?: string | null,
+    loanEndDate?: string | null,
     creditCardLimit?: number,
-    statementDate?: string|null,
-    dueDate?: string|null,
-    from : string|null,
-    to: string|null,
+    statementDate?: string | null,
+    targetAmount?: number,
+    savedAlready?: number,
+    desiredDate?: string | null,
+    dueDate?: string | null,
+    from: string | null,
+    to: string | null,
 }
 
 export interface TransactionInfo {
     type: string,
     amount: number,
-    from : string|null,
-    to: string|null,
+    from: string | null,
+    to: string | null,
     date: string,
     note: string,
-    scategory: string|null,
-    pcategory: string|null,
-    scheduleId?:string|null
-    spaceId?: string|undefined
+    scategory: string | null,
+    pcategory: string | null,
+    scheduleId?: string | null
+    spaceId?: string | undefined
 }
 
 export enum Frequency {
-    ONE_TIME="ONE_TIME",
-    RECURRENT="RECURRENT"
+    ONE_TIME = "ONE_TIME",
+    RECURRENT = "RECURRENT"
 }
 
 export enum Repeat {
@@ -114,41 +117,41 @@ export enum RecurringApproval {
 }
 
 export enum ContinueType {
-   FOREVER="FOREVER",
-   UNTIL_A_DATE="UNTIL_A_DATE"
+    FOREVER = "FOREVER",
+    UNTIL_A_DATE = "UNTIL_A_DATE"
 }
 
 
 export interface ScheduleInfo {
     type: string,
     amount: number,
-    from : string|null,
-    to: string|null,
+    from: string | null,
+    to: string | null,
     note: string,
-    scategory: string|null,
-    pcategory: string|null,
+    scategory: string | null,
+    pcategory: string | null,
     frequency: string,
     startDate: string,
     repeat: string,
     interval: number,
     recurringApproval: string
     continue: ContinueType,
-    endDate: string|null,
+    endDate: string | null,
     isClosed?: boolean,
     spaceId?: string
 }
 
 interface SubCategoryInfo {
-  _id: string,
-  name: string;
-  color: string; // hex code
+    _id: string,
+    name: string;
+    color: string; // hex code
 }
 
 export interface CategoryInfo {
-  _id: string,
-  parentCategoryId: string;
-  parentCategory: string;
-  subCategoryId: string;
-  subCategoryName: string;
-  transactionTypes: string[],
+    _id: string,
+    parentCategoryId: string;
+    parentCategory: string;
+    subCategoryId: string;
+    subCategoryName: string;
+    transactionTypes: string[],
 }

@@ -18,6 +18,7 @@ import { SpaceService } from "../../../services/space.service";
 import NetWorthSummary from "./Dashboard/NetWorthSummary";
 import AssetsSummary from "./Dashboard/AssetsSummary";
 import AllSpaceSummary from "./Dashboard/AllSpaceSummary";
+import SavingGoalSummary from "./Dashboard/SavingGoalSummary";
 
 enum SpaceAction {
    EDIT_DETAILS = "EDIT_DETAILS",
@@ -239,6 +240,17 @@ function DashBoard() {
                   <>
                      <CreditCardSummary currency={currency || ""} creditCardSummary={summary} />
                      <RecentTransactions loanSummary={summary} />
+                  </>
+               )
+            }
+            
+            {
+               (standardSpaceType === SpaceType.SAVING_GOAL) && (
+                  <>
+                  <SavingGoalSummary currency={currency || ""} goalSummary={summary}/>
+                  <RecentTransactions loanSummary={summary} />
+                     {/* <CreditCardSummary currency={currency || ""} creditCardSummary={summary} />
+                     <RecentTransactions loanSummary={summary} /> */}
                   </>
                )
             }

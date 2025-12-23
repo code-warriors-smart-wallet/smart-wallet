@@ -5,7 +5,6 @@ import { useNavigate, useParams } from "react-router-dom";
 import DashBoard from "../../components/user.portal/views/Dashboard";
 import Transactions from "../../components/user.portal/views/Transactions";
 import Spaces from "../../components/user.portal/views/Spaces";
-import Budget from "../../components/user.portal/views/Budget";
 import Category from "../../components/user.portal/views/Category";
 import Schedule from "../../components/user.portal/views/Schedule";
 
@@ -29,8 +28,6 @@ function UserPortal() {
             return <Transactions />
          case UserPortalView.SCHEDULES:
             return <Schedule />
-         case UserPortalView.BUDGETS:
-            return <Budget />
          case UserPortalView.CATEGORIES:
             return <Category />
          default:

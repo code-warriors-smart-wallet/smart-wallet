@@ -36,7 +36,7 @@ function SideBar({ isSideBarOpen, view, spacetype, spaceid }: { isSideBarOpen: b
                <SideBarItem name={UserPortalView.DASHBOARD} isActive={view == UserPortalView.DASHBOARD} onClick={onClickSideBarItem} Icon={DashBoardIcon} />
                <SideBarItem name={UserPortalView.TRANSACTIONS} isActive={view == UserPortalView.TRANSACTIONS} onClick={onClickSideBarItem} Icon={TransactionIcon} />
                <SideBarItem name={UserPortalView.SCHEDULES} isActive={view == UserPortalView.SCHEDULES} onClick={onClickSideBarItem} Icon={ScheduleIcon} />
-               <SideBarItem name={UserPortalView.BUDGETS} isActive={view == UserPortalView.BUDGETS} onClick={onClickSideBarItem} Icon={BudgetIcon} />
+               {/* <SideBarItem name={UserPortalView.BUDGETS} isActive={view == UserPortalView.BUDGETS} onClick={onClickSideBarItem} Icon={BudgetIcon} /> */}
                {/* <SideBarItem name={UserPortalView.GOALS} isActive={view == UserPortalView.GOALS} onClick={onClickSideBarItem} Icon={GoalIcon} /> */}
                {/* <SideBarItem name={UserPortalView.NOTIFICATIONS} isActive={view == UserPortalView.NOTIFICATIONS} pc={5} onClick={onClickSideBarItem} Icon={NotificationIcon} /> */}
                <SideBarItem name={UserPortalView.CATEGORIES} isActive={view == UserPortalView.CATEGORIES} onClick={onClickSideBarItem} Icon={CategoryIcon} />

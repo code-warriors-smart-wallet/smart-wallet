@@ -10,7 +10,6 @@ import { connectDatabase } from './config/database';
 import path from 'path';
 import { initScheduleJobs } from './jobs/schedule';
 import { seedCategories } from './models/category';
-import budgetRouter from './routes/budget';
 
 // Load environment variables
 dotenv.config({ path: path.join(__dirname, '../.env') });
@@ -28,7 +27,7 @@ app.use(cookieParser());
 // Connect to database
 connectDatabase()
     .then(() => {
-        app.use("/budget", budgetRouter);
+        // Routes
         app.use("/category", categoryRouter);
         app.use("/transaction", transactionRouter);
         app.use("/dashboard", dashboardRouter);
@@ -48,6 +47,8 @@ connectDatabase()
         console.error('Failed to start finops-service server:', error);
         process.exit(1);
     });
+
+
 
 // Handle unexpected errors
 process.on('unhandledRejection', (error) => {

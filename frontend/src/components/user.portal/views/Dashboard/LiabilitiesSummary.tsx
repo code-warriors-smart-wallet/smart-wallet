@@ -19,7 +19,7 @@ function LiabilitiesSummary({ currency, summary }: { currency: string, summary: 
         } else if (space === SpaceType.CREDIT_CARD) {
             spaces = [SpaceType.CREDIT_CARD]
             setTotal(summary.totalCreditcardLiabilityAmount)
-        } 
+        }
         let assetsInfo = summary.liabilitiesInfo?.filter((info: any) => spaces.includes(info.spaceType))
         assetsInfo = assetsInfo?.map((rec: any, index: any) => ({ ...rec, color: `hsl(${(index / assetsInfo.length) * 360}, 80%, 50%)` }));
         setAssetsInfo(assetsInfo)
@@ -49,63 +49,70 @@ function LiabilitiesSummary({ currency, summary }: { currency: string, summary: 
                     </div>
                 </div>
                 <div className="p-2 border border-border-light-primary dark:border-border-dark-primary mt-3">
-                    <div className="flex items-center justify-center gap-3">
-                        <svg
-                            width={400}
-                            height={300}
-                        // ref={chartRef}
-                        >
-                            <VictoryPie
-                                standalone={false}
-                                width={400}
-                                height={300}
-                                innerRadius={60}
-                                colorScale={liabilitiesInfo?.map((c: any) => c.color)}
-                                labels={() => null}
-                                style={{
-                                    // data: {
-                                    //     fillOpacity: 0.9,
-                                    //     stroke: "#c43a31",
-                                    //     strokeWidth: 3,
-                                    // },
-                                    labels: {
-                                        fontSize: 15,
-                                        fill: "#fff",
-                                    },
-                                }}
-                                data={liabilitiesInfo}
-                                theme={VictoryTheme.clean}
-                            // radius={({ datum }) =>
-                            //     datum.parentCategory === selectedPCategory ? 100 : 90
-                            // }
-                            // events={[
-                            //     {
-                            //         target: "data",
-                            //         eventHandlers: {
-                            //             onClick: (_, props) => {
-                            //                 const categoryName = props.datum.parentCategory
-                            //                 setselectedPCategory(categoryName)
-                            //                 return null
-                            //             }
-                            //         }
-                            //     }
-                            // ]}
-                            />
-                        </svg>
-                        <div>
-                            {
-                                liabilitiesInfo?.map((info: any) => {
-                                    return (
-                                        <div className="flex gap-2 items-center">
-                                            <span style={{ backgroundColor: info.color }} className="w-3 h-3">
-                                            </span>
-                                            <span className="capitalize">{info.x} ({(Number(info.y) / total * 100).toFixed(2)}%)<span className="text-xs text-text-light-secondary dark:text-text-dark-secondary"> - {currency}. {Number(info.y).toFixed(2)}</span></span>
-                                        </div>
-                                    )
-                                })
-                            }
-                        </div>
-                    </div>
+                    {
+                        liabilitiesInfo.length > 0 ? (
+                            <div className="flex items-center justify-center gap-3">
+                                <svg
+                                    width={400}
+                                    height={300}
+                                // ref={chartRef}
+                                >
+                                    <VictoryPie
+                                        standalone={false}
+                                        width={400}
+                                        height={300}
+                                        innerRadius={60}
+                                        colorScale={liabilitiesInfo?.map((c: any) => c.color)}
+                                        labels={() => null}
+                                        style={{
+                                            // data: {
+                                            //     fillOpacity: 0.9,
+                                            //     stroke: "#c43a31",
+                                            //     strokeWidth: 3,
+                                            // },
+                                            labels: {
+                                                fontSize: 15,
+                                                fill: "#fff",
+                                            },
+                                        }}
+                                        data={liabilitiesInfo}
+                                        theme={VictoryTheme.clean}
+                                    // radius={({ datum }) =>
+                                    //     datum.parentCategory === selectedPCategory ? 100 : 90
+                                    // }
+                                    // events={[
+                                    //     {
+                                    //         target: "data",
+                                    //         eventHandlers: {
+                                    //             onClick: (_, props) => {
+                                    //                 const categoryName = props.datum.parentCategory
+                                    //                 setselectedPCategory(categoryName)
+                                    //                 return null
+                                    //             }
+                                    //         }
+                                    //     }
+                                    // ]}
+                                    />
+                                </svg>
+                                <div>
+                                    {
+                                        liabilitiesInfo?.map((info: any) => {
+                                            return (
+                                                <div className="flex gap-2 items-center">
+                                                    <span style={{ backgroundColor: info.color }} className="w-3 h-3">
+                                                    </span>
+                                                    <span className="capitalize">{info.x} ({(Number(info.y) / total * 100).toFixed(2)}%)<span className="text-xs text-text-light-secondary dark:text-text-dark-secondary"> - {currency}. {Number(info.y).toFixed(2)}</span></span>
+                                                </div>
+                                            )
+                                        })
+                                    }
+                                </div>
+                            </div>
+                        ) : (
+                            <div className="w-full h-full grid place-items-center text-sm text-text-light-secondary dark:text-text-dark-secondary">No records found.</div>
+
+                        )
+                    }
                 </div>
             </div>
         </section>

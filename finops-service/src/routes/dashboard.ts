@@ -963,13 +963,12 @@ dashboardRouter.get('/saving-goal/:spaceid', authenticate, async (req: Request, 
 
 dashboardRouter.get("/all", authenticate, async (req: Request, res: Response) => {
     const userId: string = (req as any).user.id;
-    // const { userId } = req.params
 
-    // cash totoal income
     try {
         let totalCashAssetAmount = 0;
         let totalBankAssetAmount = 0;
         let totalLoanLentAssetAmount = 0;
+        let totalSavingGoalAssetAmount = 0;
         let totalLoanBorrowedLiabilityAmount = 0;
         let totalCreditcardLiabilityAmount = 0
 
@@ -1275,6 +1274,102 @@ dashboardRouter.get("/all", authenticate, async (req: Request, res: Response) =>
             }
         })
 
+        // saving goal
+        const goalTotalIncome = await Transaction.aggregate([
+            {
+                $lookup: {
+                    from: "spaces",
+                    as: "toSpace",
+                    localField: "to",
+                    foreignField: "_id"
+                },
+
+            },
+
+            {
+                $unwind: "$toSpace"
+            },
+
+            {
+                $match: {
+                    "userId": new ObjectId(userId),
+                    "toSpace.type": SpaceType.SAVING_GOAL,
+                }
+            },
+
+            {
+                $group: {
+                    _id: { spaceId: "$toSpace._id", spaceName: "$toSpace.name", spaceType: "$toSpace.type" },
+                    total: { $sum: "$amount" }
+                }
+            },
+
+            {
+                $project: {
+                    _id: 0,
+                    id: "$_id.spaceId",
+                    spaceName: "$_id.spaceName",
+                    spaceType: "$_id.spaceType",
+                    amount: { $toDouble: "$total" }
+                }
+            }
+        ])
+
+        const goalTotalExpense = await Transaction.aggregate([
+            {
+                $lookup: {
+                    from: "spaces",
+                    as: "fromSpace",
+                    localField: "from",
+                    foreignField: "_id"
+                },
+
+            },
+
+            {
+                $unwind: "$fromSpace"
+            },
+
+            {
+                $match: {
+                    "userId": new ObjectId(userId),
+                    "fromSpace.type": SpaceType.SAVING_GOAL,
+                }
+            },
+
+            {
+                $group: {
+                    _id: { spaceId: "$fromSpace._id", spaceName: "$fromSpace.name", spaceType: "$fromSpace.type" },
+                    total: { $sum: "$amount" }
+                }
+            },
+
+            {
+                $project: {
+                    _id: 0,
+                    id: "$_id.spaceId",
+                    spaceName: "$_id.spaceName",
+                    spaceType: "$_id.spaceType",
+                    amount: { $toDouble: "$total" }
+                }
+            }
+        ])
+
+        const goalAssetsInfo = goalTotalIncome.map((rec) => {
+            const totalExpense = goalTotalExpense.find(rec2 => String(rec2.id) === String(rec.id));
+            const expenseAmount = totalExpense?.amount || 0;
+            totalSavingGoalAssetAmount += rec.amount - expenseAmount
+            return {
+                id: rec.id,
+                x: rec.spaceName,
+                spaceType: rec.spaceType,
+                totalIncome: rec.amount,
+                totalExpense: expenseAmount,
+                color: rec.color,
+                y: rec.amount - expenseAmount
+            }
+        })
+
         // loan borrowed
         const totalLoanBorrowedPrincipal = await Transaction.aggregate([
             {
@@ -1482,9 +1577,9 @@ dashboardRouter.get("/all", authenticate, async (req: Request, res: Response) =>
             success: true,
             data: {
                 object: {
-                    assetsInfo: [...cashAssetsInfo, ...bankAssetsInfo, ...loanlentAssetsInfo],
+                    assetsInfo: [...cashAssetsInfo, ...bankAssetsInfo, ...loanlentAssetsInfo, ...goalAssetsInfo],
                     liabilitiesInfo: [...loanborrowedLiabiltitiesInfo, ...creditcardLiabiltitiesInfo],
-                    totalCashAssetAmount, totalBankAssetAmount, totalLoanLentAssetAmount, totalLoanBorrowedLiabilityAmount, totalCreditcardLiabilityAmount
+                    totalCashAssetAmount, totalBankAssetAmount, totalLoanLentAssetAmount, totalSavingGoalAssetAmount, totalLoanBorrowedLiabilityAmount, totalCreditcardLiabilityAmount
                 },
                 message: 'Data retreived successfully!'
             },

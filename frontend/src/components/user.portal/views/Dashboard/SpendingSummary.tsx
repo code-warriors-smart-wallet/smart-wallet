@@ -3,6 +3,7 @@ import Input from "../../../Input";
 import { Dispatch, SetStateAction, useEffect, useRef, useState } from "react";
 import Button from "../../../Button";
 import { VictoryLine, VictoryPie, VictoryTheme, VictoryChart, VictoryAxis } from "victory";
+import { generateRandomColor } from "../../../../utils/utils";
 
 interface SpendingSummaryProps {
     spendingSummary: any,
@@ -13,11 +14,12 @@ interface SpendingSummaryProps {
     setendDate: Dispatch<SetStateAction<string>>,
     onDateRangeChange: (start: string, end: string) => void,
     filterType: SpendingSummaryFilterOptions,
-    setFilterType: Dispatch<SetStateAction<SpendingSummaryFilterOptions>>
+    setFilterType: Dispatch<SetStateAction<SpendingSummaryFilterOptions>>,
+    username?: string
 }
 
 export enum SpendingSummaryFilterOptions {
-    THIS_MONTH="THIS_MONTH", TODAY="TODAY", YESTERDAY="YESTERDAY", THIS_WEEK="THIS_WEEK", THIS_YEAR="THIS_YEAR", CUSTOM="CUSTOM"
+    THIS_MONTH = "THIS_MONTH", TODAY = "TODAY", YESTERDAY = "YESTERDAY", THIS_WEEK = "THIS_WEEK", THIS_YEAR = "THIS_YEAR", CUSTOM = "CUSTOM"
 }
 
 function SpendingSummary({
@@ -29,7 +31,8 @@ function SpendingSummary({
     setendDate,
     onDateRangeChange,
     filterType,
-    setFilterType }: SpendingSummaryProps) {
+    setFilterType,
+    username }: SpendingSummaryProps) {
 
     const moneyIn = spendingSummary.moneyIn?.length > 0 ? spendingSummary?.moneyIn[0].totalAmount.$numberDecimal : 0.0;
     const moneyOut = spendingSummary.moneyOut?.length > 0 ? spendingSummary?.moneyOut[0].totalAmount.$numberDecimal : 0.0;
@@ -41,6 +44,8 @@ function SpendingSummary({
     const spendingbySCategory = spendingSummary.spendingByCategory?.filter((cat: any) => {
         return cat.parentCategory?.includes(selectedPCategory)
     });
+    const spendingByUser = spendingSummary?.spendingByUser?.map((rec: any, index: any) => ({ ...rec, color: `hsl(${(index / spendingSummary.spendingByUser.length) * 360}, 70%, 50%)` }));
+    const incomeByUser = spendingSummary?.incomeByUser?.map((rec: any, index: any) => ({ ...rec, color: `hsl(${(index / spendingSummary.incomeByUser.length) * 360}, 70%, 50%)` }));
 
     useEffect(() => {
         const handleClickOutside = (event: MouseEvent) => {
@@ -53,7 +58,7 @@ function SpendingSummary({
         return () => document.removeEventListener("mousedown", handleClickOutside)
     }, [])
 
-    console.log(filterType==SpendingSummaryFilterOptions.CUSTOM)
+    console.log(filterType == SpendingSummaryFilterOptions.CUSTOM)
 
     return (
         <section className="rounded my-3 py-2 px-3 border border-border-light-primary dark:border-border-dark-primary *:text-text-light-primary *:dark:text-text-dark-primary">
@@ -80,7 +85,7 @@ function SpendingSummary({
                         placeholder="Enter amount"
                         value={startDate}
                         onChange={(e) => setstartDate(e.target.value)}
-                        className={`pt-2 pb-2 py-1 ml-2 mr-4 mt-0 mb-0 ${filterType!=SpendingSummaryFilterOptions.CUSTOM ? "opacity-70 pointer-events-none" : "opacity-100 pointer-events-auto"}`}
+                        className={`pt-2 pb-2 py-1 ml-2 mr-4 mt-0 mb-0 ${filterType != SpendingSummaryFilterOptions.CUSTOM ? "opacity-70 pointer-events-none" : "opacity-100 pointer-events-auto"}`}
                     />
                     <label className="text-text-light-primary dark:text-text-dark-primary">To:</label>
                     <Input
@@ -90,11 +95,11 @@ function SpendingSummary({
                         value={endDate}
                         id="toDate"
                         onChange={(e) => setendDate(e.target.value)}
-                        className={`pt-2 pb-2 py-1 ml-2 mr-4 mt-0 mb-0  ${filterType!=SpendingSummaryFilterOptions.CUSTOM ? "opacity-70 pointer-events-none" : "opacity-100 pointer-events-auto"}`}
+                        className={`pt-2 pb-2 py-1 ml-2 mr-4 mt-0 mb-0  ${filterType != SpendingSummaryFilterOptions.CUSTOM ? "opacity-70 pointer-events-none" : "opacity-100 pointer-events-auto"}`}
                     />
                     <Button
                         text="Apply"
-                        className={`max-w-fit pt-2 pb-2 ml-2 ${filterType!=SpendingSummaryFilterOptions.CUSTOM ? "opacity-70 pointer-events-none" : "opacity-100 pointer-events-auto"}`}
+                        className={`max-w-fit pt-2 pb-2 ml-2 ${filterType != SpendingSummaryFilterOptions.CUSTOM ? "opacity-70 pointer-events-none" : "opacity-100 pointer-events-auto"}`}
                         onClick={() => onDateRangeChange(startDate, endDate)}
                     />
                 </div>
@@ -217,6 +222,99 @@ function SpendingSummary({
                     </div>
                 </div>
             </div>
+
+            {/* Member contribution */}
+            {
+                spendingByUser && spendingByUser.length > 0 && incomeByUser && incomeByUser.length > 0 && (
+                    <div className="flex gap-3 *:flex-1 flex-wrap">
+                        <div className="p-2 border border-border-light-primary dark:border-border-dark-primary mt-3">
+                            <h1>Income by members</h1>
+                            {
+                                incomeByUser.length == 0 && <div className="w-full h-full grid place-items-center text-sm text-text-light-secondary dark:text-text-dark-secondary">No records found.</div>
+                            }
+                            <div className="flex items-center justify-center gap-3">
+                                <svg
+                                    width={200}
+                                    height={300}
+                                    ref={chartRef}
+                                >
+                                    <VictoryPie
+                                        standalone={false}
+                                        width={200}
+                                        height={300}
+                                        innerRadius={60}
+                                        colorScale={incomeByUser?.map((c: any) => c.color)}
+                                        labels={() => null}
+                                        data={incomeByUser}
+                                        theme={VictoryTheme.clean}
+                                        radius={90}
+                                    />
+                                </svg>
+                                <div>
+                                    {
+                                        incomeByUser?.map((cat: any) => {
+                                            return (
+                                                <div className="flex gap-2 items-center">
+                                                    <span style={{ backgroundColor: cat.color }} className="w-3 h-3">
+                                                    </span>
+                                                    <span className="capitalize">
+                                                        {username === cat.username ? "You" : cat.username}
+                                                        <span className="text-xs text-text-light-secondary dark:text-text-dark-secondary">
+                                                            - {currency}. {cat.y}
+                                                        </span></span>
+                                                </div>
+                                            )
+                                        })
+                                    }
+                                </div>
+                            </div>
+                        </div>
+                        <div className="p-2 border border-border-light-primary dark:border-border-dark-primary mt-3">
+                            <h1>Spending by members</h1>
+                            {
+                                spendingByUser.length == 0 && <div className="w-full h-full grid place-items-center text-sm text-text-light-secondary dark:text-text-dark-secondary">No records found.</div>
+                            }
+                            <div className="flex items-center justify-center gap-3">
+                                <svg
+                                    width={200}
+                                    height={300}
+                                    ref={chartRef}
+                                >
+                                    <VictoryPie
+                                        standalone={false}
+                                        width={200}
+                                        height={300}
+                                        innerRadius={60}
+                                        colorScale={spendingByUser?.map((c: any) => c.color)}
+                                        labels={() => null}
+                                        data={spendingByUser}
+                                        theme={VictoryTheme.clean}
+                                        radius={90}
+                                    />
+                                </svg>
+                                <div>
+                                    {
+                                        spendingByUser?.map((cat: any) => {
+                                            return (
+                                                <div className="flex gap-2 items-center">
+                                                    <span style={{ backgroundColor: cat.color }} className="w-3 h-3">
+                                                    </span>
+                                                    <span className="capitalize">
+                                                        {username === cat.username ? "You" : cat.username}
+                                                        <span className="text-xs text-text-light-secondary dark:text-text-dark-secondary">
+                                                            - {currency}. {cat.y}
+                                                        </span></span>
+                                                </div>
+                                            )
+                                        })
+                                    }
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+                )
+            }
 
             {/* income charts */}
             {/* <div className="flex gap-3 *:flex-1 flex-wrap">

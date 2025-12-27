@@ -1,7 +1,9 @@
 import express, { Request, Response } from 'express';
 import Cat from '../models/category';
+import Space from '../models/space';
 import { authenticate } from '../middlewares/auth';
 import mongoose from 'mongoose';
+import { getUsersBySpace } from './dashboard';
 
 const categoryRouter = express.Router();
 
@@ -126,7 +128,7 @@ categoryRouter.put('/sub/', authenticate, async (req: Request, res: Response) =>
                         name: name,
                         color: color,
                         transactionTypes: transactionTypes,
-                        userId: userId 
+                        userId: userId
                     }
                 }
             },
@@ -153,7 +155,7 @@ categoryRouter.put('/sub/', authenticate, async (req: Request, res: Response) =>
 
 categoryRouter.delete('/sub/:pid/:sid', authenticate, async (req: Request, res: Response) => {
     try {
-        const {pid, sid} = req.params;
+        const { pid, sid } = req.params;
         const userId: string = (req as any).user.id;
 
         // Find the old subcategory (so you can keep other fields intact)
@@ -193,6 +195,7 @@ categoryRouter.delete('/sub/:pid/:sid', authenticate, async (req: Request, res: 
 categoryRouter.get('/', authenticate, async (req: Request, res: Response) => {
     try {
         const userId: string = (req as any).user.id;
+
         const categories = await Cat.aggregate([
             { $unwind: "$subCategories" },
 
@@ -238,12 +241,16 @@ categoryRouter.get('/', authenticate, async (req: Request, res: Response) => {
     }
 })
 
-categoryRouter.get('/space/:type', authenticate, async (req: Request, res: Response) => {
+categoryRouter.get('/space/:spaceid', authenticate, async (req: Request, res: Response) => {
     try {
         const userId: string = (req as any).user.id;
-        const { type } = req.params;
+        const { spaceid } = req.params;
+
+        const space = await Space.findById(spaceid)
+        const userIds = await getUsersBySpace(spaceid);
+
         const categories = await Cat.aggregate([
-            { $match: { spaces: type } },
+            { $match: { spaces: space?.type } },
 
             { $unwind: "$subCategories" },
 
@@ -251,8 +258,24 @@ categoryRouter.get('/space/:type', authenticate, async (req: Request, res: Respo
                 $match: {
                     $or: [
                         { "subCategories.userId": null },
-                        { "subCategories.userId": new mongoose.Types.ObjectId(userId) }
+                        { "subCategories.userId": { $in: userIds } }
                     ]
+                }
+            },
+
+            {
+                $lookup: {
+                    from: "users", // MongoDB collection name
+                    localField: "subCategories.userId",
+                    foreignField: "_id",
+                    as: "user"
+                }
+            },
+
+            {
+                $unwind: {
+                    path: "$user",
+                    preserveNullAndEmptyArrays: true
                 }
             },
 
@@ -266,9 +289,13 @@ categoryRouter.get('/space/:type', authenticate, async (req: Request, res: Respo
                     subCategoryName: "$subCategories.name",
                     transactionTypes: "$subCategories.transactionTypes",
                     subCategoryColor: "$subCategories.color",
-                    userId: "$subCategories.userId"
+                    user: {
+                        _id: "$user._id",
+                        username: "$user.username"
+                    }
                 }
             },
+
             {
                 $sort: {
                     parentCategory: 1,
@@ -276,6 +303,7 @@ categoryRouter.get('/space/:type', authenticate, async (req: Request, res: Respo
                 }
             }
         ]);
+
 
         res.status(200).json({
             success: true,

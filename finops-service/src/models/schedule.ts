@@ -1,5 +1,5 @@
 import { Document, model, Schema } from "mongoose";
-import { TransactionType } from "./transaction";
+import { MemberStatus, TransactionType } from "./transaction";
 
 export enum Repeat {
     DAY = "DAY",
@@ -34,6 +34,7 @@ export interface ISchedule extends Document {
     isAutomated: boolean,
     isActive: boolean,
     spaceId: Schema.Types.ObjectId,
+    memberStatus: string
 }
 
 const ScheduleSchema: Schema = new Schema({
@@ -64,6 +65,7 @@ const ScheduleSchema: Schema = new Schema({
     },
     userId: {
         type: Schema.Types.ObjectId,
+        ref: "User"
     },
     startDate: {
         type: Date
@@ -93,7 +95,12 @@ const ScheduleSchema: Schema = new Schema({
     spaceId: {
         type: Schema.Types.ObjectId,
         ref: "Space"
-    }
+    },
+    memberStatus: {
+            type: String,
+            enum: Object.values(MemberStatus),
+            default: MemberStatus.ACTIVE_MEMBER
+        },
 })
 
 export default model<ISchedule>("Schedule", ScheduleSchema)

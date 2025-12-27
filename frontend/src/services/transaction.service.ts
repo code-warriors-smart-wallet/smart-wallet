@@ -65,6 +65,7 @@ export function TransactionService() {
                     "authorization": `Bearer ${token}`
                 }
             });
+            console.log(response.data.data.object)
             if (response.data.success) {
                 return response.data.data.object
             }

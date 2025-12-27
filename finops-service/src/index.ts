@@ -1,15 +1,23 @@
+import { initScheduleJobs } from './jobs/schedule';
+import { seedCategories } from './models/category';
+
 import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import cookieParser from 'cookie-parser';
+import path from 'path';
+
+import './models/user';
+import './models/space';
+import './models/category';
+import './models/schedule';
+import './models/transaction';
+
+import { connectDatabase } from './config/database';
 import categoryRouter from "./routes/category";
 import transactionRouter from "./routes/transaction";
 import dashboardRouter from "./routes/dashboard";
 import scheduleRouter from "./routes/schedule";
-import { connectDatabase } from './config/database';
-import path from 'path';
-import { initScheduleJobs } from './jobs/schedule';
-import { seedCategories } from './models/category';
 
 // Load environment variables
 dotenv.config({ path: path.join(__dirname, '../.env') });

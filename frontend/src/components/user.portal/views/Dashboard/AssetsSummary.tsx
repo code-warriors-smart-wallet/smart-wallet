@@ -24,7 +24,10 @@ function AssetsSummary({ currency, summary }: { currency: string, summary: any }
             spaces = [SpaceType.LOAN_LENT]
             setTotal(summary.totalLoanLentAssetAmount)
         }
-        setAssetsInfo(summary.assetsInfo?.filter((info: any) => spaces.includes(info.spaceType)))
+        let assetsInfo = summary.assetsInfo?.filter((info: any) => spaces.includes(info.spaceType))
+        assetsInfo = assetsInfo?.map((rec: any, index: any) => ({ ...rec, color: `hsl(${(index / assetsInfo.length) * 360}, 70%, 50%)` }));
+        setAssetsInfo(assetsInfo)
+        
     }, [space, summary])
 
     return (
@@ -50,7 +53,7 @@ function AssetsSummary({ currency, summary }: { currency: string, summary: any }
                         <h2 className="text-xl font-semibold text-text-light-secondary dark:text-text-dark-secondary">{summary.totalBankAssetAmount} {currency}</h2>
                     </div>
                     <div className={`p-3 border hover:bg-hover-light-primary hover:dark:bg-hover-dark-primary cursor-pointer ${ space === SpaceType.LOAN_LENT ? "border-primary bg-hover-light-primary dark:bg-hover-dark-primary" : "border-border-light-primary dark:border-border-dark-primary"  }`} onClick={() => setSpace(SpaceType.LOAN_LENT)}>
-                        <h1 className="font-semibold">Loan Receivables</h1>
+                        <h1 className="font-semibold">Loan Receivables:</h1>
                         <h2 className="text-xl font-semibold text-text-light-secondary dark:text-text-dark-secondary">{summary.totalLoanLentAssetAmount} {currency}</h2>
                     </div>
                 </div>
@@ -66,7 +69,7 @@ function AssetsSummary({ currency, summary }: { currency: string, summary: any }
                                 width={400}
                                 height={300}
                                 innerRadius={60}
-                                colorScale={assetsInfo?.map((c: any) => c.color)}
+                                colorScale={assetsInfo?.map((c: any, index) => c.color)}
                                 labels={() => null}
                                 style={{
                                     // data: {

@@ -84,6 +84,10 @@ export interface SpaceInfo {
     dueDate?: string | null,
     from: string | null,
     to: string | null,
+    isCollaborative: boolean,
+    collaborator: string,
+    newCollaborators: string[],
+    oldCollaborators: {email: string, status: string}[]
 }
 
 export interface TransactionInfo {
@@ -95,8 +99,9 @@ export interface TransactionInfo {
     note: string,
     scategory: string | null,
     pcategory: string | null,
-    scheduleId?: string | null
-    spaceId?: string | undefined
+    scheduleId?: string | null,
+    spaceId?: string | undefined,
+    username?: string
 }
 
 export enum Frequency {
@@ -138,7 +143,8 @@ export interface ScheduleInfo {
     continue: ContinueType,
     endDate: string | null,
     isClosed?: boolean,
-    spaceId?: string
+    spaceId?: string,
+    username?: string 
 }
 
 interface SubCategoryInfo {

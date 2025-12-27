@@ -19,6 +19,24 @@ export async function sendRegisterOTPEmail(userId: any, email: string, otp: stri
         }
     }
 
+export async function sendSpaceInvitationEmail(userId: any, email: string, space: string, link: string): Promise<boolean> {
+        try {
+        const mailReq =  {
+            mailOptions: {
+                to: email,
+                subject: 'Space invitation',
+                text: `Click below link to join to space ${space}: \n Link: ${link}`
+            },
+            userId: userId,
+            type: "SPACE_INVITATION_SEND"
+        };
+            const response = await api.post(`notification/email/send/`, mailReq);
+            return response.data.success;
+        } catch (error) {
+            return false
+        }
+    }
+
 // export const sendOTPEmail = async (email: string, otp: string): Promise<void> => {
 //     try {
 //         const mailOptions = {

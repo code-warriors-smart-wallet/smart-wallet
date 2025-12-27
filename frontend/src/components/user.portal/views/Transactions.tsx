@@ -10,7 +10,7 @@ import { useSelector } from "react-redux";
 import { RootState } from "../../../redux/store/store";
 import { CategoryService } from "../../../services/category.service";
 import { TransactionService } from "../../../services/transaction.service";
-import { FaArrowAltCircleDown, FaArrowAltCircleUp, FaCreditCard, FaEdit, FaMoneyBillWave, FaTimes, FaTrash, FaUniversity, FaBullseye  } from "react-icons/fa"
+import { FaArrowAltCircleDown, FaArrowAltCircleUp, FaCreditCard, FaEdit, FaMoneyBillWave, FaTimes, FaTrash, FaUniversity, FaBullseye, FaInfoCircle } from "react-icons/fa"
 import TransactionList from "./Transactions/TransactionList";
 
 export enum TransactionType {
@@ -34,6 +34,7 @@ export interface transactionTypeInfo {
       type: TransactionType;
       fromSpaces: string[];
       toSpaces: string[];
+      isCollaborative: boolean
    }[];
 }
 
@@ -46,16 +47,19 @@ export const transactionTypesInfo: transactionTypeInfo[] = [
             type: TransactionType.EXPENSE,
             fromSpaces: ["ACTIVE_SPACE"],
             toSpaces: ["OUTSIDE_MYWALLET"],
+            isCollaborative: true
          },
          {
             type: TransactionType.INCOME,
             fromSpaces: ["OUTSIDE_MYWALLET"],
-            toSpaces: ["ACTIVE_SPACE"]
+            toSpaces: ["ACTIVE_SPACE"],
+            isCollaborative: true
          },
          {
             type: TransactionType.INTERNAL_TRANSFER,
             fromSpaces: ["ACTIVE_SPACE"],
-            toSpaces: [SpaceType.CASH, SpaceType.BANK]
+            toSpaces: [SpaceType.CASH, SpaceType.BANK],
+            isCollaborative: false
          }
       ]
    },
@@ -66,17 +70,20 @@ export const transactionTypesInfo: transactionTypeInfo[] = [
          {
             type: TransactionType.EXPENSE,
             fromSpaces: ["ACTIVE_SPACE"],
-            toSpaces: ["OUTSIDE_MYWALLET"]
+            toSpaces: ["OUTSIDE_MYWALLET"],
+            isCollaborative: true
          },
          {
             type: TransactionType.INCOME,
             fromSpaces: ["OUTSIDE_MYWALLET"],
-            toSpaces: ["ACTIVE_SPACE"]
+            toSpaces: ["ACTIVE_SPACE"],
+            isCollaborative: true
          },
          {
             type: TransactionType.INTERNAL_TRANSFER,
             fromSpaces: ["ACTIVE_SPACE"],
-            toSpaces: [SpaceType.CASH, SpaceType.BANK]
+            toSpaces: [SpaceType.CASH, SpaceType.BANK],
+            isCollaborative: false
          }
       ]
    },
@@ -87,12 +94,14 @@ export const transactionTypesInfo: transactionTypeInfo[] = [
          {
             type: TransactionType.BALANCE_INCREASE, // increase
             toSpaces: ["ACTIVE_SPACE"],
-            fromSpaces: ["OUTSIDE_MYWALLET"]
+            fromSpaces: ["OUTSIDE_MYWALLET"],
+            isCollaborative: false
          },
          {
             type: TransactionType.BALANCE_DECREASE, // increase
             toSpaces: ["ACTIVE_SPACE"],
-            fromSpaces: ["OUTSIDE_MYWALLET"]
+            fromSpaces: ["OUTSIDE_MYWALLET"],
+            isCollaborative: false
          }
       ]
    },
@@ -103,12 +112,14 @@ export const transactionTypesInfo: transactionTypeInfo[] = [
          {
             type: TransactionType.REPAYMENT_RECEIVED,
             fromSpaces: ["ACTIVE_SPACE"],
-            toSpaces: [SpaceType.CASH, SpaceType.BANK]
+            toSpaces: [SpaceType.CASH, SpaceType.BANK],
+            isCollaborative: false
          },
          {
             type: TransactionType.LOAN_CHARGES,
             fromSpaces: ["ACTIVE_SPACE"],
-            toSpaces: [SpaceType.CASH, SpaceType.BANK]
+            toSpaces: [SpaceType.CASH, SpaceType.BANK],
+            isCollaborative: false
          }
       ]
    },
@@ -119,28 +130,32 @@ export const transactionTypesInfo: transactionTypeInfo[] = [
          {
             type: TransactionType.REPAYMENT_PAID,
             toSpaces: ["ACTIVE_SPACE"],
-            fromSpaces: [SpaceType.CASH, SpaceType.BANK]
+            fromSpaces: [SpaceType.CASH, SpaceType.BANK],
+            isCollaborative: false
          },
          {
             type: TransactionType.LOAN_CHARGES,
             toSpaces: ["ACTIVE_SPACE"],
-            fromSpaces: [SpaceType.CASH, SpaceType.BANK]
+            fromSpaces: [SpaceType.CASH, SpaceType.BANK],
+            isCollaborative: false
          }
       ]
    },
    {
       spaceType: SpaceType.SAVING_GOAL,
-      icon: <FaBullseye  />,
+      icon: <FaBullseye />,
       transactionTypes: [
          {
             type: TransactionType.SAVING,
             toSpaces: ["ACTIVE_SPACE"],
-            fromSpaces: [SpaceType.CASH, SpaceType.BANK]
+            fromSpaces: [SpaceType.CASH, SpaceType.BANK],
+            isCollaborative: true
          },
          {
             type: TransactionType.WITHDRAW,
             fromSpaces: ["ACTIVE_SPACE"],
-            toSpaces: [SpaceType.CASH, SpaceType.BANK]
+            toSpaces: [SpaceType.CASH, SpaceType.BANK],
+            isCollaborative: true
          }
       ]
    },
@@ -151,7 +166,7 @@ function Transactions() {
    const { spacetype, spaceid } = useParams()
    const [activeSpaceId, setActiveSpaceId] = useState<string | undefined>(spaceid)
    const [activeSpaceType, setActiveSpaceType] = useState<string | undefined>(spacetype)
-   const { spaces } = useSelector((state: RootState) => state.auth)
+   const { username, spaces } = useSelector((state: RootState) => state.auth)
    const [inputs, setInputs] = useState<TransactionInfo>({
       type: "",
       amount: 0.0,
@@ -178,6 +193,8 @@ function Transactions() {
 
    const [allowedParentCategories, setAllowedParentCategories] = useState<any[]>([])
    const [allowedSubCategories, setAllowedSubCategories] = useState<CategoryInfo[]>([])
+   const currentSpace = spaces.find(sp => sp.id === spaceid);
+
 
    console.log("allowedSubCategories", allowedSubCategories)
 
@@ -192,7 +209,8 @@ function Transactions() {
          scategory: transaction.scategory,
          type: transaction.type,
          scheduleId: transaction?.scheduleId || null,
-         spaceId: transaction.spaceId
+         spaceId: transaction.spaceId,
+         username: transaction.userId.username
       }
       console.log(transaction, transactionInfo);
       setInputs(transactionInfo)
@@ -370,7 +388,17 @@ function Transactions() {
       <>
          {/* sub header */}
          <div className="flex justify-between items-center">
-            <h1 className="text-xl text-text-light-primary dark:text-text-dark-primary">Transactions</h1>
+            <h1 className="text-xl text-text-light-primary dark:text-text-dark-primary flex items-center">
+               Transactions
+               {
+                  spaces.filter(sp => sp.isCollaborative).length > 0 && spacetype === "all" && (
+                     <FaInfoCircle
+                        className="ml-3 text-primary"
+                        title="The All Spaces view shows only your personal financial records. Transactions created by other members in collaborative spaces are not included."
+                     />
+                  )
+               }
+            </h1>
             <div className="flex justify-end gap-3 items-center">
                {
                   (!loading && transactions?.length != 0) && (
@@ -464,13 +492,24 @@ function Transactions() {
                                  Select type
                               </option>
                               {
-                                 spaceInfo?.transactionTypes.map((t) => {
-                                    return (
-                                       <option key={t.type} value={t.type}>
-                                          {t.type.split("_").join(" ")}
-                                       </option>
-                                    )
-                                 })
+                                 currentSpace?.isCollaborative ? (
+                                    spaceInfo?.transactionTypes.filter(t => t.isCollaborative).map((t) => {
+                                       return (
+                                          <option key={t.type} value={t.type}>
+                                             {t.type.split("_").join(" ")}
+                                          </option>
+                                       )
+                                    })
+                                 ) : (
+                                    spaceInfo?.transactionTypes.map((t) => {
+                                       return (
+                                          <option key={t.type} value={t.type}>
+                                             {t.type.split("_").join(" ")}
+                                          </option>
+                                       )
+                                    })
+                                 )
+
                               }
 
                            </select>
@@ -684,18 +723,20 @@ function Transactions() {
                         <div className="flex gap-2">
                            {
                               inputs.type != TransactionType.LOAN_PRINCIPAL && (
-                                 <>
-                                    <Button
-                                       text={<FaEdit />}
-                                       onClick={onNewOrEditMode}
-                                       className="max-w-fit pt-2 pb-2"
-                                    />
-                                    <Button
-                                       text={<FaTrash />}
-                                       onClick={onDelete}
-                                       className="max-w-fit pt-2 pb-2 hover:!bg-red-600 !bg-red-500"
-                                    />
-                                 </>
+                                 inputs.username === username ? (
+                                    <>
+                                       <Button
+                                          text={<FaEdit />}
+                                          onClick={onNewOrEditMode}
+                                          className="max-w-fit pt-2 pb-2"
+                                       />
+                                       <Button
+                                          text={<FaTrash />}
+                                          onClick={onDelete}
+                                          className="max-w-fit pt-2 pb-2 hover:!bg-red-600 !bg-red-500"
+                                       />
+                                    </>
+                                 ) : null
                               )
                            }
                            <Button

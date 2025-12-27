@@ -5,7 +5,7 @@ export interface ButtonProps {
     type?: "button" | "submit" | "reset";
     onClick?: () => void,
     className?: string,
-    disabled?: boolean,
+    disabled?: boolean | undefined | null,
     priority?: "primary" | "secondary"
 }
 

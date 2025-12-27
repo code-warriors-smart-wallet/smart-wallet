@@ -9,11 +9,27 @@ export enum SpaceType {
    SAVING_GOAL = 'SAVING_GOAL'
 }
 
+export enum COLLABORATOR_STATUS {
+   PENDING = 'PENDING',
+   ACCEPTED = 'ACCEPTED',
+   REJECTED = 'REJECTED',
+   LEFT = 'LEFT',
+   EXPIRED = 'EXPIRED',
+   REMOVED = "REMOVED"
+}
+
+interface ICollaborator {
+   _id?: Schema.Types.ObjectId;
+  userId: Schema.Types.ObjectId;
+  invitationLink: string;
+  expiredAt: Date;
+  status: COLLABORATOR_STATUS;
+}
+
 export interface ISpace extends Document {
    ownerId: Schema.Types.ObjectId;
    type: SpaceType;
    name: string;
-   // description?: string;
    isDefault: boolean;
    loanPrincipal: Schema.Types.Decimal128,
    loanStartDate: Schema.Types.Date,
@@ -24,8 +40,16 @@ export interface ISpace extends Document {
    color: string,
    targetAmount: Schema.Types.Decimal128,
    desiredDate: Schema.Types.Date,
-   // collaborators: IUser[]
+   isCollaborative: boolean,
+   collaborators: ICollaborator[]
 }
+
+const CollaboratorSchema = new Schema<ICollaborator>({
+  invitationLink: { type: String, required: true },
+  status: { type: String, enum: Object.values(COLLABORATOR_STATUS) },
+  expiredAt: { type: Schema.Types.Date },
+  userId: {type: Schema.Types.ObjectId, ref: "User", default: null}
+});
 
 const SpaceSchema: Schema = new Schema({
    ownerId: { type: Schema.Types.ObjectId, ref: 'User', required: true },
@@ -42,12 +66,11 @@ const SpaceSchema: Schema = new Schema({
    creditCardLimit: { type: Schema.Types.Decimal128},
    creditCardStatementDate: { type: Schema.Types.Date},
    creditCardDueDate: { type: Schema.Types.Date},
-   // description: { type: String },
-   // isIndividual: { type: Boolean },
+   isCollaborative: { type: Boolean },
    isDefault: { type: Boolean, default: false },
    targetAmount: { type: Schema.Types.Decimal128},
    desiredDate: { type: Schema.Types.Date},
-   // collaborators: {type: []}
+   collaborators: { type: [CollaboratorSchema], default: []}
 }, {
    timestamps: true
 });

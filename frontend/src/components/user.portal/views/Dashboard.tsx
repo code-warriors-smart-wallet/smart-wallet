@@ -5,28 +5,30 @@ import { useNavigate, useParams } from "react-router-dom";
 import SpendingSummary from "./Dashboard/SpendingSummary";
 import CreditCardSummary from "./Dashboard/CreditCardSummary";
 import { DashboardService } from "../../../services/dashboard.service";
-import { Dispatch, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import Spaces, { SpaceType } from "./Spaces";
 import RecentTransactions from "./Dashboard/RecentTransactions";
 import LoanLentSummary from "./Dashboard/LoanLentSummary";
 import LoanBorrowedSummary from "./Dashboard/LoanBorrowedSummary";
-import { toLocalSpaceType, toStrdSpaceType } from "../../../utils/utils";
+import { toStrdSpaceType } from "../../../utils/utils";
 import { SpendingSummaryFilterOptions } from "./Dashboard/SpendingSummary"
 import CashFlowTrend from "./Dashboard/CashFlowTrend";
 import DropDown from "../../../components/Dropdown";
 import { SpaceService } from "../../../services/space.service";
-import NetWorthSummary from "./Dashboard/NetWorthSummary";
-import AssetsSummary from "./Dashboard/AssetsSummary";
 import AllSpaceSummary from "./Dashboard/AllSpaceSummary";
 import SavingGoalSummary from "./Dashboard/SavingGoalSummary";
+import Button from "../../../components/Button";
+import { FaInfoCircle } from "react-icons/fa";
 
 enum SpaceAction {
    EDIT_DETAILS = "EDIT_DETAILS",
-   DELETE_SPACE = "DELETE_SPACE"
+   VIEW_DETAILS = "VIEW_DETAILS",
+   DELETE_SPACE = "DELETE_SPACE",
+   LEFT_SPACE = "LEFT_SPACE"
 }
 
 function DashBoard() {
-   const { currency, spaces } = useSelector((state: RootState) => state.auth)
+   const { username, currency, spaces } = useSelector((state: RootState) => state.auth)
    const { spaceid, spacetype, view } = useParams();
    const { getCashBankSummary, getOtherSpaceSummary, getAllSpaceSummary } = DashboardService();
    const [totalIncome, settotalIncome] = useState(0.0)
@@ -34,6 +36,7 @@ function DashBoard() {
    const [summary, setsummary] = useState(null)
    const [loading, setLoading] = useState(false);
    const standardSpaceType = toStrdSpaceType(spacetype || "") as SpaceType;
+   const currentSpace = spaces.find(sp => sp.id === spaceid);
 
    const today = new Date();
    const year = today.getFullYear();
@@ -47,7 +50,10 @@ function DashBoard() {
    const [selectedAction, setSelectedAction] = useState<string | null>(null)
    const [editSpaceId, setEditSpaceId] = useState<string | null>(null)
    const navigate = useNavigate();
-   const { deleteSpace } = SpaceService()
+   const { deleteSpace, leftSpace } = SpaceService();
+   const spaceActions = spaces.find(sp => sp.id == spaceid)?.isOwner ?
+      [SpaceAction.EDIT_DETAILS, SpaceAction.DELETE_SPACE] :
+      [SpaceAction.VIEW_DETAILS, SpaceAction.LEFT_SPACE]
 
    const getCashBankData = async (start: string, end: string) => {
       console.log(startDate, endDate)
@@ -60,7 +66,11 @@ function DashBoard() {
             if (res.totalExpense.length > 0) {
                settotalExpense(res.totalExpense[0].totalAmount.$numberDecimal)
             }
-            setsummary(res.spendingSummary)
+            const summary = {
+               ...res.spendingSummary, spaceInfo: res.spaceInfo
+            }
+            console.log("summary: ", summary)
+            setsummary(summary)
          })
          .catch(err => {
             settotalIncome(0)
@@ -151,17 +161,22 @@ function DashBoard() {
    useEffect(() => {
       if (!selectedAction) return;
       const action = selectedAction.split(" ").join("_") as SpaceAction;
-      if (action === SpaceAction.EDIT_DETAILS) {
-         console.log(spaceid)
+      if (action === SpaceAction.EDIT_DETAILS || action === SpaceAction.VIEW_DETAILS) {
          setEditSpaceId(spaceid || null)
          setSelectedAction(null)
-      }
-      if (action === SpaceAction.DELETE_SPACE) {
+      } else if (action === SpaceAction.DELETE_SPACE) {
          if (confirm("Are you sure?\nDo you want to delete this space? All the associated transactions and schedules will be deleted by this actions. This actions cannot be undone.")) {
             deleteSpace(spaceid || "")
                .then(res => {
-                  const to = spaces[0]
-                  navigate(`/user-portal/${toLocalSpaceType(to.type)}/${to.id}/${view}`)
+                  navigate(`/user-portal/all/all/${view}`);
+               })
+         }
+         setSelectedAction(null)
+      } else if (action === SpaceAction.LEFT_SPACE) {
+         if (confirm("Are you sure?\nDo you want to left this space?\nAll your past transactions will remain in this space. You will lose access permanently.")) {
+            leftSpace(spaceid || "")
+               .then((res: any) => {
+                  navigate(`/user-portal/all/all/${view}`);
                })
          }
          setSelectedAction(null)
@@ -173,24 +188,54 @@ function DashBoard() {
          <>
             {/* sub header */}
             <div className="flex justify-between items-center">
-               <h1 className="text-xl text-text-light-primary dark:text-text-dark-primary">Dashboard</h1>
-               <div className="flex justify-end gap-3 items-center">
+               <h1 className="text-xl text-text-light-primary dark:text-text-dark-primary flex items-center">
+                  Dashboard
+                  <span
+                           className="max-w-fit ml-3 pt-2 pb-1 pl-1 pr-1 uppercase bg-transparent border border-2 border-primary text-xs rounded cursor-pointer"
+                        >{spacetype}</span>
                   {
-                     spacetype != "all" && (
-                        <DropDown
-                           title="ACTIONS"
-                           dropdownItems={Object.values(SpaceAction).map(action => action.split("_").join(" ")).slice(0, Object.values(SpaceAction).length - 1)}
-                           lastItem={SpaceAction.DELETE_SPACE.split("_").join(" ")}
-                           onClick={(text) => setSelectedAction(text)}
+                     currentSpace?.isCollaborative ? (
+                        <span
+                           className="max-w-fit ml-3 pt-2 pb-1 pl-1 pr-1 bg-transparent border border-2 border-primary text-xs rounded cursor-pointer"
+                        >COLLABORATIVE</span>
+                     ) : spacetype !== "all" ? <span
+                        className="max-w-fit ml-3 pt-2 pb-1 pl-1 pr-1 bg-transparent border border-2 border-primary text-xs rounded cursor-pointer"
+                     >PERSONAL</span> : null
+                  }
+                  {
+                     currentSpace?.isCollaborative ? (
+                        currentSpace.isOwner ?
+                           <span
+                              className="max-w-fit ml-3 pt-2 pb-1 pl-1 pr-1 bg-transparent border border-2 border-primary text-xs rounded cursor-pointer"
+                           >OWNER</span>
+                           :
+                           <span
+                              className="max-w-fit ml-3 pt-2 pb-1 pl-1 pr-1 bg-transparent border border-2 border-primary text-xs rounded cursor-pointer"
+                           >MEMBER</span>
+                     ) : null
+                  }
+                  {
+                     spaces.filter(sp => sp.isCollaborative).length > 0 && spacetype === "all" && (
+                        <FaInfoCircle
+                           className="ml-3 text-primary"
+                           title="The All Spaces view shows only your personal financial records. Transactions created by other members in collaborative spaces are not included."
                         />
                      )
                   }
+
+               </h1>
+               <div className="flex justify-end gap-3 items-center">
+                  <DropDown
+                     title="ACTIONS"
+                     dropdownItems={spaceActions.map(action => action.split("_").join(" ")).slice(0, Object.values(SpaceAction).length - 1)}
+                     onClick={(text) => setSelectedAction(text)}
+                  />
                </div>
             </div>
 
             {
                (spacetype === "all") && (
-                  <AllSpaceSummary currency={currency || ""} summary={summary}/>
+                  <AllSpaceSummary currency={currency || ""} summary={summary} />
                )
             }
 
@@ -211,6 +256,7 @@ function DashBoard() {
                         onDateRangeChange={getCashBankData}
                         filterType={filterType}
                         setFilterType={setFilterType}
+                        username={username || ""}
                      />
                      <CashFlowTrend spendingSummary={summary} />
                   </>
@@ -243,14 +289,12 @@ function DashBoard() {
                   </>
                )
             }
-            
+
             {
                (standardSpaceType === SpaceType.SAVING_GOAL) && (
                   <>
-                  <SavingGoalSummary currency={currency || ""} goalSummary={summary}/>
-                  <RecentTransactions loanSummary={summary} />
-                     {/* <CreditCardSummary currency={currency || ""} creditCardSummary={summary} />
-                     <RecentTransactions loanSummary={summary} /> */}
+                     <SavingGoalSummary currency={currency || ""} goalSummary={summary} username={username || ""} />
+                     <RecentTransactions loanSummary={summary} />
                   </>
                )
             }

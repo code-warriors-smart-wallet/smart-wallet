@@ -1,8 +1,10 @@
 import express, { Request, Response } from 'express';
-import Schedule, { Frequency, RecurringApproval, Repeat } from '../models/schedule';
+import Schedule, { Frequency, RecurringApproval } from '../models/schedule';
 import { authenticate } from '../middlewares/auth';
-import Transaction from '../models/transaction';
+import Transaction, { MemberStatus } from '../models/transaction';
 import { getNextDueDate } from '../utils/schedule.util';
+import { getUsersBySpace } from './dashboard';
+import { Types } from 'mongoose';
 
 const scheduleRouter = express.Router();
 
@@ -159,8 +161,6 @@ scheduleRouter.put('/skip/:id', authenticate, async (req: Request, res: Response
 
 })
 
-
-
 scheduleRouter.put('/:id', authenticate, async (req: Request, res: Response) => {
     try {
         const { id } = req.params;
@@ -252,9 +252,12 @@ scheduleRouter.get('/user/:spaceid/:limit/:skip', authenticate, async (req: Requ
     try {
         const userId: string = (req as any).user.id;
         const { spaceid, skip, limit } = req.params;
+
+        const userIds = await getUsersBySpace(spaceid)
+
         let condition: any = {
             $and: [
-                { userId: userId },
+                { userId: {$in: userIds} },
                 {
                     $or: [
                         { from: spaceid },
@@ -263,7 +266,7 @@ scheduleRouter.get('/user/:spaceid/:limit/:skip', authenticate, async (req: Requ
                 }
             ]
         }
-
+        
         if (spaceid === "all") {
             condition = { userId: userId }
         }
@@ -271,14 +274,18 @@ scheduleRouter.get('/user/:spaceid/:limit/:skip', authenticate, async (req: Requ
         const schedules = await Schedule.find(condition)
             .skip(Number.parseInt(skip))
             .limit(Number.parseInt(limit))
-            .sort({ isActive: -1, nextDueDate: 1 });
+            .sort({ isActive: -1, nextDueDate: 1 })
+            .populate({
+                path: "userId",        
+                select: "username"     
+            });
 
         const total = await Schedule.countDocuments(condition);
         res.status(200).json({
             success: true,
             data: {
                 object: {
-                    schedules, total
+                    schedules, total, userIds
                 },
                 message: 'Schedules retrieved successfully!'
             },
@@ -292,6 +299,50 @@ scheduleRouter.get('/user/:spaceid/:limit/:skip', authenticate, async (req: Requ
             data: null
         });
     }
+})
+
+scheduleRouter.patch('/spaces/:spaceId/members/:userId/status', authenticate, async (req: Request, res: Response) => {
+    try {
+        const { spaceId, userId } = req.params;
+        const { memberStatus } = req.body;
+
+        // Validate memberStatus
+        if (!Object.values(MemberStatus).includes(memberStatus)) {
+            res.status(400).json({
+                message: "Invalid member status",
+            });
+        }
+
+        const result = await Schedule.updateMany(
+            {
+                spaceId: new Types.ObjectId(spaceId),
+                userId: new Types.ObjectId(userId),
+            },
+            {
+                $set: { memberStatus },
+            }
+        );
+
+        res.status(200).json({
+            success: true,
+            data: {
+                object: {
+                    modifiedCount: result.modifiedCount,
+                },
+                message: "Member status updated successfully"
+            },
+            error: null
+        });
+    } catch (error) {
+        const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+        console.error("Update member status error:", error);
+        res.status(500).json({
+            success: false,
+            error: { message: 'Error updating member staus: ' + errorMessage },
+            data: null
+        });
+    }
+
 })
 
 export default scheduleRouter;

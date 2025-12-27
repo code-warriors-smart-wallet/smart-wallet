@@ -9,6 +9,7 @@ import UserPortal from "../pages/protected/UserPortal";
 import { useSelector } from "react-redux";
 import { RootState } from "@/redux/store/store";
 import { refreshAccessToken } from "../config/api.config";
+import SpaceInvitation from "../pages/protected/SpaceInvitation";
 
 function AppContainer() {
 
@@ -31,6 +32,7 @@ function AppContainer() {
             <Route path="/register" element={<Register />} />
             <Route path="/verify-otp" element={<OTPVerification />} />
             <Route path="/register/currency" element={<Currency />} />
+            <Route path="/invite" element={<SpaceInvitation />} />
             <Route
                 path="/user-portal/:spacetype/:spaceid/:view"
                 element={

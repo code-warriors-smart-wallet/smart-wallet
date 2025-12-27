@@ -20,7 +20,9 @@ function LiabilitiesSummary({ currency, summary }: { currency: string, summary: 
             spaces = [SpaceType.CREDIT_CARD]
             setTotal(summary.totalCreditcardLiabilityAmount)
         } 
-        setAssetsInfo(summary.liabilitiesInfo?.filter((info: any) => spaces.includes(info.spaceType)))
+        let assetsInfo = summary.liabilitiesInfo?.filter((info: any) => spaces.includes(info.spaceType))
+        assetsInfo = assetsInfo?.map((rec: any, index: any) => ({ ...rec, color: `hsl(${(index / assetsInfo.length) * 360}, 80%, 50%)` }));
+        setAssetsInfo(assetsInfo)
     }, [space, summary])
 
     return (

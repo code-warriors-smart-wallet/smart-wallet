@@ -12,7 +12,8 @@ import { LoginStatus } from '../interfaces/responses';
 import { generateAccessToken, generateRefreshToken } from '../utils/jwt.util';
 import dotenv from 'dotenv';
 import { authenticate } from '../middlewares/auth';
-import Space, {SpaceType} from '../models/space';
+import Space, { SpaceType, COLLABORATOR_STATUS} from '../models/space';
+import { Types } from 'mongoose';
 
 dotenv.config();
 const REFRESH_TOKEN_SECRET = process.env.REFRESH_TOKEN_SECRET!;
@@ -139,8 +140,8 @@ authRouter.post('/verify-otp', async (req: Request, res: Response) => {
             expiredAt: { $gt: new Date() }
         });
 
-        console.log("otp: ", otp?.code);
-        console.log("date: ", new Date());
+        // console.log("otp: ", otp?.code);
+        // console.log("date: ", new Date());
 
         if (!otp) {
             res.status(400).json({
@@ -207,9 +208,9 @@ authRouter.post('/resend-otp', async (req: Request, res: Response) => {
 
         // Check if user is blocked
         if (user.blockedUntil) {
-            console.log("user blocked")
+            // console.log("user blocked")
             if (user.blockedUntil > new Date()) {
-                console.log("time remaining to unlock")
+                // console.log("time remaining to unlock")
                 const remainingTime = user.blockedUntil.getTime() - Date.now();
                 const minutesRemaining = Math.ceil(remainingTime / (1000 * 60));
                 res.status(429).json({
@@ -222,7 +223,7 @@ authRouter.post('/resend-otp', async (req: Request, res: Response) => {
                 });
                 return;
             } else {
-                console.log("unblocking user")
+                // console.log("unblocking user")
                 user.blockedUntil = undefined;
                 await OTP.deleteOne({ _id: existingOTP?._id });
                 await user.save();
@@ -236,7 +237,7 @@ authRouter.post('/resend-otp', async (req: Request, res: Response) => {
 
         if (!existingOTP) {
             // No existing OTP - create new one
-            console.log("no existing otp")
+            // console.log("no existing otp")
             await OTP.create({
                 userId: user._id,
                 code: otpCode,
@@ -246,12 +247,12 @@ authRouter.post('/resend-otp', async (req: Request, res: Response) => {
                 lastOtpAttemptAt: new Date()
             });
         } else {
-            console.log("existing otp found: ", existingOTP)
+            // console.log("existing otp found: ", existingOTP)
             // Check if last request was more than 30 minutes ago
             const thirtyMinutesAgo = new Date(Date.now() - 30 * 60 * 1000);
 
             if (existingOTP.lastOtpAttemptAt && existingOTP.lastOtpAttemptAt < thirtyMinutesAgo) {
-                console.log("otp requested long time ago")
+                // console.log("otp requested long time ago")
                 // Delete old OTP and create new one
                 await OTP.deleteOne({ _id: existingOTP._id });
                 await OTP.create({
@@ -270,7 +271,7 @@ authRouter.post('/resend-otp', async (req: Request, res: Response) => {
                     $inc: { attempts: 1 },
                     lastOtpAttemptAt: new Date()
                 });
-                console.log("incrementing otp count: ", incremetedOTP)
+                // console.log("incrementing otp count: ", incremetedOTP)
             } else {
                 // Block user after 3 attempts
                 const blockUntil = new Date();
@@ -281,7 +282,7 @@ authRouter.post('/resend-otp', async (req: Request, res: Response) => {
                     enabled: false
                 });
 
-                console.log("user blocked: ", blockedUser)
+                // console.log("user blocked: ", blockedUser)
 
                 await OTP.deleteOne({ _id: existingOTP._id });
 
@@ -301,7 +302,7 @@ authRouter.post('/resend-otp', async (req: Request, res: Response) => {
         await sendRegisterOTPEmail(user._id, email, otpCode);
 
         const currentOTP = await OTP.findOne({ userId: user._id });
-        console.log("current otp: ", currentOTP)
+        // console.log("current otp: ", currentOTP)
 
         res.status(200).json({
             success: true,
@@ -335,12 +336,12 @@ authRouter.post("/google", async (req: Request, res: Response) => {
     });
 
     const googleUser = await googleRes.json();
-    console.log("googleUser: ", googleUser)
+    // console.log("googleUser: ", googleUser)
     const { email, given_name, picture } = googleUser;
     let existingUser = await User.findOne({ email });
     let isNewUser = false;
     if (!existingUser) {
-        console.log("creating new user...")
+        // console.log("creating new user...")
         existingUser = await User.create({
             email,
             username: given_name,
@@ -375,7 +376,7 @@ authRouter.post("/google", async (req: Request, res: Response) => {
         isNewUser = true;
     }
 
-    console.log("existing user found: ", existingUser)
+    // console.log("existing user found: ", existingUser)
     if (existingUser.blockedUntil && existingUser.blockedUntil > new Date()) {
         const remainingTime = existingUser.blockedUntil.getTime() - Date.now();
         const minutesRemaining = Math.ceil(remainingTime / (1000 * 60));
@@ -413,8 +414,8 @@ authRouter.post("/google", async (req: Request, res: Response) => {
     if (plan!.name !== PlanType.STARTER && subscription!.endDate < new Date()) {
         plan = await Plan.findOne({ name: PlanType.STARTER })
     }
-    const accessToken = generateAccessToken({ id: existingUser._id as string, role: existingUser.role })
-    const refreshToken = generateRefreshToken({ id: existingUser._id as string, role: existingUser.role })
+    const accessToken = generateAccessToken({ id: existingUser.toString(), role: existingUser.role })
+    const refreshToken = generateRefreshToken({ id: existingUser.toString(), role: existingUser.role })
     existingUser.refreshToken = refreshToken
     const updatedUser = await User.findByIdAndUpdate(
         existingUser._id,
@@ -422,7 +423,7 @@ authRouter.post("/google", async (req: Request, res: Response) => {
         { new: true }
     ).select('-password');
 
-    console.log(updatedUser?.refreshToken)
+    // console.log(updatedUser?.refreshToken)
 
     res.cookie('refreshToken', updatedUser!.refreshToken, {
         httpOnly: true,
@@ -431,7 +432,7 @@ authRouter.post("/google", async (req: Request, res: Response) => {
         path: '/user/auth/',
     });
 
-    const spaces = await Space.find({ownerId: existingUser._id})
+    const spaces = await getSpacesByUser(existingUser._id.toString());
 
     res.status(200).json({
         success: true,
@@ -508,8 +509,8 @@ authRouter.post("/login", async (req: Request, res: Response) => {
             if (plan!.name !== PlanType.STARTER && subscription!.endDate < new Date()) {
                 plan = await Plan.findOne({ name: PlanType.STARTER })
             }
-            const accessToken = generateAccessToken({ id: user._id as string, role: user.role })
-            const refreshToken = generateRefreshToken({ id: user._id as string, role: user.role })
+            const accessToken = generateAccessToken({ id: user._id.toString(), role: user.role })
+            const refreshToken = generateRefreshToken({ id: user._id.toString(), role: user.role })
             user.refreshToken = refreshToken
             const updatedUser = await User.findByIdAndUpdate(
                 user._id,
@@ -517,7 +518,7 @@ authRouter.post("/login", async (req: Request, res: Response) => {
                 { new: true }
             ).select('-password');
 
-            console.log(updatedUser?.refreshToken)
+            // console.log(updatedUser?.refreshToken)
 
             res.cookie('refreshToken', updatedUser!.refreshToken, {
                 httpOnly: true,
@@ -526,7 +527,7 @@ authRouter.post("/login", async (req: Request, res: Response) => {
                 path: '/user/auth/',
             });
 
-            const spaces = await Space.find({ownerId: user._id})
+            const spaces = await getSpacesByUser(user._id.toString());
 
             res.status(200).json({
                 success: true,
@@ -572,37 +573,39 @@ authRouter.post("/login", async (req: Request, res: Response) => {
 // Refresh Token
 authRouter.post('/refresh_token', async (req: Request, res: Response) => {
     const token = req.cookies?.refreshToken;
-    console.log("req.cookies: ", req.cookies)
+    // console.log("req.cookies: ", req.cookies)
     if (!token) {
-        console.log("Refresh token not found in cookie!")
+        // console.log("Refresh token not found in cookie!")
         res.sendStatus(401);
         return;
     };
     const storedToken = await User.findOne({ refreshToken: token });
     if (!storedToken) {
-        console.log("Refresh token not found in db!")
+        // console.log("Refresh token not found in db!")
         res.sendStatus(401);
         return;
     }
 
     jwt.verify(token, REFRESH_TOKEN_SECRET, async (err: any, user: any) => {
         if (err) {
-            console.log("Refresh token expired!")
+            // console.log("Refresh token expired!")
             return res.sendStatus(401)
         };
-        console.log("Refresh token valid. user id: ", user.id)
+        // console.log("Refresh token valid. user id: ", user.id)
         const storedUser = await User.findOne({ _id: user.id });
         if (!storedUser || !storedUser.enabled) {
             return res.status(401).send("no user found or disbaled")
         }
-        console.log("stored user: ", storedUser)
+        // console.log("stored user: ", storedUser)
         const subscription = await Subscription.findOne({ userId: user.id, status: SubscriptionStatus.ACTIVE });
         let plan = await Plan.findOne({ _id: subscription!.planId });
         if (plan!.name !== PlanType.STARTER && subscription!.endDate < new Date()) {
             plan = await Plan.findOne({ name: PlanType.STARTER })
         }
-        const newAccessToken = generateAccessToken({ id: storedUser._id as string, role: user.role });
-        const spaces = await Space.find({ownerId: storedUser._id})
+        const newAccessToken = generateAccessToken({ id: storedUser._id.toString(), role: user.role });
+
+        const spaces = await getSpacesByUser(storedUser._id.toString());
+
         res.status(200).json({
             success: true,
             data: {
@@ -636,7 +639,7 @@ authRouter.post('/logout', async (req: Request, res: Response) => {
             { refreshToken: "" },
             { new: true }
         ).select('-password');
-        console.log("updated logout user: ", updatedUser)
+        // console.log("updated logout user: ", updatedUser)
     }
     res.clearCookie('refreshToken');
     res.sendStatus(204);
@@ -644,8 +647,47 @@ authRouter.post('/logout', async (req: Request, res: Response) => {
 
 // Protected Route Test
 authRouter.get('/protected', authenticate, (req: Request, res: Response) => {
-    console.log("protected route. user: ", (req as any).user)
+    // console.log("protected route. user: ", (req as any).user)
     res.json({ message: 'This is protected data' });
 });
 
 export default authRouter;
+
+
+const getSpacesByUser = async (userId: string) => {
+    const userObjectId = new Types.ObjectId(userId);
+
+    const spaces = await Space.find({
+        $or: [
+            // owner always has access
+            { ownerId: userObjectId },
+
+            // collaborator must be enabled
+            {
+                collaborators: {
+                    $elemMatch: {
+                        userId: userObjectId,
+                        status: COLLABORATOR_STATUS.ACCEPTED
+                    }
+                }
+            }
+        ]
+    })
+        .select({
+            _id: 1,
+            type: 1,
+            name: 1,
+            isCollaborative: 1,
+            ownerId: 1
+        })
+        .lean();
+
+    const response = spaces.map(space => ({
+        id: space._id,
+        type: space.type,
+        name: space.name,
+        isCollaborative: space.isCollaborative ?? false,
+        isOwner: space.ownerId.toString() === userId
+    }));
+    return response;
+}

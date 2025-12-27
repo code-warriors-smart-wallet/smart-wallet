@@ -25,13 +25,14 @@ export function CategoryService() {
         }
     }
 
-    async function getCategoriesBySpace(spaceType: string): Promise<any[]> {
+    async function getCategoriesBySpace(spaceid: string): Promise<any[]> {
         try {
-            const response = await api.get(`finops/category/space/${spaceType}`, {
+            const response = await api.get(`finops/category/space/${spaceid}`, {
                 headers: {
                     "authorization": `Bearer ${token}`
                 }
             });
+            console.log(response.data.data.object)
             if (response.data.success) {
                 return response.data.data.object
             }

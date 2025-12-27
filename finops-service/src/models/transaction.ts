@@ -14,6 +14,12 @@ export enum TransactionType {
     WITHDRAW = "WITHDRAW",
 }
 
+export enum MemberStatus {
+    LEFT_MEMBER = "LEFT_MEMBER",
+    REMOVED_MEMBER = "REMOVED_MEMBER",
+    ACTIVE_MEMBER = "ACTIVE_MEMBER",
+}
+
 export interface ITransaction extends Document {
     type: TransactionType,
     amount: Schema.Types.Decimal128,
@@ -26,6 +32,7 @@ export interface ITransaction extends Document {
     userId: Schema.Types.ObjectId,
     scheduleId: Schema.Types.ObjectId,
     spaceId: Schema.Types.ObjectId,
+    memberStatus: string
 }
 
 const TransactionSchema: Schema = new Schema({
@@ -68,7 +75,12 @@ const TransactionSchema: Schema = new Schema({
     spaceId: {
         type: Schema.Types.ObjectId,
         ref: "Space"
-    }
+    },
+    memberStatus: {
+        type: String,
+        enum: Object.values(MemberStatus),
+        default: MemberStatus.ACTIVE_MEMBER
+    },
 })
 
 export default model<ITransaction>("Transaction", TransactionSchema)

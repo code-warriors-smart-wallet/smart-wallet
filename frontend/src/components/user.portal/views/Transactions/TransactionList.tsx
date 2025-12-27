@@ -2,7 +2,7 @@ import { getFormattedDate, toStrdSpaceType } from "../../../../utils/utils";
 import { CategoryInfo } from "../../../../interfaces/modals";
 import { useSelector } from "react-redux";
 import { RootState } from "../../../../redux/store/store";
-import { FaArrowDown, FaArrowRight, FaArrowUp, FaLongArrowAltRight, FaMoneyBillWave } from "react-icons/fa";
+import { FaArrowDown, FaArrowRight, FaArrowUp, FaLongArrowAltRight, FaMoneyBillWave, FaUser, FaUserAlt } from "react-icons/fa";
 import { RiPercentLine } from "react-icons/ri";
 import { HiOutlineCalendar } from "react-icons/hi";
 import { TransactionType } from "../Transactions";
@@ -11,9 +11,10 @@ import { SpaceType } from "../Spaces";
 
 function TransactionList({ transactions, categories, onClick }: { transactions: any[], categories: CategoryInfo[], onClick?: (t: any) => void }) {
 
-    const { spaces, currency } = useSelector((state: RootState) => state.auth)
+    const { username, spaces, currency } = useSelector((state: RootState) => state.auth)
     const { spacetype, spaceid } = useParams()
     const standardSpaceType = toStrdSpaceType(spacetype || "") as SpaceType;
+    const currentSpace = spaces.find(sp => sp.id === spaceid);
 
     return (
         <ul className="mt-5 *:mb-3">
@@ -33,9 +34,11 @@ function TransactionList({ transactions, categories, onClick }: { transactions: 
                                 </span>
                                 <span className="text-text-light-primary dark:text-text-dark-primary">{currency}. {t.amount.$numberDecimal}</span>
                             </div>
+
                             <div className="flex gap-3 *:text-xs">
                                 <span className="text-text-light-secondary dark:text-text-dark-secondary">{t.note}</span>
                             </div>
+
                             <div className="flex justify-between gap-3 *:text-sm">
                                 <span className="text-text-light-secondary dark:text-text-dark-secondary flex gap-2 items-center capitalize">
                                     {
@@ -79,6 +82,20 @@ function TransactionList({ transactions, categories, onClick }: { transactions: 
                                             spaceid === t.to ?
                                                 `${spaces.find(s => s.id == t.from)?.name || "Outside wallet"}` :
                                                 <>{`${spaces.find(s => s.id == t.from)?.name || "Outside wallet"}`} <FaLongArrowAltRight /> {`${spaces.find(s => s.id == t.to)?.name || "Outside wallet"}`}</>
+                                    }
+
+                                    {
+                                        currentSpace?.isCollaborative && (
+                                            <span className="ml-2 text-text-light-secondary dark:text-text-dark-secondary flex gap-2 items-center capitalize">
+                                                <FaUserAlt className="inline-block" size={15} />
+                                                {
+                                                    username === t.userId.username ? "You"
+                                                        : t?.memberStatus === "REMOVED_MEMBER" ? "Removed member"
+                                                            : t?.memberStatus === "LEFT_MEMBER" ? "Left member"
+                                                                : t.userId.username
+                                                }
+                                            </span>
+                                        )
                                     }
                                 </span>
                                 <span className="text-text-light-secondary dark:text-text-dark-secondary text-xs flex items-center gap-2">

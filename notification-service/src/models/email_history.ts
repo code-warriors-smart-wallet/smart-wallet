@@ -4,6 +4,7 @@ export enum EmailNotificationType {
    REGISTER_OTP_SEND = 'REGISTER_OTP_SEND',
    FORGOT_PASSWORD_OTP_SEND = 'FORGOT_PASSWORD_OTP_SEND',
    NEW_USER_WELCOME_SEND = 'NEW_USER_WELCOME_SEND',
+   SPACE_INVITATION_SEND = 'SPACE_INVITATION_SEND'
 }
 
 export interface IEmailHistory extends Document {

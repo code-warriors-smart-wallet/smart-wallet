@@ -1,18 +1,10 @@
 import { getFormattedDate } from "../../../../utils/utils";
 import { FaHandHoldingUsd } from "react-icons/fa";
 
-function SavingGoalSummary({ currency, goalSummary }: { currency: string, goalSummary: any }) {
+function SavingGoalSummary({ currency, goalSummary, username }: { currency: string, goalSummary: any, username: string }) {
 
-    // const totalLimit = creditCardSummary?.spaceInfo ? creditCardSummary.spaceInfo[0]?.creditCardLimit?.$numberDecimal : 0;
-    // const actualDueDate = creditCardSummary?.spaceInfo ? (creditCardSummary.spaceInfo[0]?.creditCardDueDate?.split("T")[0] || "Not set") : "Not set";
-    // const actualStatementDate = creditCardSummary?.spaceInfo ? (creditCardSummary.spaceInfo[0]?.creditCardStatementDate?.split("T")[0] || "Not set") : "Not set";
-    // const creditCardDueDate = getDueDate(actualDueDate)
-    // const creditCardStatementDate = getStatementDate(actualStatementDate, actualDueDate)
-    // const totalBalance = creditCardSummary?.totalBalance?.length > 0 ? creditCardSummary.totalBalance[0]?.amount : 0
-    // const totalPayment = creditCardSummary?.totalPayment?.length > 0 ? creditCardSummary.totalPayment[0]?.amount : 0;
-    // const totalOutStanding = totalBalance - totalPayment;
-    const target = goalSummary.goal.targetAmount.$numberDecimal;
-    const savings = goalSummary.savedAmount - goalSummary.withdrawAmount;
+    const target = goalSummary?.goal?.targetAmount.$numberDecimal;
+    const savings = goalSummary?.savedAmount - goalSummary?.withdrawAmount;
     const utilizationRate = target > 0 ? (savings / target * 100).toFixed(2) : 0.0;
 
     return (
@@ -35,11 +27,11 @@ function SavingGoalSummary({ currency, goalSummary }: { currency: string, goalSu
                 </div>
                 <div className="pb-2 border-border-light-primary dark:border-border-dark-primary mt-3">
                     <h1 className="font-semibold">Start date</h1>
-                    <h2 className="text-xl font-semibold text-text-light-secondary dark:text-text-dark-secondary">{getFormattedDate(goalSummary.goal.createdAt)}</h2>
+                    <h2 className="text-xl font-semibold text-text-light-secondary dark:text-text-dark-secondary">{getFormattedDate(goalSummary?.goal?.createdAt)}</h2>
                 </div>
                 <div className="pb-2 border-border-light-primary dark:border-border-dark-primary mt-3">
                     <h1 className="font-semibold">Desired date</h1>
-                    <h2 className="text-xl font-semibold text-text-light-secondary dark:text-text-dark-secondary">{getFormattedDate(goalSummary.goal.desiredDate)}</h2>
+                    <h2 className="text-xl font-semibold text-text-light-secondary dark:text-text-dark-secondary">{getFormattedDate(goalSummary?.goal?.desiredDate)}</h2>
                 </div>
             </div>
 

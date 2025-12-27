@@ -8,7 +8,7 @@ import { useParams } from "react-router-dom";
 import { useSelector } from "react-redux";
 import { RootState } from "../../../redux/store/store";
 import { CategoryService } from "../../../services/category.service";
-import { FaEdit, FaTimes, FaTrash } from "react-icons/fa"
+import { FaEdit, FaInfoCircle, FaTimes, FaTrash } from "react-icons/fa"
 import { TransactionType, transactionTypesInfo } from "./Transactions";
 import { ScheduleService } from "../../../services/schedule.service";
 import ScheduleList from "./Schedules/ScheduleList";
@@ -18,7 +18,7 @@ function Schedule() {
    const { spacetype, spaceid } = useParams()
    const [activeSpaceId, setActiveSpaceId] = useState<string | undefined>(spaceid)
    const [activeSpaceType, setActiveSpaceType] = useState<string | undefined>(spacetype)
-   const { spaces } = useSelector((state: RootState) => state.auth)
+   const { username, spaces } = useSelector((state: RootState) => state.auth)
    const [inputs, setInputs] = useState<ScheduleInfo>({
       type: "",
       amount: 0.0,
@@ -51,6 +51,7 @@ function Schedule() {
 
    const [allowedParentCategories, setAllowedParentCategories] = useState<any[]>([])
    const [allowedSubCategories, setAllowedSubCategories] = useState<CategoryInfo[]>([])
+   const currentSpace = spaces.find(sp => sp.id === spaceid);
 
    console.log(categories)
 
@@ -71,7 +72,8 @@ function Schedule() {
          continue: schedule.endDate ? ContinueType.UNTIL_A_DATE : ContinueType.FOREVER,
          endDate: schedule.endDate ? schedule.endDate.split("T")[0] : null,
          isClosed: !schedule.isActive,
-         spaceId: schedule.spaceId
+         spaceId: schedule.spaceId,
+         username: schedule.userId.username
       }
       console.log(schedule, scheduleInfo);
       setInputs(scheduleInfo)
@@ -307,7 +309,17 @@ function Schedule() {
       <>
          {/* sub header */}
          <div className="flex justify-between items-center">
-            <h1 className="text-xl text-text-light-primary dark:text-text-dark-primary">Schedules</h1>
+            <h1 className="text-xl text-text-light-primary dark:text-text-dark-primary flex items-center">
+               Schedules
+               {
+                  spaces.filter(sp => sp.isCollaborative).length > 0 && spacetype === "all" && (
+                     <FaInfoCircle
+                        className="ml-3 text-primary"
+                        title="The All Spaces view shows only your personal financial records. Transactions created by other members in collaborative spaces are not included."
+                     />
+                  )
+               }
+            </h1>
             <div className="flex justify-end gap-3 items-center">
                {
                   (!loading && schedules?.length != 0) && (
@@ -401,15 +413,24 @@ function Schedule() {
                                  Select type
                               </option>
                               {
-                                 spaceInfo?.transactionTypes.map((t) => {
-                                    return (
-                                       <option value={t.type}>
-                                          {t.type.split("_").join(" ")}
-                                       </option>
-                                    )
-                                 })
+                                 currentSpace?.isCollaborative ? (
+                                    spaceInfo?.transactionTypes.filter(t => t.isCollaborative).map((t) => {
+                                       return (
+                                          <option key={t.type} value={t.type}>
+                                             {t.type.split("_").join(" ")}
+                                          </option>
+                                       )
+                                    })
+                                 ) : (
+                                    spaceInfo?.transactionTypes.map((t) => {
+                                       return (
+                                          <option key={t.type} value={t.type}>
+                                             {t.type.split("_").join(" ")}
+                                          </option>
+                                       )
+                                    })
+                                 )
                               }
-
                            </select>
                         </div>
 
@@ -743,16 +764,23 @@ function Schedule() {
                      <div className="flex justify-between shrink-0 items-center pb-4 text-xl font-medium text-text-light-primary dark:text-text-dark-primary">
                         View Schedule
                         <div className="flex gap-2">
-                           <Button
-                              text={<FaEdit />}
-                              onClick={onNewOrEditMode}
-                              className="max-w-fit pt-2 pb-2"
-                           />
-                           <Button
-                              text={<FaTrash />}
-                              onClick={onDelete}
-                              className="max-w-fit pt-2 pb-2 hover:!bg-red-600 !bg-red-500"
-                           />
+                           {
+                              inputs.username === username ? (
+                                 <>
+                                    <Button
+                                       text={<FaEdit />}
+                                       onClick={onNewOrEditMode}
+                                       className="max-w-fit pt-2 pb-2"
+                                    />
+                                    <Button
+                                       text={<FaTrash />}
+                                       onClick={onDelete}
+                                       className="max-w-fit pt-2 pb-2 hover:!bg-red-600 !bg-red-500"
+                                    />
+                                 </>
+
+                              ) : null
+                           }
                            <Button
                               text={<FaTimes />}
                               onClick={onCancel}
@@ -785,7 +813,7 @@ function Schedule() {
 
                            </select>
                         </div>
-                        
+
                         {/* type */}
                         <div className="my-3">
                            <label className="text-text-light-primary dark:text-text-dark-primary font-bold">Type:</label>
@@ -804,6 +832,8 @@ function Schedule() {
                                     )
                                  })
                               }
+
+
 
                            </select>
                         </div>

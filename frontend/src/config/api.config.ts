@@ -46,17 +46,11 @@ export const refreshAccessToken = async () => {
         console.log(">>>> Requesting refresh token")
         const response = await api.post(`user/auth/refresh_token`, {}, { withCredentials: true });
         if (response.data.success) {
-            const spacesInfo = response.data.data.object.spaces
-            const spaces: {id: string, name: string, type: String}[] = []
-            let defaultSpaceId:String = ""
-            let defaultSpaceType:String = ""
-            spacesInfo.forEach((s) => {
-                if (s.isDefault) {
-                    defaultSpaceId = s._id
-                    defaultSpaceType = s.type
-                }
-                spaces.push({id: s._id, name: s.name, type: s.type})
-            })
+            // const spacesInfo = response.data.data.object.spaces
+            // const spaces: {id: string, name: string, type: String, isCollaborative: boolean}[] = []
+            // spacesInfo.forEach((s: any) => {
+            //     spaces.push({id: s._id, name: s.name, type: s.type, isCollaborative: s.isCollaborative})
+            // })
             const userData = {
                 username: response.data.data.object.username,
                 email: response.data.data.object.email,
@@ -64,7 +58,7 @@ export const refreshAccessToken = async () => {
                 currency: response.data.data.object.currency,
                 plan: response.data.data.object.plan,
                 role: response.data.data.object.role,
-                spaces: spaces
+                spaces: response.data.data.object.spaces
             }
             
             dispatch(loginSuccess(userData))

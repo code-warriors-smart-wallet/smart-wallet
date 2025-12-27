@@ -14,6 +14,7 @@ function Login() {
     const [inputs, setInputs] = useState<LoginInfo>({ email: "", password: "" });
     const [loggingIn, setLoggingIn] = useState<boolean>(false)
     const { login, loginWithGoogle } = AuthService()
+    const {redirect} = Object.fromEntries(new URLSearchParams(window.location.search));
 
     const onInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const { name, value } = e.target as HTMLInputElement;
@@ -30,14 +31,14 @@ function Login() {
         console.log(inputs);
         if (!validateInputs(inputs)) return;
         setLoggingIn(true)
-        await login(inputs)
+        await login(inputs, redirect)
         setLoggingIn(false);
     }
 
     const onGoogleLogin = useGoogleLogin({
         onSuccess: async (tokenResponse: any) => {
             console.log(tokenResponse);
-            await loginWithGoogle({ token: tokenResponse.access_token })
+            await loginWithGoogle({ token: tokenResponse.access_token }, redirect)
         },
         onError: () => toast.error("Login failed!")
     });

@@ -1,6 +1,6 @@
 import express, { Request, Response } from 'express';
 import Transaction, { TransactionType } from '../models/transaction';
-import Space, { SpaceType } from '../models/space';
+import Space, { ISpace, SpaceType } from '../models/space';
 import { authenticate } from '../middlewares/auth';
 import mongoose from 'mongoose';
 import Cat from '../models/category';
@@ -13,10 +13,15 @@ dashboardRouter.get('/cash/:spaceid/:from/:to', authenticate, async (req: Reques
         const userId: string = (req as any).user.id;
         const { spaceid, from, to } = req.params
 
+        const userIds = await getUsersBySpace(spaceid)
+        console.log(userIds.length)
+
         // current balance
         const totalIncome = await Transaction.aggregate([
             {
-                $match: { userId: new ObjectId(userId) }
+                $match: {
+                    userId: { $in: userIds }
+                }
             },
             {
                 $group: {
@@ -33,7 +38,9 @@ dashboardRouter.get('/cash/:spaceid/:from/:to', authenticate, async (req: Reques
 
         const totalExpense = await Transaction.aggregate([
             {
-                $match: { userId: new ObjectId(userId) }
+                $match: {
+                    userId: { $in: userIds }
+                }
             },
             {
                 $group: {
@@ -52,7 +59,7 @@ dashboardRouter.get('/cash/:spaceid/:from/:to', authenticate, async (req: Reques
         const moneyIn = await Transaction.aggregate([
             {
                 $match: {
-                    userId: new ObjectId(userId),
+                    userId: { $in: userIds },
                     date: {
                         $gte: new Date(from),
                         $lte: new Date(to)
@@ -75,7 +82,7 @@ dashboardRouter.get('/cash/:spaceid/:from/:to', authenticate, async (req: Reques
         const moneyOut = await Transaction.aggregate([
             {
                 $match: {
-                    userId: new ObjectId(userId),
+                    userId: { $in: userIds },
                     date: {
                         $gte: new Date(from),
                         $lte: new Date(to)
@@ -99,7 +106,7 @@ dashboardRouter.get('/cash/:spaceid/:from/:to', authenticate, async (req: Reques
             // Filter transactions first
             {
                 $match: {
-                    userId: new ObjectId(userId),
+                    userId: { $in: userIds },
                     date: { $gte: new Date(from), $lte: new Date(to) },
                     from: new ObjectId(spaceid),
                     pcategory: { $ne: null }
@@ -140,7 +147,7 @@ dashboardRouter.get('/cash/:spaceid/:from/:to', authenticate, async (req: Reques
             // Filter transactions first
             {
                 $match: {
-                    userId: new ObjectId(userId),
+                    userId: { $in: userIds },
                     date: { $gte: new Date(from), $lte: new Date(to) },
                     from: new ObjectId(spaceid),
                     pcategory: { $ne: null }
@@ -200,7 +207,7 @@ dashboardRouter.get('/cash/:spaceid/:from/:to', authenticate, async (req: Reques
             // 1️⃣ Filter transactions
             {
                 $match: {
-                    userId: new ObjectId(userId),
+                    userId: { $in: userIds },
                     date: { $gte: new Date(from), $lte: new Date(to) },
                     to: new ObjectId(spaceid),
                 }
@@ -251,6 +258,88 @@ dashboardRouter.get('/cash/:spaceid/:from/:to', authenticate, async (req: Reques
             { $sort: { subCategory: 1 } }
         ])
 
+        let spendingByUser = null
+        let incomeByUser = null
+
+        if (userIds.length > 1) {
+            spendingByUser = await Transaction.aggregate([
+                // Filter transactions first
+                {
+                    $match: {
+                        date: { $gte: new Date(from), $lte: new Date(to) },
+                        from: new ObjectId(spaceid),
+                    },
+                },
+                // Group by user IDs
+                {
+                    $group: {
+                        _id: "$userId",
+                        totalAmount: { $sum: "$amount" },
+                    },
+                },
+                // Lookup to get user names
+                {
+                    $lookup: {
+                        from: "users", // name of your users collection
+                        localField: "_id", // the grouped pcategory ID
+                        foreignField: "_id", // match with categories _id
+                        as: "userData",
+                    },
+                },
+                { $unwind: { path: "$userData", preserveNullAndEmptyArrays: true } },
+                // Project clean result
+                {
+                    $project: {
+                        _id: 0,
+                        username: "$userData.username",
+                        y: { $toDouble: "$totalAmount" }, // convert Decimal128 to number
+                    },
+                },
+                {
+                    $sort: { y: -1 }, // ascending by name
+                },
+            ])
+
+            incomeByUser = await Transaction.aggregate([
+                // Filter transactions first
+                {
+                    $match: {
+                        date: { $gte: new Date(from), $lte: new Date(to) },
+                        to: new ObjectId(spaceid),
+                    },
+                },
+                // Group by user IDs
+                {
+                    $group: {
+                        _id: "$userId",
+                        totalAmount: { $sum: "$amount" },
+                    },
+                },
+                // Lookup to get user names
+                {
+                    $lookup: {
+                        from: "users", // name of your users collection
+                        localField: "_id", // the grouped pcategory ID
+                        foreignField: "_id", // match with categories _id
+                        as: "userData",
+                    },
+                },
+                { $unwind: { path: "$userData", preserveNullAndEmptyArrays: true } },
+                // Project clean result
+                {
+                    $project: {
+                        _id: 0,
+                        username: "$userData.username",
+                        y: { $toDouble: "$totalAmount" }, // convert Decimal128 to number
+                    },
+                },
+                {
+                    $sort: { y: -1 }, // ascending by name
+                },
+            ])
+
+        }
+
         const today = new Date();
         const last12Months = Array.from({ length: 12 }).map((_, i) => {
             const d = new Date(today.getFullYear(), today.getMonth() - i, 1);
@@ -265,7 +354,7 @@ dashboardRouter.get('/cash/:spaceid/:from/:to', authenticate, async (req: Reques
         const rawMonthlyExpense = await Transaction.aggregate([
             {
                 $match: {
-                    userId: new ObjectId(userId),
+                    userId: { $in: userIds },
                     from: new ObjectId(spaceid),
                 }
             },
@@ -317,7 +406,7 @@ dashboardRouter.get('/cash/:spaceid/:from/:to', authenticate, async (req: Reques
         const rawMonthlyIncome = await Transaction.aggregate([
             {
                 $match: {
-                    userId: new ObjectId(userId),
+                    userId: { $in: userIds },
                     to: new ObjectId(spaceid),
                 }
             },
@@ -382,10 +471,13 @@ dashboardRouter.get('/cash/:spaceid/:from/:to', authenticate, async (req: Reques
             };
         });
 
+        const spaceInfo = await getSpaceById(spaceid)
+
         res.status(200).json({
             success: true,
             data: {
                 object: {
+                    spaceInfo: spaceInfo,
                     totalIncome: totalIncome,
                     totalExpense: totalExpense,
                     spendingSummary: {
@@ -397,8 +489,11 @@ dashboardRouter.get('/cash/:spaceid/:from/:to', authenticate, async (req: Reques
                         incomeByCategory: incomeByCategory,
                         top5income: [],
                         monthlyExpense: monthlyExpense,
-                        monthlyIncome: monthlyIncome
-                    }
+                        monthlyIncome: monthlyIncome,
+                        spendingByUser: spendingByUser,
+                        incomeByUser: incomeByUser
+                    },
+                    userIds: userIds
                 },
                 message: 'Data retreived successfully!'
             },
@@ -756,6 +851,8 @@ dashboardRouter.get('/saving-goal/:spaceid', authenticate, async (req: Request, 
         const userId: string = (req as any).user.id;
         const { spaceid } = req.params;
 
+        const userIds = await getUsersBySpace(spaceid)
+
         const categories = await Cat.aggregate([
             { $match: { spaces: SpaceType.SAVING_GOAL } },
 
@@ -821,9 +918,7 @@ dashboardRouter.get('/saving-goal/:spaceid', authenticate, async (req: Request, 
             }
         ])
 
-        const goal = await Space.find({
-            _id: spaceid,
-        })
+        const goal = await getSpaceById(spaceid)
 
         // const loanPrincipalTransaction = await Transaction.findOne({
         //     from: spaceid,
@@ -832,7 +927,7 @@ dashboardRouter.get('/saving-goal/:spaceid', authenticate, async (req: Request, 
 
         const recentTransactions = await Transaction.find({
             $and: [
-                { userId: userId },
+                { userId: { $in: userIds } },
                 {
                     $or: [
                         { from: spaceid },
@@ -846,7 +941,7 @@ dashboardRouter.get('/saving-goal/:spaceid', authenticate, async (req: Request, 
             success: true,
             data: {
                 object: {
-                    goal: goal.length > 0 ? goal[0] : {},
+                    goal: goal,
                     savedAmount: savedAmount.length > 0 ? savedAmount[0].amount : 0,
                     withdrawAmount: withdrawAmount.length > 0 ? withdrawAmount[0].amount : 0,
                     recentTransactions: recentTransactions
@@ -1406,3 +1501,33 @@ dashboardRouter.get("/all", authenticate, async (req: Request, res: Response) =>
 })
 
 export default dashboardRouter;
+
+const getSpaceById = async (spaceid: string) => {
+    const space = await Space.findById(spaceid)
+        .populate({
+            path: 'collaborators.userId',
+            select: 'email -_id'
+        })
+        .lean();
+
+    return space;
+}
+
+export const getUsersBySpace = async (spaceid: string) => {
+    if (spaceid === "all") return []
+
+    const space = await Space.findById(spaceid)
+        .select("ownerId collaborators")
+        .lean();
+
+    if (!space) {
+        return [];
+    }
+
+    const userIds = [
+        space.ownerId,
+        ...(space.collaborators?.map(c => c.userId) ?? [])
+    ];
+
+    return userIds
+}

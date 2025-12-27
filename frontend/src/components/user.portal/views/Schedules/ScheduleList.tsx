@@ -2,7 +2,7 @@ import { capitalize, getFormattedDate, toStrdSpaceType } from "../../../../utils
 import { CategoryInfo, Repeat } from "../../../../interfaces/modals";
 import { useSelector } from "react-redux";
 import { RootState } from "../../../../redux/store/store";
-import { FaArrowDown, FaArrowUp, FaCalendar, FaHandHoldingUsd, FaLongArrowAltRight, FaMoneyBillWave, FaRegClock, FaSyncAlt, FaTimes, FaUserClock } from "react-icons/fa";
+import { FaArrowDown, FaArrowUp, FaCalendar, FaHandHoldingUsd, FaLongArrowAltRight, FaMoneyBillWave, FaRegClock, FaSyncAlt, FaTimes, FaUserAlt, FaUserClock } from "react-icons/fa";
 import { FiAlertTriangle, FiCalendar, FiCheckCircle, FiClock, FiFlag, FiSunrise } from "react-icons/fi"
 import { RiPercentLine } from "react-icons/ri";
 import { TransactionType } from "../Transactions";
@@ -12,10 +12,10 @@ import Button from "../../../../components/Button";
 
 function ScheduleList({ schedules, categories, onClick, onConfirm, onSkip }: { schedules: any[], categories: CategoryInfo[], onClick?: (t: any) => void, onConfirm: (id: string) => void, onSkip: (id: string) => void }) {
 
-    const { spaces, currency } = useSelector((state: RootState) => state.auth)
+    const { username, spaces, currency } = useSelector((state: RootState) => state.auth)
     const { spacetype, spaceid } = useParams()
     const standardSpaceType = toStrdSpaceType(spacetype || "") as SpaceType;
-    console.log(schedules)
+    const currentSpace = spaces.find(sp => sp.id === spaceid);
     return (
         <ul className="mt-5 *:mb-3">
             {
@@ -91,6 +91,19 @@ function ScheduleList({ schedules, categories, onClick, onConfirm, onSkip }: { s
                                             }
                                         </span>
                                     </span>
+                                    {
+                                        currentSpace?.isCollaborative && (
+                                            <span className="text-text-light-secondary dark:text-text-dark-secondary flex gap-2 items-center capitalize">
+                                                <FaUserAlt className="inline-block" size={15} />
+                                                {
+                                                    username === schedule.userId.username ? "You"
+                                                        : schedule?.memberStatus === "REMOVED_MEMBER" ? "Removed member"
+                                                            : schedule?.memberStatus === "LEFT_MEMBER" ? "Left member"
+                                                                : schedule.userId.username
+                                                }
+                                            </span>
+                                        )
+                                    }
                                 </div>
                                 <span className="text-text-light-secondary dark:text-text-dark-secondary text-xs">
                                     {
@@ -105,7 +118,7 @@ function ScheduleList({ schedules, categories, onClick, onConfirm, onSkip }: { s
                             </div>
                             <div className="flex gap-3 mt-2">
                                 {
-                                    schedule.isActive && (
+                                    schedule.isActive && schedule.userId.username === username && (
 
                                         <>
 
@@ -135,7 +148,6 @@ function ScheduleList({ schedules, categories, onClick, onConfirm, onSkip }: { s
                                     onClick={onClick ? () => onClick(schedule) : () => { }}
                                     priority="secondary"
                                 />
-                                {getNextDueDate("2025-09-20", true, Repeat.MONTH, 1)}
                             </div>
 
                         </li>

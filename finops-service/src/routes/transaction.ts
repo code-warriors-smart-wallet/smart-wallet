@@ -1,6 +1,8 @@
 import express, { Request, Response } from 'express';
-import Transaction from '../models/transaction';
+import Transaction, { MemberStatus } from '../models/transaction';
 import { authenticate } from '../middlewares/auth';
+import { getUsersBySpace } from "./dashboard"
+import { Types } from 'mongoose';
 
 const transactionRouter = express.Router();
 
@@ -34,7 +36,10 @@ transactionRouter.put('/:id', authenticate, async (req: Request, res: Response) 
         const { id } = req.params;
         const userId: string = (req as any).user.id;
 
-        const existingTransaction = await Transaction.findOne({ _id: id, userId: userId });
+        const existingTransaction = await Transaction.findOne({
+            _id: id,
+            userId: userId
+        });
 
         if (!existingTransaction) {
             res.status(404).json({
@@ -99,9 +104,12 @@ transactionRouter.get('/user/:spaceid/:limit/:skip', authenticate, async (req: R
     try {
         const userId: string = (req as any).user.id;
         const { spaceid, skip, limit } = req.params;
+
+        const userIds = await getUsersBySpace(spaceid)
+
         let condition: any = {
             $and: [
-                { userId: userId },
+                { userId: { $in: userIds } },
                 {
                     $or: [
                         { from: spaceid },
@@ -118,7 +126,11 @@ transactionRouter.get('/user/:spaceid/:limit/:skip', authenticate, async (req: R
         const transactions = await Transaction.find(condition)
             .skip(Number.parseInt(skip))
             .limit(Number.parseInt(limit))
-            .sort({ date: -1 });
+            .sort({ date: -1 })
+            .populate({
+                path: "userId",
+                select: "username"
+            });
 
         const total = await Transaction.countDocuments(condition);
         res.status(200).json({
@@ -141,4 +153,49 @@ transactionRouter.get('/user/:spaceid/:limit/:skip', authenticate, async (req: R
     }
 })
 
+transactionRouter.patch('/spaces/:spaceId/members/:userId/status', authenticate, async (req: Request, res: Response) => {
+    try {
+        const { spaceId, userId } = req.params;
+        const { memberStatus } = req.body;
+
+        // Validate memberStatus
+        if (!Object.values(MemberStatus).includes(memberStatus)) {
+            res.status(400).json({
+                message: "Invalid member status",
+            });
+        }
+
+        const result = await Transaction.updateMany(
+            {
+                spaceId: new Types.ObjectId(spaceId),
+                userId: new Types.ObjectId(userId),
+            },
+            {
+                $set: { memberStatus },
+            }
+        );
+
+        console.log(">>>>", spaceId, userId, result.modifiedCount);
+
+        res.status(200).json({
+            success: true,
+            data: {
+                object: {
+                    modifiedCount: result.modifiedCount,
+                },
+                message: "Member status updated successfully"
+            },
+            error: null
+        });
+    } catch (error) {
+        const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+        console.error("Update member status error:", error);
+        res.status(500).json({
+            success: false,
+            error: { message: 'Error updating member staus: ' + errorMessage },
+            data: null
+        });
+    }
+
+})
 export default transactionRouter;

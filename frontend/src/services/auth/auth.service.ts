@@ -114,22 +114,17 @@ export function AuthService() {
         }
     }
 
-    async function login(body: LoginInfo) {
+    async function login(body: LoginInfo, redirect?: string) {
         try {
             const response = await api.post(`user/auth/login`, body, { withCredentials: true });
             console.log(response.data)
             if (response.data.success) {
-                const spacesInfo: any[] = response.data.data.object.spaces
-                const spaces: {id: string, name: string, type: String}[] = []
-                let defaultSpaceId:String = ""
-                let defaultSpaceType:String = ""
-                spacesInfo.forEach((s) => {
-                    if (s.isDefault) {
-                        defaultSpaceId = s._id
-                        defaultSpaceType = s.type
-                    }
-                    spaces.push({id: s._id, name: s.name, type: s.type})
-                })
+                // const spacesInfo: any[] = response.data.data.object.spaces
+                // const spaces: {id: string, name: string, type: String, isCollaborative: boolean}[] = []
+                // spacesInfo.forEach((s) => {
+                //     spaces.push({id: s._id, name: s.name, type: s.type, isCollaborative: s.isCollaborative})
+                // })
+                localStorage.setItem("smart-wallet-token", response.data.data.object.accessToken);
                 const userData = {
                     username: response.data.data.object.username,
                     email: response.data.data.object.email,
@@ -137,12 +132,16 @@ export function AuthService() {
                     currency: response.data.data.object.currency,
                     plan: response.data.data.object.plan,
                     role: response.data.data.object.role,
-                    spaces: spaces
+                    spaces: response.data.data.object.spaces
                 }
                 dispatch(loginSuccess(userData))
-                console.log(spaces)
+                console.log(response.data.data.object.spaces)
                 toast.success("Login successful!");
-                navigate(`/user-portal/${defaultSpaceType.toLowerCase().split("_").join("-")}/${defaultSpaceId}/${UserPortalView.DASHBOARD}`);
+                if (redirect) {
+                    navigate(redirect);
+                } else {
+                    navigate(`/user-portal/all/all/${UserPortalView.DASHBOARD}`);
+                }
             }
         } catch (error) {
             if (axios.isAxiosError(error) && error.response) {
@@ -163,22 +162,16 @@ export function AuthService() {
         }
     }
 
-    async function loginWithGoogle(body: {token: string, currency: string}) {
+    async function loginWithGoogle(body: {token: string, currency?: string}, redirect: string) {
         try {
             const response = await api.post(`user/auth/google`, body, { withCredentials: true });
             console.log(response.data)
             if (response.data.success) {
-                const spacesInfo: any = response.data.data.object.spaces
-                const spaces: {id: string, name: string, type: String}[] = []
-                let defaultSpaceId:String = ""
-                let defaultSpaceType:String = ""
-                spacesInfo.forEach((s: any) => {
-                    if (s.isDefault) {
-                        defaultSpaceId = s._id
-                        defaultSpaceType = s.type
-                    }
-                    spaces.push({id: s._id, name: s.name, type: s.type})
-                })
+                // const spacesInfo: any = response.data.data.object.spaces
+                // const spaces: {id: string, name: string, type: String, isCollaborative: boolean}[] = []
+                // spacesInfo.forEach((s: any) => {
+                //     spaces.push({id: s._id, name: s.name, type: s.type, isCollaborative: s.isCollaborative})
+                // })
                 const userData = {
                     username: response.data.data.object.username,
                     email: response.data.data.object.email,
@@ -186,11 +179,15 @@ export function AuthService() {
                     currency: response.data.data.object.currency,
                     plan: response.data.data.object.plan,
                     role: response.data.data.object.role,
-                    spaces: spaces
+                    spaces: response.data.data.object.spaces
                 }
                 dispatch(loginSuccess(userData))
                 toast.success("Login successful!");
-                navigate(`/user-portal/${defaultSpaceType.toLowerCase().split("_").join("-")}/${defaultSpaceId}/${UserPortalView.DASHBOARD}`);
+                if (redirect) {
+                    navigate(redirect);
+                } else {
+                    navigate(`/user-portal/all/all/${UserPortalView.DASHBOARD}`);
+                }
             }
         } catch (error) {
             if (axios.isAxiosError(error) && error.response) {

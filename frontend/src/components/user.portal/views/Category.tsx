@@ -5,6 +5,8 @@ import { useEffect, useState } from "react";
 import { capitalize, generateRandomColor, toStrdSpaceType } from "../../../utils/utils";
 import { TransactionType, transactionTypesInfo } from "./Transactions";
 import Input from "../../../components/Input";
+import { useSelector } from "react-redux";
+import { RootState } from "../../../redux/store/store";
 import { toast } from "react-toastify";
 
 enum CategoryType {
@@ -28,7 +30,7 @@ interface SubCategoryInfo {
 }
 
 function Category() {
-    const { spacetype } = useParams();
+    const { spacetype, spaceid } = useParams();
     const { getCategories, getCategoriesBySpace, createSubCategory, updateSubCategory, deleteSubCategory, createMainCategory } = CategoryService();
     const [categories, setCategories] = useState<any[]>([])
     const [parentCategories, setParentCategories] = useState<any[]>([])
@@ -48,31 +50,35 @@ function Category() {
     const [editSid, setEditSid] = useState<string | null>(null)
     const [allowedTransactionTypesToDisplay, setAllowedTransactionTypesToDisplay] = useState<TransactionType[]>([])
     const [allowedTransactionTypesToCreate, setAllowedTransactionTypesToCreate] = useState<TransactionType[]>([])
+    const { username, spaces } = useSelector((state: RootState) => state.auth)
+    const currentSpace = spaces.find(sp => sp.id === spaceid);
+
 
     const fetchCategories = () => {
         setLoading(true)
         if (spacetype === "all") {
             getCategories()
-            .then((res) => {
-                setCategories(res)
-                const distinctpcategories = [...new Map(
-                    res.map(cat => [cat.parentCategoryId, cat])).values()
-                ]
-                setParentCategories(distinctpcategories)
-            })
-            .catch((err) => setCategories([]))
-            .finally(() => setLoading(false))
+                .then((res) => {
+                    console.log(res)
+                    setCategories(res)
+                    const distinctpcategories = [...new Map(
+                        res.map(cat => [cat.parentCategoryId, cat])).values()
+                    ]
+                    setParentCategories(distinctpcategories)
+                })
+                .catch((err) => setCategories([]))
+                .finally(() => setLoading(false))
         } else {
-            getCategoriesBySpace(toStrdSpaceType(spacetype))
-            .then((res) => {
-                setCategories(res)
-                const distinctpcategories = [...new Map(
-                    res.map(cat => [cat.parentCategoryId, cat])).values()
-                ]
-                setParentCategories(distinctpcategories)
-            })
-            .catch((err) => setCategories([]))
-            .finally(() => setLoading(false))
+            getCategoriesBySpace(spaceid || "")
+                .then((res) => {
+                    setCategories(res)
+                    const distinctpcategories = [...new Map(
+                        res.map(cat => [cat.parentCategoryId, cat])).values()
+                    ]
+                    setParentCategories(distinctpcategories)
+                })
+                .catch((err) => setCategories([]))
+                .finally(() => setLoading(false))
         }
     }
 
@@ -261,7 +267,7 @@ function Category() {
 
     const findAllowedTransactionTypesToCreate = () => {
         if (spacetype === "all") {
-            return [TransactionType.INCOME, TransactionType.EXPENSE ,TransactionType.INTERNAL_TRANSFER, TransactionType.BALANCE_DECREASE, TransactionType.BALANCE_INCREASE]
+            return [TransactionType.INCOME, TransactionType.EXPENSE, TransactionType.INTERNAL_TRANSFER, TransactionType.BALANCE_DECREASE, TransactionType.BALANCE_INCREASE]
         } else {
             return transactionTypesInfo.find(info => info.spaceType === toStrdSpaceType(spacetype))?.transactionTypes.map(type => type.type)
         }
@@ -279,10 +285,10 @@ function Category() {
         fetchCategories();
         setAllowedTransactionTypesToDisplay(findAllowedTransactionTypes() || [])
         setAllowedTransactionTypesToCreate(findAllowedTransactionTypesToCreate() || [])
-    }, [spacetype])
+    }, [spacetype, spaceid])
 
     if (loading) return <h1 className="text-xl text-text-light-primary dark:text-text-dark-primary">Loading...</h1>
-    console.log(categories)
+
     return (
         <>
             {/* header */}
@@ -305,7 +311,12 @@ function Category() {
                     <div className="w-full overflow-x-auto">
                         <h2 className="my-2 font-bold">Categories Managed by you</h2>
                         {
-                            categories.filter(cat => cat.transactionTypes.find((type: TransactionType) => allowedTransactionTypesToDisplay.includes(type)) && cat.userId != null).length > 0 ? (
+                            categories
+                                .filter(cat =>
+                                    cat.transactionTypes.find((type: TransactionType) => allowedTransactionTypesToDisplay.includes(type))
+                                    && (
+                                        (spacetype === "all" && cat.userId) || (spacetype !== "all" && cat?.user?.username)
+                                    )).length > 0 ? (
                                 <table className="min-w-xl w-full border-collapse">
                                     <thead>
                                         <tr className="bg-transparent  p-2 *:p-2 *:font-bold text-primary *:border-b *:border-b-border-light-primary *:dark:border-b-border-dark-primary">
@@ -319,7 +330,13 @@ function Category() {
                                     <tbody className="bg-transparent text-text-light-primary dark:text-text-dark-primary text-sm *:hover:bg-hover-light-primary *:hover:dark:bg-hover-dark-primary *:border-b *:border-b-border-light-primary *:dark:border-b-border-dark-primary">
                                         {
                                             categories
-                                                .filter(cat => cat.transactionTypes.find((type: TransactionType) => allowedTransactionTypesToDisplay.includes(type)) && cat.userId != null)
+                                                .filter(cat =>
+                                                    cat.transactionTypes.find((type: TransactionType) => allowedTransactionTypesToDisplay.includes(type))
+                                                    && (
+                                                        (
+                                                            (spacetype === "all" && cat.userId) || (spacetype !== "all" && cat?.user?.username)
+                                                        )
+                                                    ))
                                                 .map((cat, index) => {
                                                     return (
                                                         <tr key={`${cat.subCategoryId}`} className="*:p-2 hover:!bg-transparent cursor-pointer" style={{ backgroundColor: cat.color + "30" }}>
@@ -338,13 +355,13 @@ function Category() {
                                                                 <Button
                                                                     text="Edit"
                                                                     className="max-w-fit pt-1 pb-1 px-2"
-                                                                    disabled={!cat.userId}
+                                                                    disabled={spacetype !== "all" ? cat?.user?.username !== username : false}
                                                                     onClick={() => onEditMode(cat)}
                                                                 />
                                                                 <Button
                                                                     text="Delete"
                                                                     className="max-w-fit pt-1 pb-1 px-2 hover:!bg-red-600 !bg-red-500"
-                                                                    disabled={!cat.userId}
+                                                                    disabled={spacetype !== "all" ? cat?.user?.username !== username : false}
                                                                     onClick={() => onDelete(cat.parentCategoryId, cat.subCategoryId)}
                                                                 />
                                                             </td>
@@ -373,7 +390,9 @@ function Category() {
                             <tbody className="bg-transparent text-text-light-primary dark:text-text-dark-primary text-sm *:hover:bg-hover-light-primary *:hover:dark:bg-hover-dark-primary *:border-b *:border-b-border-light-primary *:dark:border-b-border-dark-primary">
                                 {
                                     categories
-                                        .filter(cat => cat.transactionTypes.find((type: TransactionType) => allowedTransactionTypesToDisplay.includes(type)) && cat.userId == null)
+                                        .filter(cat => 
+                                            cat.transactionTypes.find((type: TransactionType) => allowedTransactionTypesToDisplay.includes(type)) 
+                                            && (!cat?.user?.username && !cat.userId))
                                         .map((cat, index) => {
                                             return (
                                                 <tr key={`${cat.subCategoryId}`} className="*:p-2 hover:!bg-transparent cursor-pointer" style={{ backgroundColor: cat.color + "30" }}>

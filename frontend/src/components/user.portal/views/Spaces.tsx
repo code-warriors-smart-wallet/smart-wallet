@@ -207,8 +207,8 @@ function Spaces({ onCancel, editSpaceId, summary }: { onCancel: () => void, edit
             ...inputs,
             type: spaceInfo?.type,
             name: spaceInfo?.name,
-            targetAmount: spaceInfo?.targetAmount,
-            desiredDate: spaceInfo?.desiredDate,
+            targetAmount: spaceInfo?.targetAmount?.$numberDecimal,
+            desiredDate: spaceInfo?.desiredDate?.split("T")[0],
             savedAlready: spaceInfo?.savedAlready,
             isCollaborative: spaceInfo?.isCollaborative,
             oldCollaborators: spaceInfo?.collaborators?.map((c: { userId: { email: string; }; status: string; }) => ({

@@ -100,7 +100,7 @@ export interface TransactionInfo {
     scategory: string | null,
     pcategory: string | null,
     scheduleId?: string | null,
-    spaceId?: string | undefined,
+    spaceId: string,
     username?: string
 }
 

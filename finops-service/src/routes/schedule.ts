@@ -3,7 +3,7 @@ import Schedule, { Frequency, RecurringApproval } from '../models/schedule';
 import { authenticate } from '../middlewares/auth';
 import Transaction, { MemberStatus } from '../models/transaction';
 import { getNextDueDate } from '../utils/schedule.util';
-import { getUsersBySpace } from './dashboard';
+import { getUsersBySpace } from './transaction';
 import { Types } from 'mongoose';
 
 const scheduleRouter = express.Router();

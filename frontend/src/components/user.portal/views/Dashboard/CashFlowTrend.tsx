@@ -21,7 +21,7 @@ function CashFlowTrend({ spendingSummary }: { spendingSummary: any }) {
                 <div className="p-2 border border-border-light-primary dark:border-border-dark-primary mt-3">
                     {/* <h1>Monthly Expense vs Income vs Savings</h1> */}
                     {
-                        monthlySavings.filter((rec: { y: number; }) => rec.y === 0).length === 12 ? (
+                        monthlySavings?.filter((rec: { y: number; }) => rec.y === 0).length === 12 ? (
                             <div className="w-full h-full grid place-items-center text-sm text-text-light-secondary dark:text-text-dark-secondary">No records found.</div>
                         ) : (
                             <>

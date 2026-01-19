@@ -6,11 +6,12 @@
       "start-frontend": "npm run dev --prefix frontend",
       "start-api-gateway": "npm start --prefix api-gateway",
       "start-finops-service": "npm start --prefix finops-service",
+      "start-report-service": "npm start --prefix report-service",
       "start-notification-service": "npm start --prefix notification-service",
       "start-user-service": "npm start --prefix user-service",
-      "start-backend": "concurrently \"npm run start-api-gateway\" \"npm run start-user-service\" \"npm run start-finops-service\" \"npm run start-notification-service\"",
+      "start-backend": "concurrently \"npm run start-api-gateway\" \"npm run start-user-service\" \"npm run start-finops-service\" \"npm run start-notification-service\" \"npm run start-report-service\"",
       "start": "concurrently \"npm run start-frontend\" \"npm run start-backend\"",
-      "install-all": "npm install && npm install --prefix frontend && npm install --prefix api-gateway && npm install --prefix user-service && npm install --prefix finops-service && npm install --prefix notification-service"
+      "install-all": "npm install && npm install --prefix frontend && npm install --prefix api-gateway && npm install --prefix user-service && npm install --prefix finops-service && npm install --prefix notification-service && npm install --prefix report-service"
    },
    "dependencies": {
       "concurrently": "^9.1.2"

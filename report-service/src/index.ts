@@ -1,6 +1,3 @@
-import { initScheduleJobs } from './jobs/schedule';
-import { seedCategories } from './models/category';
-
 import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
@@ -14,13 +11,11 @@ import './models/schedule';
 import './models/transaction';
 
 import { connectDatabase } from './config/database';
-import categoryRouter from "./routes/category";
-import transactionRouter from "./routes/transaction";
-import scheduleRouter from "./routes/schedule";
+import dashboardRouter from "./routes/dashboard";
 
 // Load environment variables
 dotenv.config({ path: path.join(__dirname, '../.env') });
-const PORT = process.env.PORT || 8082;
+const PORT = process.env.PORT || 8084;
 const app = express();
 
 // Middleware
@@ -35,18 +30,13 @@ app.use(cookieParser());
 connectDatabase()
     .then(() => {
         // Routes
-        app.use("/category", categoryRouter);
-        app.use("/transaction", transactionRouter);
-        app.use("/schedule", scheduleRouter);
+        app.use("/dashboard", dashboardRouter);
 
         // Cron jobs
-        initScheduleJobs();
-
-        // seedCategories();
 
         // Start the server
         app.listen(PORT, () => {
-            console.log(`Finops-service server is listening on port ${PORT}`);
+            console.log(`Report-service server is listening on port ${PORT}`);
         });
     })
     .catch((error) => {

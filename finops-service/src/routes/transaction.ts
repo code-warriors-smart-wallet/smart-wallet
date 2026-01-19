@@ -1,7 +1,7 @@
 import express, { Request, Response } from 'express';
 import Transaction, { MemberStatus } from '../models/transaction';
+import Space, { ISpace, SpaceType } from '../models/space';
 import { authenticate } from '../middlewares/auth';
-import { getUsersBySpace } from "./dashboard"
 import { Types } from 'mongoose';
 
 const transactionRouter = express.Router();
@@ -199,3 +199,22 @@ transactionRouter.patch('/spaces/:spaceId/members/:userId/status', authenticate,
 
 })
 export default transactionRouter;
+
+export const getUsersBySpace = async (spaceid: string) => {
+    if (spaceid === "all") return []
+
+    const space = await Space.findById(spaceid)
+        .select("ownerId collaborators")
+        .lean();
+
+    if (!space) {
+        return [];
+    }
+
+    const userIds = [
+        space.ownerId,
+        ...(space.collaborators?.map(c => c.userId) ?? [])
+    ];
+
+    return userIds
+}

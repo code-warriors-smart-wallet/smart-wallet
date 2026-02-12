@@ -1,3 +1,6 @@
+import { FaFileExport } from "react-icons/fa"
+import { MdFileDownload } from "react-icons/md"
+
 export function GoogleIcon() {
     return (
         <svg xmlns="http://www.w3.org/2000/svg" width="20px" className='hs-XqwWvWI-5cb0a62fe830hs-XqwWvWI- inline hs-XqwWvWI-5cb0a62fe8hs-XqwWvWI-' viewBox="0 0 512 512">
@@ -135,6 +138,12 @@ export function BudgetIcon() {
         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
             <path strokeLinecap="round" strokeLinejoin="round" d="M3 8.25h18M3 12h18M3 15.75h18M6 5.25v13.5M18 5.25v13.5" />
         </svg>
+    )
+}
+
+export function ReportIcon() {
+    return (
+        <FaFileExport className="ml-1.5" size={18}/>
     )
 }
 

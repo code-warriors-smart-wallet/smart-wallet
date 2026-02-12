@@ -511,7 +511,6 @@ function Transactions() {
                                  )
 
                               }
-
                            </select>
                         </div>
 

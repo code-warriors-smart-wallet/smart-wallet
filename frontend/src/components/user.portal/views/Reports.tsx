@@ -9,9 +9,11 @@ import { toast } from "react-toastify";
 import { SpaceType } from "./Spaces";
 import { ReportInfo, TransactionInfo } from "@/interfaces/modals";
 import SpaceSelector from "../SpaceSelector";
+import { ReportService } from "../../../services/report.service";
 
 export enum REPORT {
-    TRANSACTION_LEDGER = "TRANSACTION_LEDGER",
+    ACCOUNT_LEDGER = "ACCOUNT_LEDGER",
+    LOAN_LEDGER = "LOAN_LEDGER",
     INCOME_VS_EXPENSE_BY_CATEGORY = "INCOME_VS_EXPENSE_BY_CATEGORY",
     BUDGET_UTILIZATION = "BUDGET_UTILIZATION",
     LOAN_REPAYMENT_SUMMARY = "LOAN_REPAYMENT_SUMMARY",
@@ -20,8 +22,12 @@ export enum REPORT {
 
 export const reportsInfo = [
     {
-        type: REPORT.TRANSACTION_LEDGER,
-        spaces: [SpaceType.BANK, SpaceType.CASH, SpaceType.CREDIT_CARD, SpaceType.LOAN_BORROWED, SpaceType.LOAN_LENT, SpaceType.SAVING_GOAL, "ALL"],
+        type: REPORT.ACCOUNT_LEDGER,
+        spaces: [SpaceType.BANK, SpaceType.CASH, SpaceType.SAVING_GOAL, "ALL"],
+    },
+    {
+        type: REPORT.LOAN_LEDGER,
+        spaces: [SpaceType.LOAN_BORROWED, SpaceType.LOAN_LENT, "ALL"],
     },
     {
         type: REPORT.INCOME_VS_EXPENSE_BY_CATEGORY,
@@ -51,9 +57,11 @@ function Reports() {
         fromdate: getFirstDayOfMonth(),
         todate: getTodayDate(),
         spaces: [],
-        format: "EXCEL"
+        format: "EXCEL",
+        isCollaborative: false,
     });
     const [showSelectSpacesModal, setShowSelectSpacesModal] = useState(false);
+    const { getTransactionLedger, loading } = ReportService();
 
     const openSelectSpacesModal = () => {
         // if (!inputs.type) {
@@ -71,7 +79,12 @@ function Reports() {
         const { name, value } = e.target as HTMLInputElement;
         if (name === "type") {
             setInputs((prev) => {
-                return { ...prev, type: value, spaces: spaceid === "all" ? [] : [spaceid || ""] }
+                return { 
+                    ...prev, 
+                    type: value, 
+                    spaces: spaceid === "all" ? [] : [spaceid || ""],
+                    isCollaborative: spaceid === "all" ? false : spaces.find(space => space.id === spaceid)?.isCollaborative || false
+                }
             });
             return;
         }
@@ -83,8 +96,28 @@ function Reports() {
     const onSelectSpaces = (selectedSpaces: { _id: string, name: string, type: string }[]) => {
         const selectedSpaceIds = selectedSpaces.map(space => space._id);
         setInputs((prev) => {
-            return { ...prev, spaces: selectedSpaceIds }
+            return { ...prev, spaces: selectedSpaceIds, isCollaborative: selectedSpaceIds.length == 1 ? spaces.find(space => space.id === selectedSpaceIds[0])?.isCollaborative || false : false }
         })
+    }
+
+    useEffect(() => {
+        // when space type or id changes, reset the form
+        setInputs({
+            type: "",
+            fromdate: getFirstDayOfMonth(),
+            todate: getTodayDate(),
+            spaces: spaceid === "all" ? [] : [spaceid || ""],
+            format: "EXCEL",
+            isCollaborative: false,
+        })
+    }, [spaceid, spacetype])
+
+    if (loading) {
+        return (
+            <div className="flex items-center justify-center h-64">
+                <div className="loader ease-linear rounded-full border-8 border-t-8 border-gray-200 h-16 w-16"></div>
+            </div>
+        )
     }
 
     return (
@@ -121,7 +154,7 @@ function Reports() {
 
                     {/* from date */}
                     {
-                        inputs.type === REPORT.TRANSACTION_LEDGER && (
+                        inputs.type === REPORT.ACCOUNT_LEDGER && (
                             <div className={`my-3`}>
                                 <label className="text-text-light-primary dark:text-text-dark-primary">From date:</label>
                                 <Input
@@ -138,7 +171,7 @@ function Reports() {
 
                     {/* to date */}
                     {
-                        inputs.type === REPORT.TRANSACTION_LEDGER && (
+                        inputs.type === REPORT.ACCOUNT_LEDGER && (
                             <div className={`my-3`}>
                                 <label className="text-text-light-primary dark:text-text-dark-primary">To date:</label>
                                 <Input
@@ -212,9 +245,14 @@ function Reports() {
                     <div className="flex justify-end gap-3 items-center">
                         <Button
                             text="Export"
-                            type="submit"
+                            type="button"
                             className="mt-4 max-w-fit px-5 py-2 text-sm"
-                        /></div>
+                            onClick={() => {
+                                console.log("inputs", inputs)
+                                getTransactionLedger(inputs.format, inputs.spaces, inputs.fromdate, inputs.todate, inputs.isCollaborative)
+                            }}
+                        />
+                    </div>
                 </form>
 
             </div>

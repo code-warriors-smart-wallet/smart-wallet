@@ -109,7 +109,8 @@ export interface ReportInfo {
     fromdate: string,
     todate: string,
     spaces: string[]
-    format: "PDF" | "EXCEL"
+    format: "PDF" | "EXCEL",
+    isCollaborative: boolean
 }
 
 export enum Frequency {

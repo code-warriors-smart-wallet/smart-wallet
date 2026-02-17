@@ -36,7 +36,7 @@ export enum PlanType {
 //     active: true;
 // }
 export interface IPlan extends Document {
-    _id: string;
+    id: string;
     name: PlanType;
     description: string;
     monthly_price: number;

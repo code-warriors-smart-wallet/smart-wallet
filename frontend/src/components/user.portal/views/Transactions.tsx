@@ -93,14 +93,14 @@ export const transactionTypesInfo: transactionTypeInfo[] = [
       transactionTypes: [
          {
             type: TransactionType.BALANCE_INCREASE, // increase
-            toSpaces: ["ACTIVE_SPACE"],
-            fromSpaces: ["OUTSIDE_MYWALLET"],
+            fromSpaces: ["ACTIVE_SPACE"],
+            toSpaces: ["OUTSIDE_MYWALLET"],
             isCollaborative: false
          },
          {
             type: TransactionType.BALANCE_DECREASE, // increase
             toSpaces: ["ACTIVE_SPACE"],
-            fromSpaces: ["OUTSIDE_MYWALLET"],
+            fromSpaces: [SpaceType.CASH, SpaceType.BANK],
             isCollaborative: false
          }
       ]

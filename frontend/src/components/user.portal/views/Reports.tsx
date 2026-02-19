@@ -27,7 +27,7 @@ export const reportsInfo = [
     },
     {
         type: REPORT.LOAN_LEDGER,
-        spaces: [SpaceType.LOAN_BORROWED, SpaceType.LOAN_LENT, "ALL"],
+        spaces: [SpaceType.LOAN_BORROWED, SpaceType.LOAN_LENT],
     },
     {
         type: REPORT.INCOME_VS_EXPENSE_BY_CATEGORY,
@@ -61,7 +61,7 @@ function Reports() {
         isCollaborative: false,
     });
     const [showSelectSpacesModal, setShowSelectSpacesModal] = useState(false);
-    const { getTransactionLedger, loading } = ReportService();
+    const { getTransactionLedger, getLoanLedger, loading } = ReportService();
 
     const openSelectSpacesModal = () => {
         // if (!inputs.type) {
@@ -171,7 +171,7 @@ function Reports() {
 
                     {/* to date */}
                     {
-                        inputs.type === REPORT.ACCOUNT_LEDGER && (
+                        [REPORT.ACCOUNT_LEDGER, REPORT.LOAN_LEDGER].includes(inputs.type as any) && (
                             <div className={`my-3`}>
                                 <label className="text-text-light-primary dark:text-text-dark-primary">To date:</label>
                                 <Input
@@ -188,7 +188,7 @@ function Reports() {
 
                     {/* spaces */}
                     {
-                        inputs.type && spaceid === "all" && (
+                        inputs.type && inputs.type === REPORT.ACCOUNT_LEDGER && spaceid === "all" && (
                             <div className={`my-3`}>
                                 <div className="flex items-center gap-3">
                                     <label className="text-text-light-primary dark:text-text-dark-primary">Select spaces:</label>
@@ -249,7 +249,11 @@ function Reports() {
                             className="mt-4 max-w-fit px-5 py-2 text-sm"
                             onClick={() => {
                                 console.log("inputs", inputs)
-                                getTransactionLedger(inputs.format, inputs.spaces, inputs.fromdate, inputs.todate, inputs.isCollaborative)
+                                if (inputs.type === REPORT.ACCOUNT_LEDGER) {
+                                    getTransactionLedger(inputs.format, inputs.spaces, inputs.fromdate, inputs.todate, inputs.isCollaborative)
+                                } else if (inputs.type === REPORT.LOAN_LEDGER) {
+                                    getLoanLedger(inputs.format, inputs.spaces.length > 0 ? inputs.spaces[0] : "", inputs.todate)
+                                }
                             }}
                         />
                     </div>

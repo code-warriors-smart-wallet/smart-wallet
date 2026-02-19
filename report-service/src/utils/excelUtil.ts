@@ -34,7 +34,7 @@ export function createTransactionLedgerSheet(
         `To: ${toDate}`,
         `Spaces: ${Array.from(spacesNames).join(", ")}`,
         `Generated on: ${new Date().toLocaleString()}`,
-        `Number of transactions: ${ledger.length - 1}`,
+        `Number of transactions: ${ledger.length }`,
         `Opening Balance: ${openingBalance.toFixed(2)}`
     ];
 
@@ -178,6 +178,133 @@ export function createTransactionLedgerSheet(
     finalRow.getCell(isCollaborative ? 7 : 6).alignment = { horizontal: "right" };
     finalRow.getCell(isCollaborative ? 8 : 7).alignment = { horizontal: "right" };
     finalRow.getCell(isCollaborative ? 9 : 8).alignment = { horizontal: "right" };
+
+    // ==============================
+    // COLUMN WIDTHS
+    // ==============================
+    worksheet.columns.forEach(col => {
+        col.width = 18;
+    });
+
+    // Freeze header
+    worksheet.views = [{ state: "frozen", ySplit: 11 }];
+
+    return workbook;
+
+}
+
+export function createLoanLedgerSheet(
+    ledger: any[],
+    fromDate: string,
+    toDate: string,
+    loanAmount: number,
+    loanStartDate: string,
+    loanEndDate: string,
+    interestRate: string,
+    totalInterest: string
+) {
+    const workbook = new ExcelJS.Workbook();
+    const worksheet = workbook.addWorksheet("Transaction Ledger");
+
+    let currentRow = 1;
+
+    const totalColumns = 9;
+
+    // ==============================
+    // TITLE
+    // ==============================
+    worksheet.mergeCells(`A${currentRow}:${String.fromCharCode(64 + totalColumns)}${currentRow}`);
+    const titleCell = worksheet.getCell(`A${currentRow}`);
+    titleCell.value = "Loan Ledger";
+    titleCell.font = { size: 16, bold: true };
+    currentRow += 2;
+
+    // ==============================
+    // INFO SECTION
+    // ==============================
+    const infoRows = [
+        `Loan amount: ${loanAmount.toFixed(2)}`,
+        `Loan start date: ${loanStartDate}`,
+        `Loan end date: ${loanEndDate}`,
+        `Interest Rate (Monthly): ${interestRate}%`,
+        `Total interest: ${totalInterest}`,
+        `From: ${fromDate}`,
+        `To: ${toDate}`,
+        `Generated on: ${new Date().toLocaleString()}`,
+        `Number of transactions: ${ledger.length}`
+    ];
+
+    infoRows.forEach(text => {
+        worksheet.mergeCells(`A${currentRow}:${String.fromCharCode(64 + totalColumns)}${currentRow}`);
+        const infocell = worksheet.getCell(`A${currentRow}`);
+        infocell.value = text;
+        infocell.font = { size: 12 };
+        infocell.alignment = { horizontal: "left", vertical: 'middle' };
+        currentRow++;
+    });
+    currentRow += 2;
+
+    // ==============================
+    // TABLE HEADER
+    // ==============================
+    const headers = [
+        "Space",
+        "Type",
+        "Date",
+        "Category",
+        "SubCategory",
+        "Amount",
+        "Outstanding Principal",
+        "Cumulative Interest",
+        "Cumulative Charges"
+    ];
+
+    const headerRow = worksheet.getRow(currentRow);
+    headerRow.values = headers;
+
+    headerRow.font = { bold: true };
+    headerRow.alignment = { horizontal: "left" };
+    headerRow.fill = {
+        type: "pattern",
+        pattern: "solid",
+        fgColor: { argb: "FFF4F4F4" }
+    };
+
+    currentRow++;
+
+    // ==============================
+    // TRANSACTION ROWS
+    // ==============================
+    const transactionRows = ledger;
+
+    transactionRows.forEach((row: any) => {
+        worksheet.addRow([
+            row.spaceName,
+            row.transactionType,
+            row.date,
+            row.mainCategory,
+            row.subCategory,
+            row.amount,
+            row.remainingBalance,
+            row.cumulativeInterest,
+            row.cumulativeCharges
+        ]);
+        const amountCell = worksheet.getCell(currentRow, 6);
+        const remainingBalanceCell = worksheet.getCell(currentRow, 7);
+        const cumulativeInterestCell = worksheet.getCell(currentRow, 8);
+        const cumulativeChargesCell = worksheet.getCell(currentRow, 9);
+
+        amountCell.numFmt = "#,##0.00";
+        remainingBalanceCell.numFmt = "#,##0.00";
+        cumulativeInterestCell.numFmt = "#,##0.00";
+        cumulativeChargesCell.numFmt = "#,##0.00";
+
+        amountCell.alignment = { horizontal: "right" };
+        remainingBalanceCell.alignment = { horizontal: "right" };
+        cumulativeInterestCell.alignment = { horizontal: "right" };
+        cumulativeChargesCell.alignment = { horizontal: "right" };
+        currentRow++;
+    });
 
     // ==============================
     // COLUMN WIDTHS

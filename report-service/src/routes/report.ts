@@ -1,12 +1,13 @@
 import express, { Request, Response } from 'express';
-import Transaction from '../models/transaction';
+import Transaction, { TransactionType } from '../models/transaction';
+import Space from '../models/space';
 import { authenticate } from '../middlewares/auth';
 import mongoose from 'mongoose';
 import { toTitleCase } from '../utils/commonUtil';
 import { getUsersBySpace } from './dashboard';
-import { generateTransactionLedgerHTML } from '../utils/templateUtil';
+import { generateLoanLedgerHTML, generateTransactionLedgerHTML } from '../utils/templateUtil';
 import { getPdfFromHTML } from '../utils/pdfUtil';
-import { createTransactionLedgerSheet } from '../utils/excelUtil';
+import { createLoanLedgerSheet, createTransactionLedgerSheet } from '../utils/excelUtil';
 
 const reportRouter = express.Router();
 const ObjectId = mongoose.Types.ObjectId;
@@ -24,8 +25,6 @@ reportRouter.post('/transaction-ledger', authenticate, async (req: Request, res:
         data: null
       });
     }
-
-    console.log("isCollaborative: ", isCollaborative, "spaces: ", spaces, ", ", spaces.length === 1 && isCollaborative);
 
     // opening balance
     const moneyIn = await Transaction.aggregate([
@@ -211,6 +210,141 @@ reportRouter.post('/transaction-ledger', authenticate, async (req: Request, res:
       );
       const buffer = await workbook.xlsx.writeBuffer();
       res.set({ 'Content-Type': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', "Content-Disposition": `attachment; filename="Account Ledger (${fromDate}-${toDate}).xlsx"` });
+      res.status(200).send(buffer);
+    }
+
+  } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    res.status(500).json({
+      success: false,
+      error: { message: 'Error creating transaction ledger: ' + errorMessage },
+      data: null
+    });
+  }
+});
+
+reportRouter.post('/loan-ledger', authenticate, async (req: Request, res: Response) => {
+  try {
+    const userId: string = (req as any).user.id;
+    const { toDate, space, format } = req.body;
+
+    // Validate input
+    if (!toDate || !space || !format) {
+      return res.status(400).json({
+        success: false,
+        error: { message: 'toDate, space, and format are required' },
+        data: null
+      });
+    }
+
+    const spaceInfo = await Space.findById(space);
+    if (!spaceInfo) {
+      return res.status(404).json({
+        success: false,
+        error: { message: 'Space not found' },
+        data: null
+      });
+    }
+
+    const loanPrincipal = parseFloat(spaceInfo.loanPrincipal.toString());
+    const loanStartDate = spaceInfo.loanStartDate;
+    const loanEndDate = spaceInfo.loanEndDate;
+    const interestRate = "N/A"; 
+    const totalInterest = "N/A";
+    const fromDate = loanStartDate;
+
+    // Fetch transactions for the specified spaces and date range
+    const transactions = await Transaction.find({
+      $and: [
+        {
+          $or: [
+            { from: new ObjectId(space) },
+            { to: new ObjectId(space) }
+          ]
+        },
+        { date: { $lte: new Date(toDate) } },
+        { userId: new ObjectId(userId) }
+      ]
+    })
+      .populate("to", "name")
+      .populate("from", "name")
+      .populate("pcategory", "parentCategory subCategories")
+      .populate("userId", "username")
+      .sort({ date: 1 });
+
+    // Transform transactions into ledger format
+    // columns: space, type, date, main category, sub category, amount, remaining balance, cumulative interest, cumulative charges
+    let remainingBalance = loanPrincipal; 
+    let cumulativeInterest = 0;
+    let cumulativeCharges = 0;
+
+    const ledger: any[] = transactions.flatMap(tx => {
+      const amount = parseFloat(tx.amount.toString());
+      let scategoryName = null;
+      if (tx.pcategory && tx.scategory) {
+        const sub = (tx.pcategory as any).subCategories.find(
+          (subCat: any) => subCat._id.toString() === tx.scategory.toString()
+        );
+        if (sub) scategoryName = sub.name;
+      }
+
+      if (tx.type === TransactionType.LOAN_PRINCIPAL) {
+        return []
+      }
+      else if (tx.type === TransactionType.REPAYMENT_PAID || tx.type === TransactionType.REPAYMENT_RECEIVED) {
+        if (scategoryName && scategoryName.toLowerCase().includes("interest")) {
+          cumulativeInterest = cumulativeInterest + amount;
+        } else {
+          remainingBalance = remainingBalance - amount;
+        }
+      } else if (tx.type === TransactionType.LOAN_CHARGES) {
+        cumulativeCharges = cumulativeCharges + amount;
+      }
+
+      return [{
+        spaceName: spaceInfo.name,
+        transactionType: toTitleCase(tx.type),
+        date: tx.date.toString().split(" ").splice(1, 3).join(" "),
+        mainCategory: (tx.pcategory as any)?.parentCategory || "",
+        subCategory: scategoryName ? toTitleCase(scategoryName) : "",
+        amount: amount,
+        remainingBalance: remainingBalance,
+        cumulativeInterest: cumulativeInterest,
+        cumulativeCharges: cumulativeCharges
+      }];
+
+      
+    });
+
+    if (format === "PDF") {
+      const html = generateLoanLedgerHTML(
+        ledger,
+        fromDate ? fromDate.toString().split(" ").splice(1, 3).join(" ") : "N/A",
+        toDate,
+        loanPrincipal,
+        loanStartDate ? loanStartDate.toString().split(" ").splice(1, 3).join(" ") : "N/A",
+        loanEndDate ? loanEndDate.toString().split(" ").splice(1, 3).join(" ") : "N/A",
+        interestRate,
+        totalInterest
+      )
+
+      const pdfBuffer = await getPdfFromHTML(html);
+
+      res.set({ 'Content-Type': 'application/pdf', 'Content-Length': pdfBuffer.length, "Content-Disposition": `attachment; filename="Loan Ledger (${fromDate}-${toDate}).pdf"` });
+      res.status(200).send(Buffer.from(pdfBuffer));
+    } else if (format === "EXCEL") {
+      const workbook = createLoanLedgerSheet(
+        ledger, 
+        fromDate ? fromDate.toString().split(" ").splice(1, 3).join(" ") : "N/A", 
+        toDate, 
+        loanPrincipal,
+        loanStartDate ? loanStartDate.toString().split(" ").splice(1, 3).join(" ") : "N/A",
+        loanEndDate ? loanEndDate.toString().split(" ").splice(1, 3).join(" ") : "N/A",
+        interestRate,
+        totalInterest
+      );
+      const buffer = await workbook.xlsx.writeBuffer();
+      res.set({ 'Content-Type': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', "Content-Disposition": `attachment; filename="Loan Ledger (${fromDate}-${toDate}).xlsx"` });
       res.status(200).send(buffer);
     }
 

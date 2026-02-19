@@ -100,7 +100,7 @@ export const transactionTypesInfo: transactionTypeInfo[] = [
          {
             type: TransactionType.BALANCE_DECREASE, // increase
             toSpaces: ["ACTIVE_SPACE"],
-            fromSpaces: [SpaceType.CASH, SpaceType.BANK],
+            fromSpaces: [SpaceType.CASH, SpaceType.BANK, "OUTSIDE_MYWALLET"],
             isCollaborative: false
          }
       ]
@@ -522,7 +522,7 @@ function Transactions() {
                               value={inputs.from || ""}
                               name="from"
                               onChange={onInputChange}
-                              disabled={spaceInfo?.transactionTypes.find(t => t.type === inputs.type)?.fromSpaces.some(sp => ["ACTIVE_SPACE", "OUTSIDE_MYWALLET"].includes(sp))}
+                              disabled={spaceInfo?.transactionTypes.find(t => t.type === inputs.type)?.fromSpaces.every(sp => ["ACTIVE_SPACE", "OUTSIDE_MYWALLET"].includes(sp))}
                            >
 
                               {

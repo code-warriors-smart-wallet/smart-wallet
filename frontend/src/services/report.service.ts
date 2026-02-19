@@ -73,9 +73,70 @@ export function ReportService() {
         }
     }
 
+    async function getLoanLedger(format: string, space: string, to: string): Promise<any> {
+        try {
+            setLoading(true);
+            api.post(`report/export/loan-ledger`,
+                {
+                    format,
+                    space: space,
+                    toDate: to,
+                },
+                {
+                    responseType: 'arraybuffer',
+                    headers: {
+                        'Accept': format === "PDF" ? 'application/pdf' : 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+                        'Authorization': `Bearer ${token}`
+                    }
+                })
+                .then((response) => {
+                    if (format === "PDF") {
+                        const blob = new Blob([response.data], { type: 'application/pdf' });
+
+                        const url = window.URL.createObjectURL(blob);
+
+                        const link = document.createElement('a');
+                        link.href = url;
+                        link.setAttribute(
+                            'download',
+                            `Loan Ledger (${to}).pdf`
+                        );
+
+                        document.body.appendChild(link);
+                        link.click();
+
+                        document.body.removeChild(link);
+                        window.URL.revokeObjectURL(url);
+                    } else if (format === "EXCEL") {
+                        const blob = new Blob([response.data], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+
+                        const url = window.URL.createObjectURL(blob);
+
+                        const link = document.createElement('a');
+                        link.href = url;
+                        link.setAttribute(
+                            'download',
+                            `Loan Ledger (${to}).xlsx`
+                        );
+
+                        document.body.appendChild(link);
+                        link.click();
+
+                        document.body.removeChild(link);
+                        window.URL.revokeObjectURL(url);
+                    }
+                })
+        } catch (error) {
+            processError(error)
+            return []
+        } finally{            
+            setLoading(false);
+        }
+    }
 
 
-    return { getTransactionLedger, loading };
+
+    return { getTransactionLedger, getLoanLedger, loading };
 }
 
 function processError(error: unknown): void {

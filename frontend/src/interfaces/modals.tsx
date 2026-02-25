@@ -104,6 +104,15 @@ export interface TransactionInfo {
     username?: string
 }
 
+export interface ReportInfo {
+    type: string,
+    fromdate: string,
+    todate: string,
+    spaces: string[]
+    format: "PDF" | "EXCEL",
+    isCollaborative: boolean
+}
+
 export enum Frequency {
     ONE_TIME = "ONE_TIME",
     RECURRENT = "RECURRENT"

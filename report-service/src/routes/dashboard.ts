@@ -11,7 +11,11 @@ const ObjectId = mongoose.Types.ObjectId;
 dashboardRouter.get('/cash/:spaceid/:from/:to', authenticate, async (req: Request, res: Response) => {
     try {
         const userId: string = (req as any).user.id;
-        const { spaceid, from, to } = req.params
+        const { spaceid, from, to } = req.params;
+
+        if (Array.isArray(spaceid) || Array.isArray(from) || Array.isArray(to)) {
+            return res.status(400).json({ error: "Invalid parameters" });
+        }
 
         const userIds = await getUsersBySpace(spaceid)
         console.log(userIds.length)
@@ -514,6 +518,10 @@ dashboardRouter.get('/loan-lent/:spaceid', authenticate, async (req: Request, re
         const userId: string = (req as any).user.id;
         const { spaceid } = req.params
 
+        if (Array.isArray(spaceid)) {
+            return res.status(400).json({ error: "Invalid parameters" });
+        }
+
         const categories = await Cat.aggregate([
             { $match: { spaces: SpaceType.LOAN_LENT } },
 
@@ -629,6 +637,10 @@ dashboardRouter.get('/loan-borrowed/:spaceid', authenticate, async (req: Request
     try {
         const userId: string = (req as any).user.id;
         const { spaceid } = req.params;
+
+        if (Array.isArray(spaceid)) {
+            return res.status(400).json({ error: "Invalid parameters" });
+        }
 
         const categories = await Cat.aggregate([
             { $match: { spaces: SpaceType.LOAN_BORROWED } },
@@ -746,6 +758,10 @@ dashboardRouter.get('/credit-card/:spaceid', authenticate, async (req: Request, 
         const userId: string = (req as any).user.id;
         const { spaceid } = req.params
 
+        if (Array.isArray(spaceid)) {
+            return res.status(400).json({ error: "Invalid parameters" });
+        }
+
         const totalBalance = await Transaction.aggregate([
             {
                 $match: {
@@ -850,6 +866,10 @@ dashboardRouter.get('/saving-goal/:spaceid', authenticate, async (req: Request, 
     try {
         const userId: string = (req as any).user.id;
         const { spaceid } = req.params;
+
+        if (Array.isArray(spaceid)) {
+            return res.status(400).json({ error: "Invalid parameters" });
+        }
 
         const userIds = await getUsersBySpace(spaceid)
 

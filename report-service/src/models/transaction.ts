@@ -59,11 +59,10 @@ const TransactionSchema: Schema = new Schema({
     },
     pcategory: {
         type: Schema.Types.ObjectId,
-        ref: "Category"
+        ref: "Cat"
     },
     scategory: {
-        type: Schema.Types.ObjectId,
-    },
+        type: Schema.Types.ObjectId, },
     userId: {
         type: Schema.Types.ObjectId,
         ref: "User"

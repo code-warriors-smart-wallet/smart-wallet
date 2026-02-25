@@ -93,14 +93,14 @@ export const transactionTypesInfo: transactionTypeInfo[] = [
       transactionTypes: [
          {
             type: TransactionType.BALANCE_INCREASE, // increase
-            toSpaces: ["ACTIVE_SPACE"],
-            fromSpaces: ["OUTSIDE_MYWALLET"],
+            fromSpaces: ["ACTIVE_SPACE"],
+            toSpaces: ["OUTSIDE_MYWALLET"],
             isCollaborative: false
          },
          {
             type: TransactionType.BALANCE_DECREASE, // increase
             toSpaces: ["ACTIVE_SPACE"],
-            fromSpaces: ["OUTSIDE_MYWALLET"],
+            fromSpaces: [SpaceType.CASH, SpaceType.BANK, "OUTSIDE_MYWALLET"],
             isCollaborative: false
          }
       ]
@@ -511,7 +511,6 @@ function Transactions() {
                                  )
 
                               }
-
                            </select>
                         </div>
 
@@ -523,7 +522,7 @@ function Transactions() {
                               value={inputs.from || ""}
                               name="from"
                               onChange={onInputChange}
-                              disabled={spaceInfo?.transactionTypes.find(t => t.type === inputs.type)?.fromSpaces.some(sp => ["ACTIVE_SPACE", "OUTSIDE_MYWALLET"].includes(sp))}
+                              disabled={spaceInfo?.transactionTypes.find(t => t.type === inputs.type)?.fromSpaces.every(sp => ["ACTIVE_SPACE", "OUTSIDE_MYWALLET"].includes(sp))}
                            >
 
                               {

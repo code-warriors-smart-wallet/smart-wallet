@@ -47,14 +47,14 @@ function TransactionList({ transactions, categories, onClick }: { transactions: 
                                                 {
                                                     standardSpaceType === SpaceType.CASH || standardSpaceType === SpaceType.BANK ? (
                                                         spaceid === t.from ? <FaArrowUp className="text-red-500" /> : <FaArrowDown className="text-green-500" />
-                                                    ) : standardSpaceType === SpaceType.LOAN_BORROWED || standardSpaceType === SpaceType.LOAN_LENT ? (
+                                                    ) : standardSpaceType === SpaceType.LOAN_BORROWED ? (
                                                         t.type === TransactionType.LOAN_PRINCIPAL ?
                                                             <FaMoneyBillWave className="text-yellow-500" /> :
-                                                            t.type === TransactionType.REPAYMENT_PAID ?
-                                                                <FaArrowUp className="text-red-500" /> :
-                                                                t.type === TransactionType.REPAYMENT_RECEIVED ?
-                                                                    <FaArrowDown className="text-green-500" /> :
-                                                                    <RiPercentLine className="text-red-500" />
+                                                                <FaArrowUp className="text-red-500" /> 
+                                                    ) : standardSpaceType === SpaceType.LOAN_LENT ? (
+                                                        t.type === TransactionType.LOAN_PRINCIPAL ?
+                                                            <FaMoneyBillWave className="text-yellow-500" /> :
+                                                                <FaArrowDown className="text-green-500" />
                                                     ) : standardSpaceType === SpaceType.CREDIT_CARD ? (
                                                         t.type === TransactionType.BALANCE_INCREASE ?
                                                             <FaArrowUp className="text-red-500" /> :

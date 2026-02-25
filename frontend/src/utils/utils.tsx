@@ -47,3 +47,24 @@ export function generateRandomColor() {
   return `#${Math.floor(Math.random() * 16777215).toString(16).padStart(6, '0')}`;
 }
 
+export function getTodayDate() {
+   const input = new Date();
+
+   const year = input.getFullYear();
+   const month = String(input.getMonth() + 1).padStart(2, '0');
+   const day = String(input.getDate()).padStart(2, '0');
+
+   const localDate = `${year}-${month}-${day}`;
+   return localDate;
+}
+
+
+export function getFirstDayOfMonth() {
+   const input = new Date();
+
+   const year = input.getFullYear();
+   const month = String(input.getMonth() + 1).padStart(2, '0');
+   const day = "01";
+   const localDate = `${year}-${month}-${day}`;
+   return localDate;
+}

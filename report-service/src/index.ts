@@ -12,6 +12,7 @@ import './models/transaction';
 
 import { connectDatabase } from './config/database';
 import dashboardRouter from "./routes/dashboard";
+import reportRouter from "./routes/report";
 
 // Load environment variables
 dotenv.config({ path: path.join(__dirname, '../.env') });
@@ -31,6 +32,7 @@ connectDatabase()
     .then(() => {
         // Routes
         app.use("/dashboard", dashboardRouter);
+        app.use("/export", reportRouter)
 
         // Cron jobs
 

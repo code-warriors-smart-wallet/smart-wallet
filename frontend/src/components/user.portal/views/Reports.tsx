@@ -260,6 +260,8 @@ function Reports() {
                                     getLoanLedger(inputs.format, inputs.spaces.length > 0 ? inputs.spaces[0] : "", inputs.todate)
                                 } else if (inputs.type === REPORT.CREDIT_CARD_LEDGER) {
                                     getCreditCardLedger(inputs.format, inputs.spaces.length > 0 ? inputs.spaces[0] : "", inputs.fromdate, inputs.todate)
+                                } else {
+                                    alert("Coming soon!")
                                 }
                             }}
                         />

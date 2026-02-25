@@ -14,6 +14,7 @@ import { ReportService } from "../../../services/report.service";
 export enum REPORT {
     ACCOUNT_LEDGER = "ACCOUNT_LEDGER",
     LOAN_LEDGER = "LOAN_LEDGER",
+    CREDIT_CARD_LEDGER = "CREDIT_CARD_LEDGER",
     INCOME_VS_EXPENSE_BY_CATEGORY = "INCOME_VS_EXPENSE_BY_CATEGORY",
     BUDGET_UTILIZATION = "BUDGET_UTILIZATION",
     LOAN_REPAYMENT_SUMMARY = "LOAN_REPAYMENT_SUMMARY",
@@ -28,6 +29,10 @@ export const reportsInfo = [
     {
         type: REPORT.LOAN_LEDGER,
         spaces: [SpaceType.LOAN_BORROWED, SpaceType.LOAN_LENT],
+    },
+    {
+        type: REPORT.CREDIT_CARD_LEDGER,
+        spaces: [SpaceType.CREDIT_CARD],
     },
     {
         type: REPORT.INCOME_VS_EXPENSE_BY_CATEGORY,
@@ -61,13 +66,13 @@ function Reports() {
         isCollaborative: false,
     });
     const [showSelectSpacesModal, setShowSelectSpacesModal] = useState(false);
-    const { getTransactionLedger, getLoanLedger, loading } = ReportService();
+    const { getTransactionLedger, getLoanLedger, getCreditCardLedger, loading } = ReportService();
 
     const openSelectSpacesModal = () => {
-        // if (!inputs.type) {
-        //     toast.error("Please select a report type");
-        //     return;
-        // }
+        if (!inputs.type) {
+            toast.error("Please select a report type");
+            return;
+        }
         setShowSelectSpacesModal(true);
     }
 
@@ -154,7 +159,7 @@ function Reports() {
 
                     {/* from date */}
                     {
-                        inputs.type === REPORT.ACCOUNT_LEDGER && (
+                        [REPORT.ACCOUNT_LEDGER, REPORT.CREDIT_CARD_LEDGER].includes(inputs.type as any) && (
                             <div className={`my-3`}>
                                 <label className="text-text-light-primary dark:text-text-dark-primary">From date:</label>
                                 <Input
@@ -171,7 +176,7 @@ function Reports() {
 
                     {/* to date */}
                     {
-                        [REPORT.ACCOUNT_LEDGER, REPORT.LOAN_LEDGER].includes(inputs.type as any) && (
+                        [REPORT.ACCOUNT_LEDGER, REPORT.LOAN_LEDGER, REPORT.CREDIT_CARD_LEDGER].includes(inputs.type as any) && (
                             <div className={`my-3`}>
                                 <label className="text-text-light-primary dark:text-text-dark-primary">To date:</label>
                                 <Input
@@ -253,6 +258,8 @@ function Reports() {
                                     getTransactionLedger(inputs.format, inputs.spaces, inputs.fromdate, inputs.todate, inputs.isCollaborative)
                                 } else if (inputs.type === REPORT.LOAN_LEDGER) {
                                     getLoanLedger(inputs.format, inputs.spaces.length > 0 ? inputs.spaces[0] : "", inputs.todate)
+                                } else if (inputs.type === REPORT.CREDIT_CARD_LEDGER) {
+                                    getCreditCardLedger(inputs.format, inputs.spaces.length > 0 ? inputs.spaces[0] : "", inputs.fromdate, inputs.todate)
                                 }
                             }}
                         />

@@ -319,3 +319,147 @@ export function createLoanLedgerSheet(
     return workbook;
 
 }
+
+export function createCreditCardLedgerSheet(
+    ledger: any[],
+    fromDate: string,
+    toDate: string,
+    openingBalance: number,
+    creditLimit: number
+) {
+    const workbook = new ExcelJS.Workbook();
+    const worksheet = workbook.addWorksheet("Credit Card Ledger");
+    let currentRow = 1;
+
+    const totalColumns = 7;
+
+    // ==============================
+    // TITLE
+    // ==============================
+    worksheet.mergeCells(`A${currentRow}:${String.fromCharCode(64 + totalColumns)}${currentRow}`);
+    const titleCell = worksheet.getCell(`A${currentRow}`);
+    titleCell.value = "Credit Card Ledger";
+    titleCell.font = { size: 16, bold: true };
+    // titleCell.alignment = { horizontal: "center", vertical: 'middle' };
+    currentRow += 2;
+
+    // ==============================
+    // INFO SECTION
+    // ==============================
+    const infoRows = [
+        `Credit card limit: ${creditLimit.toFixed(2)}`,
+        `From: ${fromDate}`,
+        `To: ${toDate}`,
+        `Generated on: ${new Date().toLocaleString()}`,
+        `Number of transactions: ${ledger.length }`,
+        `Opening Balance: ${openingBalance.toFixed(2)}`
+    ];
+
+    infoRows.forEach(text => {
+        worksheet.mergeCells(`A${currentRow}:${String.fromCharCode(64 + totalColumns)}${currentRow}`);
+        const infocell = worksheet.getCell(`A${currentRow}`);
+        infocell.value = text;
+        infocell.font = { size: 12 };
+        infocell.alignment = { horizontal: "left", vertical: 'middle' };
+        currentRow++;
+    });
+    currentRow += 2;
+
+    // ==============================
+    // TABLE HEADER
+    // ==============================
+    const headers = [
+        "Space",
+        "Type",
+        "Date",
+        "Category",
+        "SubCategory",
+        "Amount",
+        "Total outstanding"
+    ];
+
+    const headerRow = worksheet.getRow(currentRow);
+    headerRow.values = headers;
+
+    headerRow.font = { bold: true };
+    headerRow.alignment = { horizontal: "left" };
+    headerRow.fill = {
+        type: "pattern",
+        pattern: "solid",
+        fgColor: { argb: "FFF4F4F4" }
+    };
+
+    currentRow++;
+
+    // ==============================
+    // OPENING BALANCE ROW
+    // ==============================
+    const openingRow = worksheet.addRow([
+        "OPENING BALANCE"
+    ]);
+
+    worksheet.mergeCells(
+        `A${currentRow}:${String.fromCharCode(
+            64 + totalColumns
+        )}${currentRow}`
+    );
+
+    worksheet.getCell(`A${currentRow}`).font = { bold: true };
+    worksheet.getCell(`A${currentRow}`).fill = {
+        type: "pattern",
+        pattern: "solid",
+        fgColor: { argb: "FFD9EDF7" }
+    };
+
+    worksheet.getCell(currentRow, totalColumns).value = openingBalance;
+    worksheet.getCell(currentRow, totalColumns).numFmt = "#,##0.00";
+    worksheet.getCell(currentRow, totalColumns).font = { bold: true };
+    worksheet.getCell(currentRow, totalColumns).fill = {
+        type: "pattern",
+        pattern: "solid",
+        fgColor: { argb: "FFD9EDF7" }
+    };
+    worksheet.getCell(currentRow, totalColumns).alignment = { horizontal: "right" };
+
+    currentRow++;
+
+    // ==============================
+    // TRANSACTION ROWS
+    // ==============================
+    const transactionRows = ledger;
+
+    transactionRows.forEach((row: any) => {
+        worksheet.addRow([
+            row.spaceName,
+            row.transactionType,
+            row.date,
+            row.mainCategory,
+            row.subCategory,
+            row.amount,
+            row.balance
+        ]);
+        const amountcell = worksheet.getCell(currentRow, 6);
+        const balanceCell = worksheet.getCell(currentRow, 7);
+
+        amountcell.numFmt = "#,##0.00";
+        balanceCell.numFmt = "#,##0.00";
+
+        amountcell.alignment = { horizontal: "right" };
+        balanceCell.alignment = { horizontal: "right" };
+
+        currentRow++;
+    });
+
+    // ==============================
+    // COLUMN WIDTHS
+    // ==============================
+    worksheet.columns.forEach(col => {
+        col.width = 18;
+    });
+
+    // Freeze header
+    worksheet.views = [{ state: "frozen", ySplit: 11 }];
+
+    return workbook;
+
+}

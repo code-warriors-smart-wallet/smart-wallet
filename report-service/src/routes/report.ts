@@ -5,9 +5,9 @@ import { authenticate } from '../middlewares/auth';
 import mongoose from 'mongoose';
 import { toTitleCase } from '../utils/commonUtil';
 import { getUsersBySpace } from './dashboard';
-import { generateLoanLedgerHTML, generateTransactionLedgerHTML } from '../utils/templateUtil';
+import { generateCreditCardLedgerHTML, generateLoanLedgerHTML, generateTransactionLedgerHTML } from '../utils/templateUtil';
 import { getPdfFromHTML } from '../utils/pdfUtil';
-import { createLoanLedgerSheet, createTransactionLedgerSheet } from '../utils/excelUtil';
+import { createCreditCardLedgerSheet, createLoanLedgerSheet, createTransactionLedgerSheet } from '../utils/excelUtil';
 
 const reportRouter = express.Router();
 const ObjectId = mongoose.Types.ObjectId;
@@ -319,7 +319,7 @@ reportRouter.post('/loan-ledger', authenticate, async (req: Request, res: Respon
     if (format === "PDF") {
       const html = generateLoanLedgerHTML(
         ledger,
-        fromDate ? fromDate.toString().split(" ").splice(1, 3).join(" ") : "N/A",
+        fromDate ? fromDate.toString().split(" ").splice(1, 3).join(" ") : ledger[0]?.date || "N/A",
         toDate,
         loanPrincipal,
         loanStartDate ? loanStartDate.toString().split(" ").splice(1, 3).join(" ") : "N/A",
@@ -335,7 +335,7 @@ reportRouter.post('/loan-ledger', authenticate, async (req: Request, res: Respon
     } else if (format === "EXCEL") {
       const workbook = createLoanLedgerSheet(
         ledger, 
-        fromDate ? fromDate.toString().split(" ").splice(1, 3).join(" ") : "N/A", 
+        fromDate ? fromDate.toString().split(" ").splice(1, 3).join(" ") : ledger[0]?.date || "N/A",
         toDate, 
         loanPrincipal,
         loanStartDate ? loanStartDate.toString().split(" ").splice(1, 3).join(" ") : "N/A",
@@ -345,6 +345,175 @@ reportRouter.post('/loan-ledger', authenticate, async (req: Request, res: Respon
       );
       const buffer = await workbook.xlsx.writeBuffer();
       res.set({ 'Content-Type': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', "Content-Disposition": `attachment; filename="Loan Ledger (${fromDate}-${toDate}).xlsx"` });
+      res.status(200).send(buffer);
+    }
+
+  } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    res.status(500).json({
+      success: false,
+      error: { message: 'Error creating transaction ledger: ' + errorMessage },
+      data: null
+    });
+  }
+});
+
+reportRouter.post('/credit-card-ledger', authenticate, async (req: Request, res: Response) => {
+  try {
+    const userId: string = (req as any).user.id;
+    const { fromDate, toDate, space, format } = req.body;
+
+    // Validate input
+    if (!fromDate || !toDate || !space || !format) {
+      return res.status(400).json({
+        success: false,
+        error: { message: 'fromDate, toDate, space, and format are required' },
+        data: null
+      });
+    }
+
+    const spaceInfo = await Space.findById(space);
+    if (!spaceInfo) {
+      return res.status(404).json({
+        success: false,
+        error: { message: 'Space not found' },
+        data: null
+      });
+    }
+
+    const creditLimit = spaceInfo.creditCardLimit;
+
+    // opening balance
+    const moneyIn = await Transaction.aggregate([
+      {
+        $match: {
+          userId: {
+            $in: [new ObjectId(userId)],
+          },
+          date: { $lt: new Date(fromDate) },
+          type: TransactionType.BALANCE_INCREASE,
+          from: new ObjectId(space)
+        },
+      },
+      {
+        $group: {
+          _id: null,
+          total: { $sum: { $toDouble: "$amount" } },
+        },
+      },
+    ]);
+    const moneyOut = await Transaction.aggregate([
+      {
+        $match: {
+          userId: {
+            $in: [new ObjectId(userId)],
+          },
+          date: { $lt: new Date(fromDate) },
+          type: TransactionType.BALANCE_DECREASE,
+          to: new ObjectId(space)
+        },
+      },
+      {
+        $group: {
+          _id: null,
+          total: { $sum: { $toDouble: "$amount" } },
+        },
+      },
+    ]);
+
+    console.log(moneyIn?.length, moneyIn[0]?.total)
+    console.log(moneyOut?.length, moneyOut[0]?.total)
+
+
+    const totalMoneyIn = moneyIn[0]?.total || 0;
+    const totalMoneyOut = moneyOut[0]?.total || 0;
+    const openingBalance = totalMoneyIn - totalMoneyOut;
+
+
+    // Fetch transactions for the specified spaces and date range
+    const transactions = await Transaction.find({
+      $and: [
+        {
+          $or: [
+            { from: new ObjectId(space) },
+            { to: new ObjectId(space) }
+          ]
+        },
+        { date: { $gte: new Date(fromDate), $lte: new Date(toDate) } },
+        { userId: new ObjectId(userId) }
+      ]
+    })
+      .populate("to", "name")
+      .populate("from", "name")
+      .populate("pcategory", "parentCategory subCategories")
+      .populate("userId", "username")
+      .sort({ date: 1 });
+
+    let runningBalance = openingBalance;
+
+    // Transform transactions into ledger format
+    // columns: space, type, date, main category, sub category, amount, total outstanding
+    const ledger: any[] = transactions.flatMap(tx => {
+      const amount = parseFloat(tx.amount.toString());
+      let scategoryName = null;
+      if (tx.pcategory && tx.scategory) {
+        const sub = (tx.pcategory as any).subCategories.find(
+          (subCat: any) => subCat._id.toString() === tx.scategory.toString()
+        );
+        if (sub) scategoryName = sub.name;
+      }
+
+      if (tx.type === TransactionType.BALANCE_INCREASE) {
+        runningBalance += amount; 
+
+        return [{
+          spaceName: (tx.from as any)?.name || "",
+          transactionType: toTitleCase(tx.type),
+          date: tx.date.toString().split(" ").splice(1, 3).join(" "),
+          mainCategory: (tx.pcategory as any)?.parentCategory || "",
+          subCategory: scategoryName ? toTitleCase(scategoryName) : "",
+          amount: amount,
+          balance: runningBalance
+        }]
+      } else if (tx.type === TransactionType.BALANCE_DECREASE) {
+        runningBalance -= amount;
+        return [{
+          spaceName: (tx.to as any)?.name || "",
+          transactionType: toTitleCase(tx.type),
+          date: tx.date.toString().split(" ").splice(1, 3).join(" "),
+          mainCategory: (tx.pcategory as any)?.parentCategory || "",
+          subCategory: scategoryName ? toTitleCase(scategoryName) : "",
+          amount: amount,
+          balance: runningBalance
+        }]
+      } else {
+        return [];
+      }
+    });
+
+    if (format === "PDF") {
+      const html = generateCreditCardLedgerHTML(
+        ledger,
+        fromDate,
+        toDate,
+        openingBalance,
+        parseFloat(creditLimit.toString())
+      )
+
+      const pdfBuffer = await getPdfFromHTML(html);
+
+      res.set({ 'Content-Type': 'application/pdf', 'Content-Length': pdfBuffer.length, "Content-Disposition": `attachment; filename="Credit card Ledger (${fromDate}-${toDate}).pdf"` });
+      res.status(200).send(Buffer.from(pdfBuffer));
+    } else if (format === "EXCEL") {
+      const workbook = createCreditCardLedgerSheet(
+        ledger, 
+        fromDate, 
+        toDate, 
+        openingBalance,
+        parseFloat(creditLimit.toString())
+      );
+      const buffer = await workbook.xlsx.writeBuffer();
+      res.set({ 'Content-Type': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', "Content-Disposition": `attachment; filename="Credit card Ledger (${fromDate}-${toDate}).xlsx"` });
       res.status(200).send(buffer);
     }
 

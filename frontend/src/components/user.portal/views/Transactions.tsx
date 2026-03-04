@@ -6,12 +6,13 @@ import { toast } from 'react-toastify';
 import { toStrdSpaceType } from "../../../utils/utils";
 import { SpaceType } from "./Spaces";
 import { useParams } from "react-router-dom";
-import { useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { RootState } from "../../../redux/store/store";
 import { CategoryService } from "../../../services/category.service";
 import { TransactionService } from "../../../services/transaction.service";
 import { FaArrowAltCircleDown, FaArrowAltCircleUp, FaCreditCard, FaEdit, FaMoneyBillWave, FaTimes, FaTrash, FaUniversity, FaBullseye, FaInfoCircle } from "react-icons/fa"
 import TransactionList from "./Transactions/TransactionList";
+import { setLoading, setPage } from "../../../redux/features/transaction";
 
 export enum TransactionType {
    EXPENSE = 'EXPENSE',
@@ -181,22 +182,24 @@ function Transactions() {
    const [viewMode, setViewMode] = useState<boolean>(false)
    const [editId, setEditId] = useState<string | null>(null)
    // const [canEditTransaction, setCanEditTransaction] = useState<boolean>(false)
-   const [transactions, setTransactions] = useState<any[]>([])
-   const [total, setTotal] = useState<any>(0)
+   // const [transactions, setTransactions] = useState<any[]>([])
+   // const [total, setTotal] = useState<any>(0)
    const [categories, setCategories] = useState<CategoryInfo[]>([])
-   const [page, setPage] = useState<number>(1);
-   const [loading, setLoading] = useState<boolean>(false)
+   // const [page, setPage] = useState<number>(1);
+   // const [loading, setLoading] = useState<boolean>(false)
    const spaceInfo = transactionTypesInfo.find(info => toStrdSpaceType(activeSpaceType) === info.spaceType) || null
-   const { createTransaction, editTransaction, deleteTransaction, getTransactionsByUser } = TransactionService();
+   const { pageLimit, createTransaction, editTransaction, deleteTransaction, getTransactionsByUser } = TransactionService();
+   const { transactions, loading, page, total } = useSelector((state: RootState) => state.transaction)
+
    const { getCategories } = CategoryService();
-   const pageLimit = 10;
+   const dispatch = useDispatch();
+   // const pageLimit = 10;
+
+   console.log(transactions)
 
    const [allowedParentCategories, setAllowedParentCategories] = useState<any[]>([])
    const [allowedSubCategories, setAllowedSubCategories] = useState<CategoryInfo[]>([])
    const currentSpace = spaces.find(sp => sp.id === spaceid);
-
-
-   console.log("allowedSubCategories", allowedSubCategories)
 
    const onView = (transaction: any) => {
       const transactionInfo: TransactionInfo = {
@@ -212,11 +215,9 @@ function Transactions() {
          spaceId: transaction.spaceId,
          username: transaction.userId.username
       }
-      console.log(transaction, transactionInfo);
       setInputs(transactionInfo)
       setEditId(transaction._id)
       const spaceType = spaces.find(space => space.id === transactionInfo.spaceId)?.type
-      console.log(transactionInfo.type, transactionInfo.spaceId, spaceType)
       setActiveSpaceType(spaceType);
       setActiveSpaceId(transactionInfo.spaceId)
       setViewMode(true)
@@ -241,7 +242,6 @@ function Transactions() {
    const onNewOrEditSubmit = async () => {
       console.log(inputs)
       if (!activeSpaceId) {
-         console.log("No space id found")
          return;
       }
       if (inputs.amount == 0.0) {
@@ -250,40 +250,28 @@ function Transactions() {
       }
 
       let finalInputs = inputs;
-      setLoading(true)
+      dispatch(setLoading({loading: true}))
       if (editId) {
          finalInputs = { ...inputs, spaceId: activeSpaceId }
-         console.log(finalInputs)
          await editTransaction(editId, finalInputs)
       } else {
          finalInputs = { ...inputs, spaceId: activeSpaceId }
-         console.log(finalInputs)
          await createTransaction(finalInputs)
       }
       getTransactionsByUser(spaceid || "", pageLimit, (page - 1) * pageLimit)
-         .then(res => {
-            setTransactions(res.transactions)
-            setTotal(res.total)
-         })
-         .catch(err => setTransactions([]))
          .finally(() => {
-            setLoading(false);
+            dispatch(setLoading({loading: false}));
          });
       onCancel();
    }
 
    const onDelete = async () => {
       if (!editId) return;
-      setLoading(true)
+      dispatch(setLoading({loading: true}))
       await deleteTransaction(editId)
       getTransactionsByUser(spaceid || "", pageLimit, (page - 1) * pageLimit)
-         .then(res => {
-            setTransactions(res.transactions)
-            setTotal(res.total)
-         })
-         .catch(err => setTransactions([]))
          .finally(() => {
-            setLoading(false);
+            dispatch(setLoading({loading: false}));
          });
       onCancel();
    }
@@ -341,32 +329,24 @@ function Transactions() {
    }, [inputs.type])
 
    useEffect(() => {
-      console.log("hello", activeSpaceType)
       if (!viewMode) {
          setInputs({ type: "", amount: 0.0, from: null, to: null, date: getTodayDate(), note: "", scategory: null, pcategory: null })
       }
    }, [activeSpaceType])
 
 
-   console.log(inputs, activeSpaceType, allowedParentCategories)
-
    useEffect(() => {
       setActiveSpaceId(spaceid)
       setActiveSpaceType(spacetype)
-      setLoading(true)
+      dispatch(setLoading({loading: true}))
 
       getCategories(toStrdSpaceType(activeSpaceType))
          .then((res) => setCategories(res))
          .catch((err) => setCategories([]))
 
       getTransactionsByUser(spaceid || "", pageLimit, (page - 1) * pageLimit)
-         .then(res => {
-            setTransactions(res.transactions)
-            setTotal(res.total)
-         })
-         .catch(err => setTransactions([]))
          .finally(() => {
-            setLoading(false);
+            dispatch(setLoading({loading: false}));
          });
 
    }, [page, spaceid])
@@ -411,17 +391,13 @@ function Transactions() {
                         <Button
                            text="Prev"
                            className="max-w-fit bg-transparent border border-border-light-primary dark:border-border-dark-primary"
-                           onClick={() => setPage(prev => {
-                              return prev - 1
-                           })}
+                           onClick={() => dispatch(setPage({page: page - 1}))}
                            disabled={page == 1}
                         />
                         <Button
                            text="Next"
                            className="max-w-fit bg-transparent border border-border-light-primary dark:border-border-dark-primary"
-                           onClick={() => setPage(prev => {
-                              return prev + 1
-                           })}
+                           onClick={() => dispatch(setPage({page: page + 1}))}
                            disabled={page * pageLimit >= total}
                         />
                      </>

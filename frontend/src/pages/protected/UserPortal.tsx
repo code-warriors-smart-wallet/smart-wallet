@@ -8,6 +8,7 @@ import Spaces from "../../components/user.portal/views/Spaces";
 import Budget from "../../components/user.portal/views/Budget";
 import Category from "../../components/user.portal/views/Category";
 import Schedule from "../../components/user.portal/views/Schedule";
+import Reports from "../../components/user.portal/views/Reports";
 
 function UserPortal() {
 
@@ -33,6 +34,8 @@ function UserPortal() {
             return <Budget />
          case UserPortalView.CATEGORIES:
             return <Category />
+         case UserPortalView.REPORTS:
+            return <Reports />
          default:
             return <h1 className="text-xl text-text-light-primary dark:text-text-dark-primary">Default</h1>
       }

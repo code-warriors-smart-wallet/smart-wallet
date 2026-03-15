@@ -9,6 +9,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import DropDown from "../Dropdown";
 import { transactionTypesInfo } from "./views/Transactions";
 import { FaGlobe, FaPlus } from "react-icons/fa";
+import SearchInput from "./SearchInput";
 
 function NavBar({ setSideBarOpen, isSideBarOpen, view, spaceId, setSpaceFormToggle }: { setSideBarOpen: (isopen: boolean) => void, isSideBarOpen: boolean, view: UserPortalView, spaceId: string, setSpaceFormToggle: Dispatch<React.SetStateAction<boolean>> }) {
 
@@ -110,12 +111,9 @@ function NavBar({ setSideBarOpen, isSideBarOpen, view, spaceId, setSpaceFormTogg
                   </button>
                   <Logo />
                </div>
-               <div className="flex-1 relative">
-                  <input
-                     className="bg-bg-light-primary dark:bg-bg-dark-primary w-full p-2 rounded border-2 border-border-light-primary dark:border-border-dark-primary text-text-light-primary dark:text-text-dark-primary outline-none focus:border-primary focus:bg-transparent text-sm"
-                     placeholder={`Search ${view}`}
-                  />
-               </div>
+               <SearchInput
+                  view={view}
+               />
                <div className="max-w-sm ml-3">
                   <DropDown
                      title={activeDropdownText}

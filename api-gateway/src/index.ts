@@ -33,6 +33,12 @@ app.use('/notification', createProxyMiddleware({
    pathRewrite: {'^/notification': ''}
 }))
 
+app.use('/report', createProxyMiddleware({
+   target: process.env.REPORT_SERVICE_URL || "http://localhost:8084",
+   changeOrigin: true,
+   pathRewrite: {'^/report': ''}
+}))
+
 app.listen(port, () => {
    console.log("Api gateway running in port " + port)
 })

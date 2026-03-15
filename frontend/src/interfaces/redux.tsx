@@ -12,3 +12,9 @@ export interface AuthState {
     spaces: {id: string, name: string, type: string, isCollaborative: boolean, isOwner: boolean}[]
 }
 
+export interface TransactionState {
+    transactions: any[],
+    loading: boolean,
+    page: number,
+    total: number
+}

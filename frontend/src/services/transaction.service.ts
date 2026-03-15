@@ -92,14 +92,17 @@
 import axios from 'axios';
 import { api } from '../config/api.config';
 import { toast } from 'react-toastify';
-import { useSelector } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import { TransactionInfo } from "../interfaces/modals";
 import { RootState } from '@/redux/store/store';
-import { BudgetService } from './budget.service';
+import { useState } from 'react';
+import { getSuccess } from '../redux/features/transaction';
+ import { BudgetService } from './budget.service';
 
 export function TransactionService() {
-    const token = useSelector((state: RootState) => state.auth.token);
-    const budgetService = BudgetService();
+    const token = useSelector((state: RootState) => state.auth.token)
+    const dispatch = useDispatch();
+    const pageLimit = 10;
 
     // Helper function to validate and find matching budget entries for a transaction
     async function findMatchingBudgetEntries(transaction: TransactionInfo) {
@@ -474,39 +477,58 @@ export function TransactionService() {
                 }
             });
             if (response.data.success) {
-                return response.data.data.object;
+                dispatch(getSuccess({
+                    total: response.data.data.object.total,
+                    transactions: response.data.data.object.transactions
+                }))
             }
-            return [];
+            else {
+                dispatch(getSuccess({
+                    total: 0,
+                    transactions: []
+                }))
+            }
         } catch (error) {
-            processError(error);
-            return [];
+            processError(error)
+            dispatch(getSuccess({
+                total: 0,
+                transactions: []
+            }))
+        } finally {
         }
     }
 
-   async function getTransactionById(id: string): Promise<TransactionInfo | null> {
+    async function searchTransactions(body: any): Promise<any> {
         try {
-            const response = await api.get(`finops/transaction/${id}`, {
+            const response = await api.post(`finops/transaction/search`, body, {
                 headers: {
                     "authorization": `Bearer ${token}`
                 }
             });
+            console.log(response.data.data.object)
             if (response.data.success) {
-                return response.data.data.object;
+                dispatch(getSuccess({
+                    total: response.data.data.object.total,
+                    transactions: response.data.data.object.transactions
+                }))
             }
-            return null;
+            else {
+                dispatch(getSuccess({
+                    total: 0,
+                    transactions: []
+                }))
+            }
         } catch (error) {
-            console.error("Error getting transaction by ID:", error);
-            return null;
+            processError(error)
+            dispatch(getSuccess({
+                total: 0,
+                transactions: []
+            }))
+        } finally {
         }
     }
 
-    return { 
-        createTransaction, 
-        editTransaction, 
-        deleteTransaction, 
-        getTransactionsByUser,
-        getTransactionById 
-    };
+    return { pageLimit, createTransaction, editTransaction, deleteTransaction, getTransactionsByUser, searchTransactions };
 }
 
 function processError(error: unknown): void {

@@ -1,8 +1,9 @@
 import SideBarItem from "./SideBarItem";
 import { useNavigate } from "react-router-dom";
 import SidebarDropdownItem from "./SideBarDropDownItem";
-import { BudgetIcon, CategoryIcon, DashBoardIcon, GoalIcon, LogoutIcon, NotificationIcon, ScheduleIcon, SettingsIcon, SpaceIcon, TransactionIcon } from "../icons";
+import { BudgetIcon, CategoryIcon, DashBoardIcon, GoalIcon, LogoutIcon, NotificationIcon, ReportIcon, ScheduleIcon, SettingsIcon, SpaceIcon, TransactionIcon } from "../icons";
 import { AuthService } from "../../services/auth/auth.service";
+import { MdFileDownload } from "react-icons/md";
 
 export enum UserPortalView {
    DASHBOARD = "dashboard",
@@ -16,6 +17,7 @@ export enum UserPortalView {
    SETTINGS = "settings",
    SETTINGS_PROFILE = "profile",
    SETTINGS_BILLING = "billing",
+   REPORTS = "reports",
    LOGOUT = "log out"
 }
 
@@ -40,6 +42,7 @@ function SideBar({ isSideBarOpen, view, spacetype, spaceid }: { isSideBarOpen: b
                {/* <SideBarItem name={UserPortalView.GOALS} isActive={view == UserPortalView.GOALS} onClick={onClickSideBarItem} Icon={GoalIcon} /> */}
                {/* <SideBarItem name={UserPortalView.NOTIFICATIONS} isActive={view == UserPortalView.NOTIFICATIONS} pc={5} onClick={onClickSideBarItem} Icon={NotificationIcon} /> */}
                <SideBarItem name={UserPortalView.CATEGORIES} isActive={view == UserPortalView.CATEGORIES} onClick={onClickSideBarItem} Icon={CategoryIcon} />
+               <SideBarItem name={UserPortalView.REPORTS} isActive={view == UserPortalView.REPORTS} onClick={onClickSideBarItem} Icon={ReportIcon} />
                {/* <SideBarItem name={UserPortalView.MANAGE_SPACE} isActive={view == UserPortalView.MANAGE_SPACE} onClick={onClickSideBarItem} Icon={SpaceIcon} /> */}
                {/* <SidebarDropdownItem name={UserPortalView.SETTINGS} onClick={onClickSideBarItem} Icon={SettingsIcon}>
                   <SideBarItem name={UserPortalView.SETTINGS_PROFILE} onClick={onClickSideBarItem} isActive={view == UserPortalView.SETTINGS_PROFILE} />

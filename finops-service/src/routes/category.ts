@@ -3,7 +3,7 @@ import Cat from '../models/category';
 import Space from '../models/space';
 import { authenticate } from '../middlewares/auth';
 import mongoose from 'mongoose';
-import { getUsersBySpace } from './dashboard';
+import { getUsersBySpace } from './transaction';
 
 const categoryRouter = express.Router();
 

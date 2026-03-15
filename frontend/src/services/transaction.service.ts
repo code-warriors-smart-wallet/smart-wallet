@@ -97,18 +97,21 @@ import { TransactionInfo } from "../interfaces/modals";
 import { RootState } from '@/redux/store/store';
 import { useState } from 'react';
 import { getSuccess } from '../redux/features/transaction';
- import { BudgetService } from './budget.service';
+import { BudgetService } from './budget.service';
+//  import { BudgetService } from './budget.service';
 
 export function TransactionService() {
     const token = useSelector((state: RootState) => state.auth.token)
     const dispatch = useDispatch();
     const pageLimit = 10;
 
+    const { getBudgetsBySpace, getBudgetSpending, updateBudgetSpent } = BudgetService()
+
     // Helper function to validate and find matching budget entries for a transaction
     async function findMatchingBudgetEntries(transaction: TransactionInfo) {
         try {
             // Get all budgets for the space
-            const budgets = await budgetService.getBudgetsBySpace(transaction.spaceId);
+            const budgets = await getBudgetsBySpace(transaction.spaceId);
             
             const matchingEntries = [];
             
@@ -134,7 +137,7 @@ export function TransactionService() {
                 }
                 
                 // Get budget spending for the transaction date
-                const budgetSpending = await budgetService.getBudgetSpending(
+                const budgetSpending = await getBudgetSpending(
                     budget._id, 
                     transaction.date
                 );
@@ -256,7 +259,7 @@ export function TransactionService() {
                                     spaceId: transaction.spaceId
                                 };
                                 
-                                const result = await budgetService.updateBudgetSpent(budget._id, transactionData);
+                                const result = await updateBudgetSpent(budget._id, transactionData);
                                 console.log(`Removed old amount from budget ${budget._id}:`, result);
                             } catch (budgetError) {
                                 console.error(`Error removing from old budget ${budget._id}:`, budgetError);
@@ -280,7 +283,7 @@ export function TransactionService() {
                                 spaceId: transaction.spaceId
                             };
                             
-                            const result = await budgetService.updateBudgetSpent(budget._id, transactionData);
+                            const result = await updateBudgetSpent(budget._id, transactionData);
                             console.log(`Added new amount to budget ${budget._id}:`, result);
                         } catch (budgetError) {
                             console.error(`Error adding to new budget ${budget._id}:`, budgetError);
@@ -319,7 +322,7 @@ export function TransactionService() {
                                 
                 try {
                     // Update budget spent amount
-                    const result = await budgetService.updateBudgetSpent(budget._id, transactionData);
+                    const result = await updateBudgetSpent(budget._id, transactionData);
                     console.log(`Updated budget ${budget._id}, entry ${entry.id}:`, result);
                 } catch (budgetError) {
                     console.error(`Error updating budget ${budget._id}:`, budgetError);

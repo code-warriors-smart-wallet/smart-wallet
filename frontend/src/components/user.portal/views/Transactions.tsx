@@ -177,6 +177,7 @@ function Transactions() {
       note: "",
       scategory: null,
       pcategory: null,
+      spaceId: "",
    });
    const [newOrEditMode, setNewMode] = useState<boolean>(false)
    const [viewMode, setViewMode] = useState<boolean>(false)
@@ -244,18 +245,28 @@ function Transactions() {
       if (!activeSpaceId) {
          return;
       }
+      // Ensure spaceId is set
+      if (!inputs.spaceId) {
+         setInputs(prev => ({ ...prev, spaceId: activeSpaceId }));
+      }
       if (inputs.amount == 0.0) {
          toast.error("Amount is required!")
          return;
       }
 
       let finalInputs = inputs;
+     
+      // Ensure spaceId is always set
+      if (!finalInputs.spaceId) {
+         finalInputs = { ...finalInputs, spaceId: activeSpaceId };
+      }
+     
       dispatch(setLoading({loading: true}))
       if (editId) {
-         finalInputs = { ...inputs, spaceId: activeSpaceId }
+         console.log(finalInputs)
          await editTransaction(editId, finalInputs)
       } else {
-         finalInputs = { ...inputs, spaceId: activeSpaceId }
+         console.log(finalInputs)
          await createTransaction(finalInputs)
       }
       getTransactionsByUser(spaceid || "", pageLimit, (page - 1) * pageLimit)
@@ -282,7 +293,7 @@ function Transactions() {
       setEditId(null)
       setActiveSpaceType(spacetype)
       setActiveSpaceId(spaceid)
-      setInputs({ type: "", amount: 0.0, from: null, to: null, date: getTodayDate(), note: "", scategory: null, pcategory: null })
+      setInputs({ type: "", amount: 0.0, from: null, to: null, date: getTodayDate(), note: "", scategory: null, pcategory: null,spaceId: "" })
    }
 
    useEffect(() => {
@@ -330,7 +341,7 @@ function Transactions() {
 
    useEffect(() => {
       if (!viewMode) {
-         setInputs({ type: "", amount: 0.0, from: null, to: null, date: getTodayDate(), note: "", scategory: null, pcategory: null })
+         setInputs({ type: "", amount: 0.0, from: null, to: null, date: getTodayDate(), note: "", scategory: null, pcategory: null, spaceId: "" })
       }
    }, [activeSpaceType])
 

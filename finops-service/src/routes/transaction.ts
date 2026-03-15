@@ -3,6 +3,7 @@ import Transaction, { MemberStatus } from '../models/transaction';
 import Space, { ISpace, SpaceType } from '../models/space';
 import { authenticate } from '../middlewares/auth';
 import { Types } from 'mongoose';
+import mongoose from 'mongoose';
 
 const transactionRouter = express.Router();
 
@@ -31,10 +32,64 @@ transactionRouter.post('/', authenticate, async (req: Request, res: Response) =>
 
 })
 
+transactionRouter.get('/:id', authenticate, async (req: Request, res: Response) => {
+    try {
+        const { id } = req.params;
+        const userId: string = (req as any).user.id;
+
+        // Validate ObjectId
+        if (!mongoose.Types.ObjectId.isValid(id)) {
+            res.status(400).json({
+                success: false,
+                error: { message: 'Invalid transaction ID format' },
+                data: null
+            });
+            return;
+        }
+
+        const transaction = await Transaction.findOne({ _id: id, userId: userId });
+
+        if (!transaction) {
+            res.status(404).json({
+                success: false,
+                error: { message: 'Transaction not found' },
+                data: null
+            });
+            return;
+        }
+
+        res.status(200).json({
+            success: true,
+            data: {
+                object: transaction,
+                message: 'Transaction retrieved successfully'
+            },
+            error: null
+        });
+    } catch (error) {
+        const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+        res.status(500).json({
+            success: false,
+            error: { message: 'Error getting transaction: ' + errorMessage },
+            data: null
+        });
+    }
+});
+
 transactionRouter.put('/:id', authenticate, async (req: Request, res: Response) => {
     try {
         const { id } = req.params;
         const userId: string = (req as any).user.id;
+
+        // Validate ObjectId
+        if (!mongoose.Types.ObjectId.isValid(id)) {
+            res.status(400).json({
+                success: false,
+                error: { message: 'Invalid transaction ID format' },
+                data: null
+            });
+            return;
+        }
 
         const existingTransaction = await Transaction.findOne({
             _id: id,
@@ -50,12 +105,23 @@ transactionRouter.put('/:id', authenticate, async (req: Request, res: Response) 
             return;
         }
 
-        const transaction = await Transaction.updateOne({ _id: id }, { $set: { ...req.body, userId: userId } })
+        // Save the old transaction data for budget updates
+        const oldTransaction = { ...existingTransaction.toObject() };
+
+        // Update the transaction
+        const updatedTransaction = await Transaction.findByIdAndUpdate(
+            id,
+            { $set: { ...req.body, userId: userId } },
+            { new: true, runValidators: true }
+        );
+
+        // const transaction = await Transaction.updateOne({ _id: id }, { $set: { ...req.body, userId: userId } })
 
         res.status(200).json({
             success: true,
             data: {
-                object: transaction,
+                object: updatedTransaction,
+                oldObject: oldTransaction,
                 message: 'Transaction updated successfully'
             },
             error: null
@@ -76,6 +142,16 @@ transactionRouter.delete('/:id', authenticate, async (req: Request, res: Respons
         const { id } = req.params;
         const userId: string = (req as any).user.id;
 
+        // Validate ObjectId
+        if (!mongoose.Types.ObjectId.isValid(id)) {
+            res.status(400).json({
+                success: false,
+                error: { message: 'Invalid transaction ID format' },
+                data: null
+            });
+            return;
+        }
+
         const existingTransaction = await Transaction.findOne({ _id: id, userId: userId });
 
         if (!existingTransaction) {
@@ -87,9 +163,18 @@ transactionRouter.delete('/:id', authenticate, async (req: Request, res: Respons
             return;
         }
 
+        // Return the transaction data before deleting for budget updates
+        const transactionData = { ...existingTransaction.toObject() };
+
         await Transaction.deleteOne({ _id: id });
 
-        res.status(200).json({ success: true, message: "Transaction deleted successfully" });
+        res.status(200).json({
+            success: true,
+            data: {
+                object: transactionData,
+                message: "Transaction deleted successfully"
+            }
+        });
     } catch (error) {
         const errorMessage = error instanceof Error ? error.message : 'Unknown error';
         res.status(500).json({

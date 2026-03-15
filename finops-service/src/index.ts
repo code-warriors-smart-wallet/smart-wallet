@@ -17,6 +17,7 @@ import { connectDatabase } from './config/database';
 import categoryRouter from "./routes/category";
 import transactionRouter from "./routes/transaction";
 import scheduleRouter from "./routes/schedule";
+import budgetRouter from './routes/budget';
 
 // Load environment variables
 dotenv.config({ path: path.join(__dirname, '../.env') });
@@ -35,6 +36,7 @@ app.use(cookieParser());
 connectDatabase()
     .then(() => {
         // Routes
+        app.use("/budget", budgetRouter);
         app.use("/category", categoryRouter);
         app.use("/transaction", transactionRouter);
         app.use("/schedule", scheduleRouter);

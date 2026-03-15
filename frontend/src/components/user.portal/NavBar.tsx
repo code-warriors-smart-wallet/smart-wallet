@@ -28,7 +28,7 @@ function NavBar({ setSideBarOpen, isSideBarOpen, view, spaceId, setSpaceFormTogg
          setSpaceFormToggle(true)
          return
       }
-      const selectedSpace = spaces.find(sp => sp.name===text)
+      const selectedSpace = spaces.find(sp => sp.name === text)
       if (!selectedSpace) {
          navigate(`/user-portal/all/all/${view}`);
          return;
@@ -39,25 +39,54 @@ function NavBar({ setSideBarOpen, isSideBarOpen, view, spaceId, setSpaceFormTogg
    useEffect(() => {
 
       const dropdownItemsL = ["All spaces"]
-      const dropdownIconsL:React.ReactNode[] = [<FaGlobe/>]
+      const dropdownIconsL: React.ReactNode[] = [<FaGlobe />]
       let title = ""
       let titleIcon: React.ReactNode = <></>
       const lastItem = "New Space"
-      const lastIcon = <FaPlus/>
+      const lastIcon = <FaPlus />
 
-      spaces.forEach(space => {
-         if (space.id === spaceId) {
-            title = space.name,
-            titleIcon = transactionTypesInfo.find(info => info.spaceType === space.type)?.icon
-         }
-         dropdownItemsL.push(space.name)
-         dropdownIconsL.push(transactionTypesInfo.find(info => info.spaceType === space.type)?.icon)
-      })
-
-      if (!title) {
-         title = "All spaces"
-         titleIcon = <FaGlobe/>
+      // --- Filter spaces for Budget view ---
+      let filteredSpaces = spaces;
+      if (view === "budgets") {
+         const allowedTypes = ["CASH", "BANK", "CREDIT_CARD"];
+         filteredSpaces = spaces.filter((space) =>
+            allowedTypes.includes(space.type)
+         );
       }
+
+      filteredSpaces.forEach((space) => {
+         dropdownItemsL.push(space.name);
+         dropdownIconsL.push(
+            transactionTypesInfo.find((info) => info.spaceType === space.type)?.icon
+         );
+
+         if (space.id === spaceId) {
+            title = space.name;
+            titleIcon =
+               transactionTypesInfo.find((info) => info.spaceType === space.type)
+                  ?.icon || <></>;
+         }
+      });
+
+      // spaces.forEach(space => {
+      //    if (space.id === spaceId) {
+      //       title = space.name,
+      //       titleIcon = transactionTypesInfo.find(info => info.spaceType === space.type)?.icon
+      //    }
+      //    dropdownItemsL.push(space.name)
+      //    dropdownIconsL.push(transactionTypesInfo.find(info => info.spaceType === space.type)?.icon)
+      // })
+
+      // If no space matches, fallback to "All spaces"
+      if (!title || spaceId === "all") {
+         title = "All spaces";
+         titleIcon = <FaGlobe />;
+      }
+
+      // if (!title) {
+      //    title = "All spaces"
+      //    titleIcon = <FaGlobe/>
+      // }
 
       console.log(dropdownItemsL, title)
 
@@ -66,7 +95,7 @@ function NavBar({ setSideBarOpen, isSideBarOpen, view, spaceId, setSpaceFormTogg
       setActiveDropdownIcon(titleIcon)
       setActiveDropdownText(title)
 
-   }, [spaceId, spaces])
+   }, [spaceId, spaces, view])
 
    return (
       <nav className="fixed top-0 z-50 w-full bg-bg-light-primary dark:bg-bg-dark-primary border-b border-border-light-primary dark:border-border-dark-primary h-20">
@@ -92,7 +121,7 @@ function NavBar({ setSideBarOpen, isSideBarOpen, view, spaceId, setSpaceFormTogg
                      dropdownItems={dropdownItems}
                      dropdownIcons={dropdownIcons}
                      lastItem={"New Space"}
-                     lastIcon={<FaPlus/>}
+                     lastIcon={<FaPlus />}
                      onClick={(text) => onInputChange(text)}
                   />
                </div>

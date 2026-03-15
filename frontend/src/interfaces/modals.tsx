@@ -101,7 +101,8 @@ export interface TransactionInfo {
     pcategory: string | null,
     scheduleId?: string | null,
     spaceId: string,
-    username?: string
+    username?: string,
+    loanRepaymentPlanId?: string;
 }
 
 export interface ReportInfo {
@@ -169,4 +170,21 @@ export interface CategoryInfo {
     subCategoryId: string;
     subCategoryName: string;
     transactionTypes: string[],
+}
+
+export interface Plan {
+    _id: string;
+    spaceId?: {
+        _id: string;
+        name?: string;
+        type?: string;
+        loanPrincipal?: any;
+        loanStartDate?: string;
+        loanEndDate?: string;
+    };
+    installments?: Array<{
+        status: string;
+        principalPaid?: any;
+        interestPaid?: any;
+    }>;
 }

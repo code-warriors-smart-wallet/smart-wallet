@@ -24,7 +24,7 @@ export async function sendSpaceInvitationEmail(userId: any, email: string, space
         const mailReq =  {
             mailOptions: {
                 to: email,
-                subject: 'Space invitation',
+                subject: 'You\'re invited to collaborate on SmartWallet!',
                 text: `Click below link to join to space ${space}: \n Link: ${link}`
             },
             userId: userId,

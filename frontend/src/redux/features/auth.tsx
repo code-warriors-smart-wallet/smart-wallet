@@ -13,6 +13,7 @@ const initialState: AuthState = {
     currency: null,
     plan: null,
     role: null,
+    userId:null,
     spaces: []
 };
 
@@ -24,7 +25,7 @@ const authSlice = createSlice({
     initialState: initialState, // The initial state of the slice
     // reducer functions are accepting the previous state and the action and return the new state
     reducers: {
-        loginSuccess(state, action: { "payload": { username: string, email: string, token: string, currency: string, plan: PlanType, role: UserRole, spaces: {id: string, name: string, type: SpaceType}[] } }) {
+        loginSuccess(state, action: { "payload": { username: string, email: string, token: string, currency: string, plan: PlanType, role: UserRole, userId:string, spaces: {id: string, name: string, type: SpaceType, isCollaborative: boolean, isOwner: boolean}[] } }) {
             console.log("login success: ", action.payload.token)
             state.username = action.payload.username;
             state.token = action.payload.token;
@@ -33,6 +34,7 @@ const authSlice = createSlice({
             state.plan = action.payload.plan
             state.isAuthenticated = true;
             state.role = action.payload.role
+            state.userId = action.payload.userId;
             state.spaces = action.payload.spaces
         },
         logout(state) {
@@ -40,6 +42,7 @@ const authSlice = createSlice({
             state.token = null;
             state.email = null;
             state.isAuthenticated = false;
+            state.userId = null;
             localStorage.removeItem("smart-wallet-user")
         },
         setToken(state, action) {

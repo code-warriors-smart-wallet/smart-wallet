@@ -2,7 +2,7 @@ import mongoose, { Schema, Document } from 'mongoose';
 
 export interface IBudgetEntry extends Document {
     budget_id: mongoose.Types.ObjectId;
-    spaceId: mongoose.Types.ObjectId;
+    spaceIds: mongoose.Types.ObjectId[];
     start_date: Date;
     end_date: Date;
     amount: number;
@@ -17,11 +17,11 @@ const budgetEntrySchema: Schema = new Schema({
         ref: 'Budget',
         required: true
     },
-    spaceId: { 
+    spaceIds: [{ 
         type: Schema.Types.ObjectId,
         ref: 'Space',
         required: true
-    },
+    }],
     start_date: {
         type: Date,
         required: true

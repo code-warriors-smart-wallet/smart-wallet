@@ -1113,7 +1113,7 @@ const BudgetDetailModal: React.FC<BudgetDetailModalProps> = ({
           {displayData.length > 0 ? (
             <div className="bg-bg-light-primary dark:bg-bg-dark-primary rounded-xl p-6 shadow-sm">
               {/* Budget Summary Bar */}
-              <div className="flex items-center justify-between mb-6 p-4 bg-gradient-to-r from-primary/10 to-primary/5 rounded-lg">
+              {/* <div className="flex items-center justify-between mb-6 p-4 bg-gradient-to-r from-primary/10 to-primary/5 rounded-lg">
                 <div>
                   <div className="text-sm text-text-light-secondary dark:text-text-dark-secondary mb-1">
                     Total Budget Amount
@@ -1138,7 +1138,7 @@ const BudgetDetailModal: React.FC<BudgetDetailModalProps> = ({
                     {avgSpendingPercentage.toFixed(1)}%
                   </div>
                 </div>
-              </div>
+              </div> */}
 
               {/* Trend Chart Container */}
               <div className="relative">
@@ -1269,7 +1269,7 @@ const BudgetDetailModal: React.FC<BudgetDetailModalProps> = ({
               </div>
 
               {/* Summary Stats */}
-              <div className="grid grid-cols-4 gap-4 mt-8 pt-6 border-t border-border-light-primary dark:border-border-dark-primary">
+              {/* <div className="grid grid-cols-4 gap-4 mt-8 pt-6 border-t border-border-light-primary dark:border-border-dark-primary">
                 <div className="text-center">
                   <p className="text-sm text-text-light-secondary dark:text-text-dark-secondary">
                     Avg. Budget
@@ -1302,7 +1302,7 @@ const BudgetDetailModal: React.FC<BudgetDetailModalProps> = ({
                     {currency} {Math.min(...displayData.map((d: any) => d.entrySpent)).toFixed(2)}
                   </p>
                 </div>
-              </div>
+              </div> */}
             </div>
           ) : (
             <div className="bg-bg-light-primary dark:bg-bg-dark-primary rounded-xl p-12 text-center border-2 border-dashed border-border-light-primary dark:border-border-dark-primary">

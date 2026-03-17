@@ -4,6 +4,8 @@ import SidebarDropdownItem from "./SideBarDropDownItem";
 import { BudgetIcon, CategoryIcon, DashBoardIcon, GoalIcon, LogoutIcon, NotificationIcon, ReportIcon, ScheduleIcon, SettingsIcon, SpaceIcon, TransactionIcon, RepaymentPlanIcon } from "../icons";
 import { AuthService } from "../../services/auth/auth.service";
 import { MdFileDownload } from "react-icons/md";
+import { SpaceType } from "./views/Spaces";
+import { toStrdSpaceType } from "./../../utils/utils";
 
 import { useSelector } from "react-redux";
 import { RootState } from "@/redux/store/store";
@@ -90,6 +92,11 @@ function SideBar({ isSideBarOpen, view, spacetype, spaceid }: { isSideBarOpen: b
                <SideBarItem name={UserPortalView.SCHEDULES} isActive={view == UserPortalView.SCHEDULES} onClick={onClickSideBarItem} Icon={ScheduleIcon} />
                {shouldShowBudget() && (<SideBarItem name={UserPortalView.BUDGETS} isActive={view == UserPortalView.BUDGETS} onClick={onClickSideBarItem} Icon={BudgetIcon} />)}
                {shouldShowRepaymentPlan() && (<SideBarItem name={UserPortalView.REPAYMENT_PLANS} isActive={view == UserPortalView.REPAYMENT_PLANS} onClick={onClickSideBarItem} Icon={RepaymentPlanIcon} />)}
+              <!--                {
+                  [SpaceType.CASH, SpaceType.BANK, SpaceType.CREDIT_CARD].includes(toStrdSpaceType(spacetype) as SpaceType) && (
+                     <SideBarItem name={UserPortalView.BUDGETS} isActive={view == UserPortalView.BUDGETS} onClick={onClickSideBarItem} Icon={BudgetIcon} />
+                  )
+               } -->
                {/* <SideBarItem name={UserPortalView.GOALS} isActive={view == UserPortalView.GOALS} onClick={onClickSideBarItem} Icon={GoalIcon} /> */}
                {/* <SideBarItem name={UserPortalView.NOTIFICATIONS} isActive={view == UserPortalView.NOTIFICATIONS} pc={5} onClick={onClickSideBarItem} Icon={NotificationIcon} /> */}
                <SideBarItem name={UserPortalView.CATEGORIES} isActive={view == UserPortalView.CATEGORIES} onClick={onClickSideBarItem} Icon={CategoryIcon} />

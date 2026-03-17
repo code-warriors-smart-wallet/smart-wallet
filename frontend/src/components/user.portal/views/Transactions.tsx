@@ -1649,7 +1649,7 @@ function Transactions() {
                            <label className="text-text-light-primary dark:text-text-dark-primary">Amount:</label>
                            <Input
                               name="amount"
-                              type="number"
+                              type="text"
                               placeholder="Enter amount"
                               value={inputs.amount.toString()}
                               onChange={onInputChange}

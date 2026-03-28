@@ -18,3 +18,13 @@ export interface TransactionState {
     page: number,
     total: number
 }
+
+export interface InstallmentState {
+    installments: any[],
+    loading: boolean,
+    page: number,
+    total: number,
+    loanInfo: any,
+    loanRepaymentPlanInfo: any,
+    transactions: any[]
+}

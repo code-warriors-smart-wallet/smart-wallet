@@ -101,7 +101,35 @@ export interface TransactionInfo {
     pcategory: string | null,
     scheduleId?: string | null,
     spaceId: string,
-    username?: string
+    username?: string,
+    loanRepaymentPlanId?: string
+}
+
+export interface RepaymentPlanInfo {
+    
+    amount: number,
+    startDate: string,
+    endDate: string,
+    interestRate: number,
+    interestPeriod: string,
+    interestType: string,
+    paymentFrequency: string,
+    firstPaymentDate: string,
+    spaceId: string
+}
+
+export interface InstallmentPaymentInfo {
+    installmentId: number|null,
+    amount: number,
+    paymentType: string,
+    from: string|null,
+    to: string|null,
+    interest: number,
+    principal: number,
+    remainingprincipal: number,
+    remainingInterest: number,
+    planId: string|null,
+    status: string
 }
 
 export interface ReportInfo {

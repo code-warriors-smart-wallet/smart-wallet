@@ -214,8 +214,10 @@ function Transactions() {
          type: transaction.type,
          scheduleId: transaction?.scheduleId || null,
          spaceId: transaction.spaceId,
-         username: transaction.userId.username
+         username: transaction.userId.username,
+         loanRepaymentPlanId: transaction.loanRepaymentPlanId
       }
+      console.log(transactionInfo)
       setInputs(transactionInfo)
       setEditId(transaction._id)
       const spaceType = spaces.find(space => space.id === transactionInfo.spaceId)?.type
@@ -255,13 +257,13 @@ function Transactions() {
       }
 
       let finalInputs = inputs;
-     
+
       // Ensure spaceId is always set
       if (!finalInputs.spaceId) {
          finalInputs = { ...finalInputs, spaceId: activeSpaceId };
       }
-     
-      dispatch(setLoading({loading: true}))
+
+      dispatch(setLoading({ loading: true }))
       if (editId) {
          console.log(finalInputs)
          await editTransaction(editId, finalInputs)
@@ -271,18 +273,18 @@ function Transactions() {
       }
       getTransactionsByUser(spaceid || "", pageLimit, (page - 1) * pageLimit)
          .finally(() => {
-            dispatch(setLoading({loading: false}));
+            dispatch(setLoading({ loading: false }));
          });
       onCancel();
    }
 
    const onDelete = async () => {
       if (!editId) return;
-      dispatch(setLoading({loading: true}))
+      dispatch(setLoading({ loading: true }))
       await deleteTransaction(editId)
       getTransactionsByUser(spaceid || "", pageLimit, (page - 1) * pageLimit)
          .finally(() => {
-            dispatch(setLoading({loading: false}));
+            dispatch(setLoading({ loading: false }));
          });
       onCancel();
    }
@@ -293,30 +295,35 @@ function Transactions() {
       setEditId(null)
       setActiveSpaceType(spacetype)
       setActiveSpaceId(spaceid)
-      setInputs({ type: "", amount: 0.0, from: null, to: null, date: getTodayDate(), note: "", scategory: null, pcategory: null,spaceId: "" })
+      setInputs({ type: "", amount: 0.0, from: null, to: null, date: getTodayDate(), note: "", scategory: null, pcategory: null, spaceId: "" })
    }
 
    useEffect(() => {
       if (inputs.type == "") return;
+      console.log("test", inputs.type, inputs.from, inputs.to, spaceInfo)
       if (spaceInfo?.transactionTypes.find(t => t.type === inputs.type)?.fromSpaces.includes("ACTIVE_SPACE")) {
+         console.log("test", 1)
          setInputs((prev: any) => {
             return { ...prev, from: activeSpaceId }
          });
       }
 
       else if (spaceInfo?.transactionTypes.find(t => t.type === inputs.type)?.fromSpaces.includes("OUTSIDE_MYWALLET")) {
+         console.log("test", 2)
          setInputs((prev: any) => {
             return { ...prev, from: null }
          });
       }
 
       if (spaceInfo?.transactionTypes.find(t => t.type === inputs.type)?.toSpaces.includes("ACTIVE_SPACE")) {
+            console.log("test", 3)
          setInputs((prev: any) => {
             return { ...prev, to: activeSpaceId }
          });
       }
 
       else if (spaceInfo?.transactionTypes.find(t => t.type === inputs.type)?.toSpaces.includes("OUTSIDE_MYWALLET")) {
+         console.log("test", 4)
          setInputs((prev: any) => {
             return { ...prev, to: null }
          });
@@ -349,7 +356,7 @@ function Transactions() {
    useEffect(() => {
       setActiveSpaceId(spaceid)
       setActiveSpaceType(spacetype)
-      dispatch(setLoading({loading: true}))
+      dispatch(setLoading({ loading: true }))
 
       getCategories(toStrdSpaceType(activeSpaceType))
          .then((res) => setCategories(res))
@@ -357,7 +364,7 @@ function Transactions() {
 
       getTransactionsByUser(spaceid || "", pageLimit, (page - 1) * pageLimit)
          .finally(() => {
-            dispatch(setLoading({loading: false}));
+            dispatch(setLoading({ loading: false }));
          });
 
    }, [page, spaceid])
@@ -402,24 +409,28 @@ function Transactions() {
                         <Button
                            text="Prev"
                            className="max-w-fit bg-transparent border border-border-light-primary dark:border-border-dark-primary"
-                           onClick={() => dispatch(setPage({page: page - 1}))}
+                           onClick={() => dispatch(setPage({ page: page - 1 }))}
                            disabled={page == 1}
                         />
                         <Button
                            text="Next"
                            className="max-w-fit bg-transparent border border-border-light-primary dark:border-border-dark-primary"
-                           onClick={() => dispatch(setPage({page: page + 1}))}
+                           onClick={() => dispatch(setPage({ page: page + 1 }))}
                            disabled={page * pageLimit >= total}
                         />
                      </>
                   )
                }
 
-               <Button
-                  text="New Transaction"
-                  className="max-w-fit"
-                  onClick={onNewOrEditMode}
-               />
+               {
+                  toStrdSpaceType(spacetype).startsWith("LOAN") &&
+                  transactions?.filter(t => t.loanRepaymentPlanId != null)?.length == 0 &&
+                  <Button
+                     text="New Transactions"
+                     className="max-w-fit"
+                     onClick={onNewOrEditMode}
+                  />
+               }
             </div>
          </div>
 
@@ -708,19 +719,26 @@ function Transactions() {
                         View Transaction
                         <div className="flex gap-2">
                            {
-                              inputs.type != TransactionType.LOAN_PRINCIPAL && (
+                              (
                                  inputs.username === username ? (
                                     <>
-                                       <Button
-                                          text={<FaEdit />}
-                                          onClick={onNewOrEditMode}
-                                          className="max-w-fit pt-2 pb-2"
-                                       />
-                                       <Button
-                                          text={<FaTrash />}
-                                          onClick={onDelete}
-                                          className="max-w-fit pt-2 pb-2 hover:!bg-red-600 !bg-red-500"
-                                       />
+                                       {
+                                          !inputs.loanRepaymentPlanId && inputs.type != TransactionType.LOAN_PRINCIPAL &&
+                                          <>
+                                             <Button
+                                                text={<FaEdit />}
+                                                onClick={onNewOrEditMode}
+                                                className="max-w-fit pt-2 pb-2"
+                                             />
+                                             <Button
+                                                text={<FaTrash />}
+                                                onClick={onDelete}
+                                                className="max-w-fit pt-2 pb-2 hover:!bg-red-600 !bg-red-500"
+                                             />
+                                          </>
+                                       }
+
+
                                     </>
                                  ) : null
                               )

@@ -9,6 +9,7 @@ import Budget from "../../components/user.portal/views/Budget";
 import Category from "../../components/user.portal/views/Category";
 import Schedule from "../../components/user.portal/views/Schedule";
 import Reports from "../../components/user.portal/views/Reports";
+import LoanRepaymentPlan from "../../components/user.portal/views/LoanRepaymentPlan";
 
 function UserPortal() {
 
@@ -32,6 +33,8 @@ function UserPortal() {
             return <Schedule />
          case UserPortalView.BUDGETS:
             return <Budget />
+         case UserPortalView.LOAN_REPAYMENT_PLAN:
+            return <LoanRepaymentPlan />
          case UserPortalView.CATEGORIES:
             return <Category />
          case UserPortalView.REPORTS:

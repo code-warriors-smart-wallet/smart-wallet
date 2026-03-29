@@ -257,9 +257,9 @@ loanRepaymentPlanRouter.post('/pay/:planId', authenticate, async (req: Request, 
             _installment.penaltyPaid = _installment.penaltyPaid + penalty
             _installment.totalPayment = _installment.interestPaid + interest + installment[0].principalPaid + principal
             _installment.remainingBalance = _installment.principalAmount - (installment[0].principalPaid + principal)
-            _installment.status = _installment.interestPaid + interest + installment[0].principalPaid + principal >= _installment.principalAmount + _installment.interestAmount
+            _installment.status = _installment.interestPaid + installment[0].principalPaid >= _installment.principalAmount + _installment.interestAmount
                 ? InstallmentStatus.PAID
-                : _installment.interestPaid + interest + installment[0].principalPaid + principal > 0 ? InstallmentStatus.PARTIAL
+                : _installment.interestPaid + installment[0].principalPaid > 0 ? InstallmentStatus.PARTIAL
                     : InstallmentStatus.PENDING
 
             let categories = null

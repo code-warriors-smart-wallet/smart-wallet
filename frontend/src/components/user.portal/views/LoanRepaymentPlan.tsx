@@ -206,7 +206,7 @@ export enum InstallmentStatus {
     OVERDUE = "OVERDUE",
 }
 
-type Installment = {
+export type Installment = {
     installmentNumber: number;
     spaceId?: string;
     status?: string;
@@ -584,7 +584,10 @@ function LoanRepaymentPlan() {
 
     const onDelete = async (loanRepaymentPlanId: string) => {
         if (confirm("Are you sure? Do you want to delete repayment plan? This plan has existing transactions?")) {
-            let transactionDelFlag = confirm("We found previous payments. Do you want to delete them as well?")
+            let transactionDelFlag = false
+            if (loanInfo.interestPaid > 0 || loanInfo.principalPaid > 0) {
+                transactionDelFlag = confirm("We found previous payments. Do you want to delete them as well?")
+            }
             const body = {
                 loanRepaymentPlanId, transactionDelFlag
             }
@@ -1057,11 +1060,11 @@ function LoanRepaymentPlan() {
                                 <td className="px-2 py-2 bg-primary border-b border-border-light-primary dark:border-border-dark-primary text-text-light-primary dark:text-text-dark-primary">No</td>
                                 <td className="px-2 py-2 bg-primary border-b border-border-light-primary dark:border-border-dark-primary text-text-light-primary dark:text-text-dark-primary">Start date</td>
                                 <td className="px-2 py-2 bg-primary border-b border-border-light-primary dark:border-border-dark-primary text-text-light-primary dark:text-text-dark-primary">End date</td>
-                                <td className="px-2 py-2 bg-primary border-b border-border-light-primary dark:border-border-dark-primary text-text-light-primary dark:text-text-dark-primary">Pricipal amount</td>
-                                <td className="px-2 py-2 bg-primary border-b border-border-light-primary dark:border-border-dark-primary text-text-light-primary dark:text-text-dark-primary">Interest amount</td>
-                                <td className="px-2 py-2 bg-primary border-b border-border-light-primary dark:border-border-dark-primary text-text-light-primary dark:text-text-dark-primary">Total amount</td>
-                                <td className="px-2 py-2 bg-primary border-b border-border-light-primary dark:border-border-dark-primary text-text-light-primary dark:text-text-dark-primary">Principal paid</td>
-                                <td className="px-2 py-2 bg-primary border-b border-border-light-primary dark:border-border-dark-primary text-text-light-primary dark:text-text-dark-primary">Interest paid</td>
+                                <td className="px-2 py-2 bg-primary border-b border-border-light-primary dark:border-border-dark-primary text-text-light-primary dark:text-text-dark-primary">Prin. amount</td>
+                                <td className="px-2 py-2 bg-primary border-b border-border-light-primary dark:border-border-dark-primary text-text-light-primary dark:text-text-dark-primary">Int. amount</td>
+                                <td className="px-2 py-2 bg-primary border-b border-border-light-primary dark:border-border-dark-primary text-text-light-primary dark:text-text-dark-primary">Tot. amount</td>
+                                <td className="px-2 py-2 bg-primary border-b border-border-light-primary dark:border-border-dark-primary text-text-light-primary dark:text-text-dark-primary">Prin. paid</td>
+                                <td className="px-2 py-2 bg-primary border-b border-border-light-primary dark:border-border-dark-primary text-text-light-primary dark:text-text-dark-primary">Int. paid</td>
                                 <td className="px-2 py-2 bg-primary border-b border-border-light-primary dark:border-border-dark-primary text-text-light-primary dark:text-text-dark-primary">Penalty paid</td>
                                 <td className="px-2 py-2 bg-primary border-b border-border-light-primary dark:border-border-dark-primary text-text-light-primary dark:text-text-dark-primary">Status</td>
                                 <td className="px-2 py-2 bg-primary border-b border-border-light-primary dark:border-border-dark-primary text-text-light-primary dark:text-text-dark-primary">Actions</td>
@@ -1075,29 +1078,29 @@ function LoanRepaymentPlan() {
                                             className={`${isCurrentInstallment(installment.startDate, installment.endDate) ? "bg-yellow-900" : "hover:bg-hover-light-primary dark:hover:bg-hover-dark-primary cursor-pointer"}`}
                                         // onClick={() => onTransactionMode(installment)}
                                         >
-                                            <td className="px-2 py-2  border-b border-border-light-primary dark:border-border-dark-primary text-text-light-primary dark:text-text-dark-primary">{installment.installmentNumber}</td>
-                                            <td className="px-2 py-2 border-b border-border-light-primary dark:border-border-dark-primary text-text-light-primary dark:text-text-dark-primary">{installment.startDate.split("T")[0]}</td>
-                                            <td className="px-2 py-2 border-b border-border-light-primary dark:border-border-dark-primary text-text-light-primary dark:text-text-dark-primary">{installment.endDate.split("T")[0]}</td>
-                                            <td className="px-2 py-2 border-b border-border-light-primary dark:border-border-dark-primary text-text-light-primary dark:text-text-dark-primary">{installment.principalAmount}</td>
-                                            <td className="px-2 py-2 border-b border-border-light-primary dark:border-border-dark-primary text-text-light-primary dark:text-text-dark-primary">{installment.interestAmount}</td>
-                                            <td className="px-2 py-2 border-b border-border-light-primary dark:border-border-dark-primary text-text-light-primary dark:text-text-dark-primary">{installment.principalAmount + installment.interestAmount}</td>
-                                            <td className="px-2 py-2 border-b border-border-light-primary dark:border-border-dark-primary text-text-light-primary dark:text-text-dark-primary">{installment.principalPaid}</td>
-                                            <td className="px-2 py-2 border-b border-border-light-primary dark:border-border-dark-primary text-text-light-primary dark:text-text-dark-primary">{installment.interestPaid}</td>
-                                            <td className="px-2 py-2 border-b border-border-light-primary dark:border-border-dark-primary text-text-light-primary dark:text-text-dark-primary">{installment.penaltyPaid}</td>
+                                            <td className="px-2 py-3  border-b border-border-light-primary dark:border-border-dark-primary text-text-light-primary dark:text-text-dark-primary">{installment.installmentNumber}</td>
+                                            <td className="px-2 py-3 border-b border-border-light-primary dark:border-border-dark-primary text-text-light-primary dark:text-text-dark-primary">{installment.startDate.split("T")[0]}</td>
+                                            <td className="px-2 py-3 border-b border-border-light-primary dark:border-border-dark-primary text-text-light-primary dark:text-text-dark-primary">{installment.endDate.split("T")[0]}</td>
+                                            <td className="px-2 py-3 border-b border-border-light-primary dark:border-border-dark-primary text-text-light-primary dark:text-text-dark-primary">{installment.principalAmount}</td>
+                                            <td className="px-2 py-3 border-b border-border-light-primary dark:border-border-dark-primary text-text-light-primary dark:text-text-dark-primary">{installment.interestAmount}</td>
+                                            <td className="px-2 py-3 border-b border-border-light-primary dark:border-border-dark-primary text-text-light-primary dark:text-text-dark-primary">{installment.principalAmount + installment.interestAmount}</td>
+                                            <td className="px-2 py-3 border-b border-border-light-primary dark:border-border-dark-primary text-text-light-primary dark:text-text-dark-primary">{installment.principalPaid}</td>
+                                            <td className="px-2 py-3 border-b border-border-light-primary dark:border-border-dark-primary text-text-light-primary dark:text-text-dark-primary">{installment.interestPaid}</td>
+                                            <td className="px-2 py-3 border-b border-border-light-primary dark:border-border-dark-primary text-text-light-primary dark:text-text-dark-primary">{installment.penaltyPaid}</td>
                                             <td
-                                                className={`px-2 py-2 border-b border-border-light-primary dark:border-border-dark-primary ${getInstallmentStatusColor(installment.status)}`}
+                                                className={`px-2 py-3 border-b border-border-light-primary dark:border-border-dark-primary ${getInstallmentStatusColor(installment.status)}`}
                                             >{capitalize(installment.status)}</td>
-                                            <td className="px-2 py-2 border-b border-border-light-primary dark:border-border-dark-primary text-text-light-primary dark:text-text-dark-primary">
+                                            <td className="px-2 py-3 border-b border-border-light-primary dark:border-border-dark-primary text-text-light-primary dark:text-text-dark-primary">
                                                 <Button
                                                     text={activeSpaceType === SpaceType.LOAN_BORROWED ? <RiSendPlaneFill /> : <MdCallReceived />}
-                                                    className="max-w-fit test-xs py-1 px-2 mr-2"
+                                                    className="max-w-fit test-xs pt-1 pb-1 pl-2 pr-2 mr-1"
                                                     onClick={() => onPayMode(installment)}
                                                 />
                                                 {
                                                     installment.principalPaid > 0 || installment.interestPaid > 0 || installment.penaltyPaid > 0 ?
                                                         <Button
                                                             text={<FaEye />}
-                                                            className="max-w-fit"
+                                                            className="max-w-fit test-xs pt-1 pb-1 pl-2 pr-2"
                                                             onClick={() => onTransactionMode(installment)}
                                                         /> : null
                                                 }

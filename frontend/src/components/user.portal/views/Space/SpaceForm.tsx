@@ -107,6 +107,7 @@ function SpaceForm({ inputs, onInputChange, spaces, onSubmit, onAddOrEdit, onCan
                                         type="number"
                                         placeholder="Enter loan amount"
                                         value={inputs.loanPrincipal?.toString() || ""}
+                                        disabled={canEdit && inputs.plan ? true : false}
                                         onChange={onInputChange}
                                         className="mt-1 mb-1"
                                     />

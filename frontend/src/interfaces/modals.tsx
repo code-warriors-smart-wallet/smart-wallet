@@ -87,7 +87,8 @@ export interface SpaceInfo {
     isCollaborative: boolean,
     collaborator: string,
     newCollaborators: string[],
-    oldCollaborators: {email: string, status: string}[]
+    oldCollaborators: {email: string, status: string}[],
+    plan?: boolean
 }
 
 export interface TransactionInfo {

@@ -51,7 +51,8 @@ const defaultSpaceInputs = {
       isCollaborative: false,
       collaborator: "",
       newCollaborators: [],
-      oldCollaborators: []
+      oldCollaborators: [],
+      plan: false
    }
 function Spaces({ onCancel, editSpaceId, summary }: { onCancel: () => void, editSpaceId?: string | null, summary?: any }) {
 
@@ -182,6 +183,7 @@ function Spaces({ onCancel, editSpaceId, summary }: { onCancel: () => void, edit
             loanPrincipal: spaceInfo?.loanPrincipal?.$numberDecimal,
             loanEndDate: spaceInfo?.loanEndDate?.split("T")[0],
             loanStartDate: spaceInfo?.loanStartDate?.split("T")[0],
+            plan: summary?.loanRepaymentPlan && summary.loanRepaymentPlan[0] ? true : false,
             from: strdSpaceType === SpaceType.LOAN_LENT ? loanPrincipalTransaction?.from : inputs.from,
             to: strdSpaceType === SpaceType.LOAN_BORROWED ? loanPrincipalTransaction?.to : inputs.to
          }

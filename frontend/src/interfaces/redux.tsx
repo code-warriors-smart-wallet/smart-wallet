@@ -9,6 +9,7 @@ export interface AuthState {
     currency: string|null;
     plan: PlanType|null;
     role: UserRole|null;
+    userId: string | null;
     spaces: {id: string, name: string, type: string, isCollaborative: boolean, isOwner: boolean}[]
 }
 

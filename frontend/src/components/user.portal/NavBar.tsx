@@ -46,47 +46,47 @@ function NavBar({ setSideBarOpen, isSideBarOpen, view, spaceId, setSpaceFormTogg
       const lastIcon = <FaPlus />
 
       // --- Filter spaces for Budget view ---
-      let filteredSpaces = spaces;
-      if (view === "budgets") {
-         const allowedTypes = ["CASH", "BANK", "CREDIT_CARD"];
-         filteredSpaces = spaces.filter((space) =>
-            allowedTypes.includes(space.type)
-         );
-      }
+      // let filteredSpaces = spaces;
+      // if (view === "budgets") {
+      //    const allowedTypes = ["CASH", "BANK", "CREDIT_CARD"];
+      //    filteredSpaces = spaces.filter((space) =>
+      //       allowedTypes.includes(space.type)
+      //    );
+      // }
 
-      filteredSpaces.forEach((space) => {
-         dropdownItemsL.push(space.name);
-         dropdownIconsL.push(
-            transactionTypesInfo.find((info) => info.spaceType === space.type)?.icon
-         );
+      // filteredSpaces.forEach((space) => {
+      //    dropdownItemsL.push(space.name);
+      //    dropdownIconsL.push(
+      //       transactionTypesInfo.find((info) => info.spaceType === space.type)?.icon
+      //    );
 
-         if (space.id === spaceId) {
-            title = space.name;
-            titleIcon =
-               transactionTypesInfo.find((info) => info.spaceType === space.type)
-                  ?.icon || <></>;
-         }
-      });
-
-      // spaces.forEach(space => {
       //    if (space.id === spaceId) {
-      //       title = space.name,
-      //       titleIcon = transactionTypesInfo.find(info => info.spaceType === space.type)?.icon
+      //       title = space.name;
+      //       titleIcon =
+      //          transactionTypesInfo.find((info) => info.spaceType === space.type)
+      //             ?.icon || <></>;
       //    }
-      //    dropdownItemsL.push(space.name)
-      //    dropdownIconsL.push(transactionTypesInfo.find(info => info.spaceType === space.type)?.icon)
-      // })
+      // });
+
+      spaces.forEach(space => {
+         if (space.id === spaceId) {
+            title = space.name,
+            titleIcon = transactionTypesInfo.find(info => info.spaceType === space.type)?.icon
+         }
+         dropdownItemsL.push(space.name)
+         dropdownIconsL.push(transactionTypesInfo.find(info => info.spaceType === space.type)?.icon)
+      })
 
       // If no space matches, fallback to "All spaces"
-      if (!title || spaceId === "all") {
-         title = "All spaces";
-         titleIcon = <FaGlobe />;
-      }
-
-      // if (!title) {
-      //    title = "All spaces"
-      //    titleIcon = <FaGlobe/>
+      // if (!title || spaceId === "all") {
+      //    title = "All spaces";
+      //    titleIcon = <FaGlobe />;
       // }
+
+      if (!title) {
+         title = "All spaces"
+         titleIcon = <FaGlobe/>
+      }
 
       console.log(dropdownItemsL, title)
 
@@ -156,3 +156,5 @@ function NavBar({ setSideBarOpen, isSideBarOpen, view, spaceId, setSpaceFormTogg
 }
 
 export default NavBar;
+
+

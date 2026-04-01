@@ -1,11 +1,10 @@
 import { capitalize } from "../../../../utils/utils";
 import Button from "../../../Button";
 import { BudgetType } from "../Budget";
-import React, { useEffect, useState, useMemo, useCallback } from "react";
-import { ChevronDown, ChevronUp } from "lucide-react";
-import { FaCreditCard, FaEdit, FaMoneyBillWave, FaTrash, FaUniversity } from "react-icons/fa"
+import React, { useEffect, useState, useMemo, useCallback, useRef } from "react";
+import { ChevronDown, ChevronUp, Eye } from "lucide-react";
+import { FaCreditCard, FaMoneyBillWave, FaUniversity } from "react-icons/fa"
 
-const Eye = (props: any) => <span {...props}>👁️</span>;
 
 interface BudgetListProps {
   title: string;
@@ -38,21 +37,20 @@ function BudgetList({
   getSpaceName,
   getSpaceTypeName,
   showSpaceInfo,
-  currentDate = new Date()
+  currentDate = new Date(),
 }: BudgetListProps) {
 
   const [budgetsWithCurrentEntries, setBudgetsWithCurrentEntries] = useState<any[]>([]);
+
+  const prevBudgetsRef = useRef<any[]>([]);
 
   const memoizedCurrentDate = useMemo(() => currentDate, [
     currentDate.getTime()
   ]);
 
-  // Memoize budgets to prevent unnecessary re-renders
-  const memoizedBudgets = useMemo(() => budgets, [JSON.stringify(budgets)]);
-
   // Memoize the filter function
-  const filterBudgetsWithCurrentEntries = useCallback(async () => {
-    if (!memoizedBudgets || memoizedBudgets.length === 0) {
+  const filterBudgetsWithCurrentEntries = useCallback(() => {
+    if (!budgets || budgets.length === 0) {
       setBudgetsWithCurrentEntries([]);
       return;
     }
@@ -62,7 +60,7 @@ function BudgetList({
     const uniqueBudgets: any[] = [];
 
     // First, filter out duplicates based on _id
-    memoizedBudgets.forEach(budget => {
+    budgets.forEach(budget => {
       if (budget._id && !seenBudgetIds.has(budget._id)) {
         seenBudgetIds.add(budget._id);
         uniqueBudgets.push(budget);
@@ -149,8 +147,14 @@ function BudgetList({
       return budget;
     }).filter(budget => budget.currentEntry); // Only keep budgets with currentEntry
 
-    setBudgetsWithCurrentEntries(budgetsWithCurrentEntry);
-  }, [memoizedBudgets, memoizedCurrentDate]);
+    const budgetsString = JSON.stringify(budgetsWithCurrentEntry);
+    const prevBudgetsString = JSON.stringify(prevBudgetsRef.current);
+
+    if (budgetsString !== prevBudgetsString) {
+      setBudgetsWithCurrentEntries(budgetsWithCurrentEntry);
+      prevBudgetsRef.current = budgetsWithCurrentEntry;
+    }
+  }, [budgets, memoizedCurrentDate]);
 
   useEffect(() => {
     filterBudgetsWithCurrentEntries();
@@ -264,8 +268,7 @@ function BudgetList({
               return (
                 <div
                   key={budget._id}
-                  onClick={() => onViewDetails(budget)}
-                  className="p-4 border border-border-light-primary dark:border-border-dark-primary rounded-lg bg-bg-light-primary dark:bg-bg-dark-primary hover:shadow-md transition-shadow cursor-pointer"
+                  className="p-4 border border-border-light-primary dark:border-border-dark-primary rounded-lg bg-bg-light-primary dark:bg-bg-dark-primary hover:shadow-md transition-shadow"
                 >
                   {/* Budget Header */}
                   <div className="flex justify-between items-start mb-4">
@@ -320,18 +323,13 @@ function BudgetList({
                         </div>
                       )}
                     </div>
-                    <div className="flex gap-2 items-center">
-                      <Button
-                        text={<FaEdit />}
-                        onClick={() => onEdit(budget)}
-                        className="max-w-fit pt-2 pb-2"
-                      />
-                      <Button
-                        text={<FaTrash />}
-                        onClick={() => onDelete(budget._id, budget.name)}
-                        className="max-w-fit pt-2 pb-2 hover:!bg-red-600 !bg-red-500"
-                      />
-                    </div>
+                    <button
+                      onClick={() => onViewDetails(budget)}
+                      className="p-1 hover:bg-bg-light-secondary dark:hover:bg-bg-dark-secondary rounded cursor-pointer"
+                      title="View Details"
+                    >
+                      <Eye size={18} className="text-text-light-secondary dark:text-text-dark-secondary group-hover:text-primary dark:group-hover:text-primary transition-colors duration-200" />
+                    </button>
                   </div>
 
                   {/* Progress Bar */}
@@ -341,7 +339,7 @@ function BudgetList({
                         Progress
                       </span>
                       <span className={`text-xs font-bold ${getProgressTextColor(percentage)}`}>
-                        {percentage.toFixed(1)}% ({spent.toFixed(2)}/{budgetAmount.toFixed(2)})
+                        {percentage.toFixed(1)}%
                       </span>
                     </div>
                     <div className="h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
@@ -353,7 +351,7 @@ function BudgetList({
                   </div>
 
                   {/* Budget Amounts */}
-                  {/* <div className="space-y-2 mb-4">
+                  <div className="space-y-2 mb-4">
                     <div className="flex justify-between items-center">
                       <span className="text-sm text-text-light-secondary dark:text-text-dark-secondary">
                         Budget:
@@ -378,7 +376,7 @@ function BudgetList({
                         {currency} {remaining.toFixed(2)}
                       </span>
                     </div>
-                  </div> */}
+                  </div>
 
                   {/* Period */}
                   <div className="mb-4">
@@ -404,18 +402,28 @@ function BudgetList({
                   </div>
 
                   {/* Action Buttons */}
-                  {/* <div className="flex gap-2">
-                    <Button
-                      text="Edit"
-                      className="max-w-fit flex-1 text-xs py-1 cursor-pointer"
-                      onClick={}
-                    />
-                    <Button
-                      text="Delete"
-                      className="max-w-fit flex-1 text-xs py-1 hover:!bg-red-600 !bg-red-500 cursor-pointer"
-                      onClick={}
-                    />
-                  </div> */}
+
+                  {budget.canEdit && (
+                    <div className="flex gap-2 mt-4">
+                      <Button
+                        text="Edit"
+                        className="max-w-fit flex-1 text-xs py-1 cursor-pointer"
+                        onClick={() => onEdit(budget)}
+                      />
+                      <Button
+                        text="Delete"
+                        className="max-w-fit flex-1 text-xs py-1 hover:!bg-red-600 !bg-red-500 cursor-pointer"
+                        onClick={() => onDelete(budget._id, budget.name)}
+                      />
+                    </div>
+                  )}
+
+                  {/* If user cannot edit, show view-only indicator */}
+                  {!budget.canEdit && (
+                    <div className="mt-4 text-center text-xs text-text-light-secondary dark:text-text-dark-secondary border-t pt-2">
+                      View-only (created by another member)
+                    </div>
+                  )}
                 </div>
               );
             })}
@@ -427,5 +435,8 @@ function BudgetList({
 }
 
 export default BudgetList;
+
+
+
 
 

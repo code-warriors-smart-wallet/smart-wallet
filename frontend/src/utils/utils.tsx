@@ -1,23 +1,3 @@
-import { jwtDecode } from "jwt-decode";
-
-interface DecodedToken {
-  id: string;
-  role: string;
-  iat: number;
-  exp: number;
-}
-
-export function getUserIdFromToken(token: string): string | null {
-  try {
-    const decoded = jwtDecode<DecodedToken>(token);
-    console.log("Decoded token:", decoded);
-    return decoded.id || null;
-  } catch (error) {
-    console.error("Error decoding token:", error);
-    return null;
-  }
-}
-
 export const months = [
   "Jan",
   "Feb",

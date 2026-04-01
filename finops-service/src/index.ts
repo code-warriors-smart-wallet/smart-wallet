@@ -18,8 +18,6 @@ import categoryRouter from "./routes/category";
 import transactionRouter from "./routes/transaction";
 import scheduleRouter from "./routes/schedule";
 import budgetRouter from './routes/budget';
-import loanRepaymentPlanRouter from './routes/loanRepaymentPlan';
-import loanInstallmentRouter from './routes/loanInstallment';
 
 // Load environment variables
 dotenv.config({ path: path.join(__dirname, '../.env') });
@@ -42,8 +40,6 @@ connectDatabase()
         app.use("/category", categoryRouter);
         app.use("/transaction", transactionRouter);
         app.use("/schedule", scheduleRouter);
-        app.use('/loan-repayment-plan', loanRepaymentPlanRouter);
-        app.use('/loan-installment', loanInstallmentRouter);
 
         // Cron jobs
         initScheduleJobs();

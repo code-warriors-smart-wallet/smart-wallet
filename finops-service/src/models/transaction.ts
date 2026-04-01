@@ -32,8 +32,7 @@ export interface ITransaction extends Document {
     userId: Schema.Types.ObjectId,
     scheduleId: Schema.Types.ObjectId,
     spaceId: Schema.Types.ObjectId,
-    memberStatus: string,
-    loanRepaymentPlanId?: Schema.Types.ObjectId
+    memberStatus: string
 }
 
 const TransactionSchema: Schema = new Schema({
@@ -82,11 +81,6 @@ const TransactionSchema: Schema = new Schema({
         enum: Object.values(MemberStatus),
         default: MemberStatus.ACTIVE_MEMBER
     },
-    loanRepaymentPlanId: {
-        type: Schema.Types.ObjectId,
-        ref: "LoanRepaymentPlan",
-        default: null
-    }
 })
 
 export default model<ITransaction>("Transaction", TransactionSchema)

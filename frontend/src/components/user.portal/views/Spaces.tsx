@@ -53,7 +53,7 @@ const defaultSpaceInputs = {
       newCollaborators: [],
       oldCollaborators: []
    }
-function Spaces({ onCancel, editSpaceId, summary, canEdit = true }: { onCancel: () => void, editSpaceId?: string | null, summary?: any, canEdit?: boolean }) {
+function Spaces({ onCancel, editSpaceId, summary }: { onCancel: () => void, editSpaceId?: string | null, summary?: any }) {
 
    const { spacetype } = useParams();
    const [newMode, setNewMode] = useState<boolean>(false)

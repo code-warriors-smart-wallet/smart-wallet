@@ -6,8 +6,7 @@ export interface ButtonProps {
     onClick?: () => void,
     className?: string,
     disabled?: boolean | undefined | null,
-    priority?: "primary" | "secondary",
-    title?: string
+    priority?: "primary" | "secondary"
 }
 
 export interface InputProps {
@@ -19,8 +18,6 @@ export interface InputProps {
     onChange: (event: React.ChangeEvent<HTMLInputElement>) => void;
     className?: string,
     min?: string
-    max?: string,
-    step?: string,
-    id?:string,
+    id?:string
     disabled?: boolean
 }

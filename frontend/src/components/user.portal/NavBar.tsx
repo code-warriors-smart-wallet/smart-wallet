@@ -10,6 +10,7 @@ import DropDown from "../Dropdown";
 import { transactionTypesInfo } from "./views/Transactions";
 import { FaGlobe, FaPlus } from "react-icons/fa";
 import SearchInput from "./SearchInput";
+import { SpaceType } from "./views/Spaces";
 
 function NavBar({ setSideBarOpen, isSideBarOpen, view, spaceId, setSpaceFormToggle }: { setSideBarOpen: (isopen: boolean) => void, isSideBarOpen: boolean, view: UserPortalView, spaceId: string, setSpaceFormToggle: Dispatch<React.SetStateAction<boolean>> }) {
 
@@ -47,10 +48,17 @@ function NavBar({ setSideBarOpen, isSideBarOpen, view, spaceId, setSpaceFormTogg
 
       // --- Filter spaces for Budget view ---
       let filteredSpaces = spaces;
-      if (view === "budgets") {
-         const allowedTypes = ["CASH", "BANK", "CREDIT_CARD"];
+      if (view === UserPortalView.BUDGETS) {
+         const allowedTypes = [SpaceType.BANK, SpaceType.CASH, SpaceType.CREDIT_CARD];
          filteredSpaces = spaces.filter((space) =>
-            allowedTypes.includes(space.type)
+            allowedTypes.includes(space.type as SpaceType)
+         );
+      }
+
+      if (view === UserPortalView.SCHEDULES) {
+         const allowedTypes = [SpaceType.BANK, SpaceType.CASH, SpaceType.CREDIT_CARD, SpaceType.SAVING_GOAL];
+         filteredSpaces = spaces.filter((space) =>
+            allowedTypes.includes(space.type as SpaceType)
          );
       }
 

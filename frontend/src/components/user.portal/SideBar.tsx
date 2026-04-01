@@ -13,6 +13,7 @@ export enum UserPortalView {
    MANAGE_SPACE = "manage space",
    SCHEDULES = "schedules",
    BUDGETS = "budgets",
+   LOAN_REPAYMENT_PLAN="loan repayment plan",
    GOALS = "goals",
    CATEGORIES = "categories",
    NOTIFICATIONS = "notifications",
@@ -39,10 +40,20 @@ function SideBar({ isSideBarOpen, view, spacetype, spaceid }: { isSideBarOpen: b
             <ul className="space-y-2 font-medium">
                <SideBarItem name={UserPortalView.DASHBOARD} isActive={view == UserPortalView.DASHBOARD} onClick={onClickSideBarItem} Icon={DashBoardIcon} />
                <SideBarItem name={UserPortalView.TRANSACTIONS} isActive={view == UserPortalView.TRANSACTIONS} onClick={onClickSideBarItem} Icon={TransactionIcon} />
-               <SideBarItem name={UserPortalView.SCHEDULES} isActive={view == UserPortalView.SCHEDULES} onClick={onClickSideBarItem} Icon={ScheduleIcon} />
+               {/* <SideBarItem name={UserPortalView.SCHEDULES} isActive={view == UserPortalView.SCHEDULES} onClick={onClickSideBarItem} Icon={ScheduleIcon} /> */}
                {
-                  [SpaceType.CASH, SpaceType.BANK, SpaceType.CREDIT_CARD].includes(toStrdSpaceType(spacetype) as SpaceType) && (
+                  ![SpaceType.LOAN_BORROWED, SpaceType.LOAN_LENT].includes(toStrdSpaceType(spacetype) as SpaceType) && (
+                     <SideBarItem name={UserPortalView.SCHEDULES} isActive={view == UserPortalView.SCHEDULES} onClick={onClickSideBarItem} Icon={ScheduleIcon} />
+                  )
+               }
+               {
+                  ["ALL", SpaceType.CASH, SpaceType.BANK, SpaceType.CREDIT_CARD].includes(toStrdSpaceType(spacetype) as SpaceType) && (
                      <SideBarItem name={UserPortalView.BUDGETS} isActive={view == UserPortalView.BUDGETS} onClick={onClickSideBarItem} Icon={BudgetIcon} />
+                  )
+               }
+               {
+                  [SpaceType.LOAN_BORROWED, SpaceType.LOAN_LENT].includes(toStrdSpaceType(spacetype) as SpaceType) && (
+                     <SideBarItem name={UserPortalView.LOAN_REPAYMENT_PLAN} isActive={view == UserPortalView.LOAN_REPAYMENT_PLAN} onClick={onClickSideBarItem} Icon={BudgetIcon} />
                   )
                }
                {/* <SideBarItem name={UserPortalView.GOALS} isActive={view == UserPortalView.GOALS} onClick={onClickSideBarItem} Icon={GoalIcon} /> */}

@@ -19,7 +19,7 @@ const isValidDateFormat = (value: string): boolean => {
 };
 
 export function getFormattedDate(input: string) {
-  if (input==="Not set") return input;
+  if (input==="Not set" || !isValidDateFormat(input)) return input;
   const date = new Date(input);
   const day = date.getDate();
   const month = months[date.getMonth()]

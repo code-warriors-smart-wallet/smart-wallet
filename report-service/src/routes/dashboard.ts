@@ -1,5 +1,7 @@
 import express, { Request, Response } from 'express';
 import Transaction, { TransactionType } from '../models/transaction';
+import LoanRepaymentPlan from '../models/loan-repayment-plan';
+import LoanInstallment, {ILoanInstallment} from '../models/loan-installment';
 import Space, { ISpace, SpaceType } from '../models/space';
 import { authenticate } from '../middlewares/auth';
 import mongoose from 'mongoose';
@@ -539,8 +541,11 @@ dashboardRouter.get('/loan-lent/:spaceid', authenticate, async (req: Request, re
             }
         ])
 
+        console.log(categories.map(c => c.subCategoryName))
+
         const principalReceivedCategoryId = categories.find(cat => cat.subCategoryName === "Principal Repayment").subCategoryId;
         const interestReceivedCategoryId = categories.find(cat => cat.subCategoryName === "Interest").subCategoryId;
+        const penaltyPaidCategoryId = categories.find(cat => cat.subCategoryName === "Penalty").subCategoryId;
 
         const principalReceived = await Transaction.aggregate([
             {
@@ -587,6 +592,28 @@ dashboardRouter.get('/loan-lent/:spaceid', authenticate, async (req: Request, re
             }
         ])
 
+        const penaltyPaid = await Transaction.aggregate([
+            {
+                $match: {
+                    from: new ObjectId(spaceid),
+                    type: TransactionType.LOAN_CHARGES,
+                    scategory: penaltyPaidCategoryId
+                }
+            },
+            {
+                $group: {
+                    _id: null, // null means group all documents that matched
+                    total: { $sum: "$amount" }
+                }
+            },
+            {
+                $project: {
+                    _id: 0,
+                    amount: { $toDouble: "$total" }
+                }
+            }
+        ])
+
         const loan = await Space.find({
             _id: spaceid,
         })
@@ -608,14 +635,28 @@ dashboardRouter.get('/loan-lent/:spaceid', authenticate, async (req: Request, re
             ]
         }).sort({ date: -1 }).limit(5).lean()
 
+        let loanRepaymentPlan = await LoanRepaymentPlan.find({
+            spaceId: new ObjectId(spaceid)
+        });
+
+        let installments: ILoanInstallment[] = [];
+        if (loanRepaymentPlan) {
+            installments = await LoanInstallment.find({
+                spaceId: new ObjectId(spaceid)
+            }).sort({ startDate: 1 });
+        }
+
         res.status(200).json({
             success: true,
             data: {
                 object: {
                     loan: loan,
                     loanPrincipalTransaction: loanPrincipalTransaction,
+                    loanRepaymentPlan: loanRepaymentPlan,
+                    installments: installments,
                     principalReceived: principalReceived,
                     interestReceived: interestReceived,
+                    penaltyPaid: penaltyPaid,
                     recentTransactions: recentTransactions
                 },
                 message: 'Data retreived successfully!'
@@ -661,6 +702,7 @@ dashboardRouter.get('/loan-borrowed/:spaceid', authenticate, async (req: Request
 
         const principalPaidCategoryId = categories.find(cat => cat.subCategoryName === "Principal Repayment").subCategoryId;
         const interestPaidCategoryId = categories.find(cat => cat.subCategoryName === "Interest").subCategoryId;
+        const penaltyPaidCategoryId = categories.find(cat => cat.subCategoryName === "Penalty").subCategoryId;
 
         const principalPaid = await Transaction.aggregate([
             {
@@ -707,6 +749,28 @@ dashboardRouter.get('/loan-borrowed/:spaceid', authenticate, async (req: Request
             }
         ])
 
+        const penaltyPaid = await Transaction.aggregate([
+            {
+                $match: {
+                    to: new ObjectId(spaceid),
+                    type: TransactionType.LOAN_CHARGES,
+                    scategory: penaltyPaidCategoryId
+                }
+            },
+            {
+                $group: {
+                    _id: null, // null means group all documents that matched
+                    total: { $sum: "$amount" }
+                }
+            },
+            {
+                $project: {
+                    _id: 0,
+                    amount: { $toDouble: "$total" }
+                }
+            }
+        ])
+
         const loan = await Space.find({
             _id: spaceid,
         })
@@ -715,6 +779,17 @@ dashboardRouter.get('/loan-borrowed/:spaceid', authenticate, async (req: Request
             from: spaceid,
             type: TransactionType.LOAN_PRINCIPAL
         })
+
+        let loanRepaymentPlan = await LoanRepaymentPlan.find({
+            spaceId: new ObjectId(spaceid)
+        });
+
+        let installments: ILoanInstallment[] = [];
+        if (loanRepaymentPlan) {
+            installments = await LoanInstallment.find({
+                spaceId: new ObjectId(spaceid)
+            }).sort({ startDate: 1 });
+        }
 
         const recentTransactions = await Transaction.find({
             $and: [
@@ -734,8 +809,11 @@ dashboardRouter.get('/loan-borrowed/:spaceid', authenticate, async (req: Request
                 object: {
                     loan: loan,
                     loanPrincipalTransaction: loanPrincipalTransaction,
+                    loanRepaymentPlan: loanRepaymentPlan,
+                    installments: installments,
                     principalPaid: principalPaid,
                     interestPaid: interestPaid,
+                    penaltyPaid: penaltyPaid,
                     recentTransactions: recentTransactions
                 },
                 message: 'Data retreived successfully!'

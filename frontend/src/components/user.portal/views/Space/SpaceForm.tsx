@@ -107,11 +107,12 @@ function SpaceForm({ inputs, onInputChange, spaces, onSubmit, onAddOrEdit, onCan
                                         type="number"
                                         placeholder="Enter loan amount"
                                         value={inputs.loanPrincipal?.toString() || ""}
+                                        disabled={canEdit && inputs.plan ? true : false}
                                         onChange={onInputChange}
                                         className="mt-1 mb-1"
                                     />
                                 </div>
-                                <div className={`my-3`}>
+                                {/* <div className={`my-3`}>
                                     <label className="text-text-light-primary dark:text-text-dark-primary">Start Date <span className="text-xs text-red-300 italic">(optional)</span>:</label>
                                     <Input
                                         name="loanStartDate"
@@ -132,7 +133,7 @@ function SpaceForm({ inputs, onInputChange, spaces, onSubmit, onAddOrEdit, onCan
                                         onChange={onInputChange}
                                         className="mt-1 mb-1"
                                     />
-                                </div>
+                                </div> */}
                             </>
                         )
                     }

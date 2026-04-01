@@ -18,6 +18,7 @@ export interface InputProps {
     onChange: (event: React.ChangeEvent<HTMLInputElement>) => void;
     className?: string,
     min?: string
+    max?: number|undefined
     id?:string
     disabled?: boolean
 }

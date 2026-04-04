@@ -1,7 +1,7 @@
 import Button from "../../Button";
 import Input from "../../Input";
 import React, { useEffect, useState } from 'react';
-import { CategoryInfo, TransactionInfo } from "../../../interfaces/modals"
+import { CategoryInfo, PlanType, TransactionInfo } from "../../../interfaces/modals"
 import { toast } from 'react-toastify';
 import { toStrdSpaceType } from "../../../utils/utils";
 import { SpaceType } from "./Spaces";
@@ -31,6 +31,7 @@ export enum TransactionType {
 export interface transactionTypeInfo {
    spaceType: SpaceType;
    icon: React.ReactNode;
+   plan: PlanType;
    transactionTypes: {
       type: TransactionType;
       fromSpaces: string[];
@@ -43,6 +44,7 @@ export const transactionTypesInfo: transactionTypeInfo[] = [
    {
       spaceType: SpaceType.CASH,
       icon: <FaMoneyBillWave />,
+      plan: PlanType.STARTER,
       transactionTypes: [
          {
             type: TransactionType.EXPENSE,
@@ -66,6 +68,7 @@ export const transactionTypesInfo: transactionTypeInfo[] = [
    },
    {
       spaceType: SpaceType.BANK,
+      plan: PlanType.STARTER,
       icon: <FaUniversity />,
       transactionTypes: [
          {
@@ -90,6 +93,7 @@ export const transactionTypesInfo: transactionTypeInfo[] = [
    },
    {
       spaceType: SpaceType.CREDIT_CARD,
+      plan: PlanType.PLUS,
       icon: <FaCreditCard />,
       transactionTypes: [
          {
@@ -108,6 +112,7 @@ export const transactionTypesInfo: transactionTypeInfo[] = [
    },
    {
       spaceType: SpaceType.LOAN_LENT,
+      plan: PlanType.PLUS,
       icon: <FaArrowAltCircleUp />,
       transactionTypes: [
          {
@@ -126,6 +131,7 @@ export const transactionTypesInfo: transactionTypeInfo[] = [
    },
    {
       spaceType: SpaceType.LOAN_BORROWED,
+      plan: PlanType.PLUS,
       icon: <FaArrowAltCircleDown />,
       transactionTypes: [
          {
@@ -144,6 +150,7 @@ export const transactionTypesInfo: transactionTypeInfo[] = [
    },
    {
       spaceType: SpaceType.SAVING_GOAL,
+      plan: PlanType.PLUS,
       icon: <FaBullseye />,
       transactionTypes: [
          {
@@ -167,7 +174,7 @@ function Transactions() {
    const { spacetype, spaceid } = useParams()
    const [activeSpaceId, setActiveSpaceId] = useState<string | undefined>(spaceid)
    const [activeSpaceType, setActiveSpaceType] = useState<string | undefined>(spacetype)
-   const { username, spaces } = useSelector((state: RootState) => state.auth)
+   const { username, spaces, plan } = useSelector((state: RootState) => state.auth)
    const [inputs, setInputs] = useState<TransactionInfo>({
       type: "",
       amount: 0.0,

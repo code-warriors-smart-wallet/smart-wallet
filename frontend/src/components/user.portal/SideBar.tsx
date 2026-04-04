@@ -6,6 +6,11 @@ import { AuthService } from "../../services/auth/auth.service";
 import { MdFileDownload } from "react-icons/md";
 import { SpaceType } from "./views/Spaces";
 import { toStrdSpaceType } from "./../../utils/utils";
+import { RootState } from "@/redux/store/store";
+import { useSelector } from "react-redux";
+import { PlanType } from "../../interfaces/modals";
+import { useState } from "react";
+import Upgrade from "./views/Subscription/Upgrade";
 
 export enum UserPortalView {
    DASHBOARD = "dashboard",
@@ -21,6 +26,7 @@ export enum UserPortalView {
    SETTINGS_PROFILE = "profile",
    SETTINGS_BILLING = "billing",
    REPORTS = "reports",
+   AI_ASSISTANT = "ai assistant",
    LOGOUT = "log out"
 }
 
@@ -29,12 +35,19 @@ function SideBar({ isSideBarOpen, view, spacetype, spaceid }: { isSideBarOpen: b
 
    const navigate = useNavigate()
    const {logOut} = AuthService();
+   const { plan } = useSelector((state: RootState) => state.auth)
+   const [upgradeMessage, setUpgradeMessage] = useState("");
 
    const onClickSideBarItem = (newView: string) => {
+      if (plan === PlanType.STARTER && [UserPortalView.LOAN_REPAYMENT_PLAN, UserPortalView.REPORTS, UserPortalView.AI_ASSISTANT].includes(newView as UserPortalView)) {
+         setUpgradeMessage(`Upgrade to unlock ${newView}!`);
+         return;
+      }
       navigate(`/user-portal/${spacetype}/${spaceid}/${newView}`);
    }
 
    return (
+      <>
       <aside id="logo-sidebar" className={`fixed top-5 left-0 z-40 w-64 h-screen pt-20 transition-transform ${sideBarStyleSM} bg-bg-light-primary border-r border-border-light-primary dark:bg-bg-dark-primary dark:border-border-dark-primary sm:translate-x-0`} aria-label="Sidebar">
          <div className="h-full px-3 pb-4 overflow-y-auto bg-bg-light-primary dark:bg-bg-dark-primary">
             <ul className="space-y-2 font-medium">
@@ -61,14 +74,18 @@ function SideBar({ isSideBarOpen, view, spacetype, spaceid }: { isSideBarOpen: b
                <SideBarItem name={UserPortalView.CATEGORIES} isActive={view == UserPortalView.CATEGORIES} onClick={onClickSideBarItem} Icon={CategoryIcon} />
                <SideBarItem name={UserPortalView.REPORTS} isActive={view == UserPortalView.REPORTS} onClick={onClickSideBarItem} Icon={ReportIcon} />
                {/* <SideBarItem name={UserPortalView.MANAGE_SPACE} isActive={view == UserPortalView.MANAGE_SPACE} onClick={onClickSideBarItem} Icon={SpaceIcon} /> */}
-               {/* <SidebarDropdownItem name={UserPortalView.SETTINGS} onClick={onClickSideBarItem} Icon={SettingsIcon}>
+               <SidebarDropdownItem name={UserPortalView.SETTINGS} onClick={() => {}} Icon={SettingsIcon}>
                   <SideBarItem name={UserPortalView.SETTINGS_PROFILE} onClick={onClickSideBarItem} isActive={view == UserPortalView.SETTINGS_PROFILE} />
                   <SideBarItem name={UserPortalView.SETTINGS_BILLING} onClick={onClickSideBarItem} isActive={view == UserPortalView.SETTINGS_BILLING} />
-               </SidebarDropdownItem> */}
+               </SidebarDropdownItem>
                <SideBarItem name={UserPortalView.LOGOUT} isActive={view == UserPortalView.LOGOUT} onClick={logOut} Icon={LogoutIcon} />
             </ul>
          </div>
       </aside>
+      {
+            upgradeMessage != "" && <Upgrade setUpgradeMode={setUpgradeMessage} message={upgradeMessage} />
+         }
+      </>
    )
 }
 

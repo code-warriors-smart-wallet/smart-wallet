@@ -1,7 +1,7 @@
 import Button from "../../Button";
 import Input from "../../Input";
 import { useEffect, useState } from 'react';
-import { CategoryInfo, ContinueType, Frequency, RecurringApproval, Repeat, ScheduleInfo } from "../../../interfaces/modals"
+import { CategoryInfo, ContinueType, Frequency, PlanType, RecurringApproval, Repeat, ScheduleInfo } from "../../../interfaces/modals"
 import { toast } from 'react-toastify';
 import { toStrdSpaceType } from "../../../utils/utils";
 import { useParams } from "react-router-dom";
@@ -12,13 +12,14 @@ import { FaEdit, FaInfoCircle, FaTimes, FaTrash } from "react-icons/fa"
 import { TransactionType, transactionTypesInfo } from "./Transactions";
 import { ScheduleService } from "../../../services/schedule.service";
 import ScheduleList from "./Schedules/ScheduleList";
+import Upgrade from "./Subscription/Upgrade";
 
 function Schedule() {
 
    const { spacetype, spaceid } = useParams()
    const [activeSpaceId, setActiveSpaceId] = useState<string | undefined>(spaceid)
    const [activeSpaceType, setActiveSpaceType] = useState<string | undefined>(spacetype)
-   const { username, spaces } = useSelector((state: RootState) => state.auth)
+   const { username, spaces, plan } = useSelector((state: RootState) => state.auth)
    const [inputs, setInputs] = useState<ScheduleInfo>({
       type: "",
       amount: 0.0,
@@ -52,6 +53,7 @@ function Schedule() {
    const [allowedParentCategories, setAllowedParentCategories] = useState<any[]>([])
    const [allowedSubCategories, setAllowedSubCategories] = useState<CategoryInfo[]>([])
    const currentSpace = spaces.find(sp => sp.id === spaceid);
+   const [upgradeMessage, setUpgradeMessage] = useState("");
 
    console.log(categories)
 
@@ -92,6 +94,10 @@ function Schedule() {
 
    const onInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
       const { name, value } = e.target as HTMLInputElement;
+      if (plan === PlanType.STARTER && name === "frequency" && value === Frequency.RECURRENT) {
+         setUpgradeMessage("Upgrade to unlock recurring schedules!");
+         return;
+      } 
       setInputs((prev: ScheduleInfo) => {
          return { ...prev, [name]: value }
       });
@@ -1121,6 +1127,10 @@ function Schedule() {
             onConfirm={onConfirm}
             onSkip={onSkip}
          />
+
+         {
+            upgradeMessage != "" && <Upgrade setUpgradeMode={setUpgradeMessage} message={upgradeMessage} />
+         }
       </>
    )
 }

@@ -8,6 +8,8 @@ import Input from "../../../components/Input";
 import { useSelector } from "react-redux";
 import { RootState } from "../../../redux/store/store";
 import { toast } from "react-toastify";
+import { PlanType } from "../../../interfaces/modals";
+import Upgrade from "./Subscription/Upgrade";
 
 enum CategoryType {
     PARENT_CATEGORY = "PARENT_CATEGORY",
@@ -50,9 +52,9 @@ function Category() {
     const [editSid, setEditSid] = useState<string | null>(null)
     const [allowedTransactionTypesToDisplay, setAllowedTransactionTypesToDisplay] = useState<TransactionType[]>([])
     const [allowedTransactionTypesToCreate, setAllowedTransactionTypesToCreate] = useState<TransactionType[]>([])
-    const { username, spaces } = useSelector((state: RootState) => state.auth)
+    const { username, spaces, plan } = useSelector((state: RootState) => state.auth)
     const currentSpace = spaces.find(sp => sp.id === spaceid);
-
+    const [upgradeMessage, setUpgradeMessage] = useState("");
 
     const fetchCategories = () => {
         setLoading(true)
@@ -90,8 +92,16 @@ function Category() {
     }
 
     const onNewOrEditMode = () => {
-        setNewOrEditMode(true);
+        console.log("plan: ", plan)
+        if (plan === PlanType.STARTER) {
+            setUpgradeMessage("Upgrade to unlock custom categories!");
+
+        } else {
+            setNewOrEditMode(true);
+        }
     }
+
+    console.log(upgradeMessage)
 
     const onEditMode = (category: any) => {
         setInputs({
@@ -390,8 +400,8 @@ function Category() {
                             <tbody className="bg-transparent text-text-light-primary dark:text-text-dark-primary text-sm *:hover:bg-hover-light-primary *:hover:dark:bg-hover-dark-primary *:border-b *:border-b-border-light-primary *:dark:border-b-border-dark-primary">
                                 {
                                     categories
-                                        .filter(cat => 
-                                            cat.transactionTypes.find((type: TransactionType) => allowedTransactionTypesToDisplay.includes(type)) 
+                                        .filter(cat =>
+                                            cat.transactionTypes.find((type: TransactionType) => allowedTransactionTypesToDisplay.includes(type))
                                             && (!cat?.user?.username && !cat.userId))
                                         .map((cat, index) => {
                                             return (
@@ -662,8 +672,12 @@ function Category() {
                                 />
                             </div>
                         </div>
+
                     </div>
                 )
+            }
+            {
+                upgradeMessage != "" && <Upgrade setUpgradeMode={setUpgradeMessage} message={upgradeMessage} />
             }
         </>
     )

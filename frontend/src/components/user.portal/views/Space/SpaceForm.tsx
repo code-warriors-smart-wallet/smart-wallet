@@ -5,6 +5,9 @@ import { FaTimes } from "react-icons/fa";
 import { SpaceService } from "../../../../services/space.service";
 import { COLLABORATOR_STATUS, collaboratorStatusInfo } from "../Spaces";
 import { FiRefreshCw } from "react-icons/fi";
+import { RootState } from "@/redux/store/store";
+import { useSelector } from "react-redux";
+import { useState } from "react";
 
 enum SpaceType {
     CASH = 'CASH',

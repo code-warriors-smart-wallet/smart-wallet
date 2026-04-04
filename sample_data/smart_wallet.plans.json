@@ -1,36 +1,41 @@
-[{
-  "_id": {
-    "$oid": "67ea5f644189c515fdc14344"
+[
+  {
+    "_id": {
+      "$oid": "67ea5f644189c515fdc14344"
+    },
+    "name": "Starter",
+    "currency": "LKR",
+    "description": "Start simple. Stay in control",
+    "features": [
+      "Track cash & bank accounts",
+      "View all transactions & dashboard",
+      "Use predefined categories",
+      "Manage up to 5 spaces per account",
+      "One-time schedules and budgets"
+    ],
+    "active": true,
+    "monthly_price": 0,
+    "yearly_price": 0
   },
-  "name": "Starter",
-  "currency": "LKR",
-  "description": "free version",
-  "features": [],
-  "active": true,
-  "monthly_price": 0,
-  "yearly_price": 0
-},
-{
-  "_id": {
-    "$oid": "67ea5f644189c515fdc14345"
-  },
-  "name": "Plus",
-  "currency": "LKR",
-  "description": "paid version",
-  "features": [],
-  "active": true,
-  "monthly_price": 49,
-  "yearly_price": 89
-},
-{
-  "_id": {
-    "$oid": "67ea5f644189c515fdc14346"
-  },
-  "name": "Pro",
-  "currency": "LKR",
-  "description": "paid version",
-  "features": [],
-  "active": true,
-  "monthly_price": 99,
-  "yearly_price": 189
-}]
+  {
+    "_id": {
+      "$oid": "67ea5f644189c515fdc14345"
+    },
+    "name": "Plus",
+    "currency": "LKR",
+    "description": "Unlock the full power of your money",
+    "features": [
+      "Track all account types (Cash, Bank, Credit Cards, Loans, Savings, Shared accounts)",
+      "View all transactions & dashboard",
+      "Create custom categories",
+      "Unlimited spaces",
+      "Recurring schedules & budgets",
+      "Manage loan repayment plans",
+      "Use AI assistant for smart insights & queries",
+      "Access detailed reports & analytics"
+    ],
+    "active": true,
+    "monthly_price": 1999,
+    "yearly_price": 19999
+  }
+]

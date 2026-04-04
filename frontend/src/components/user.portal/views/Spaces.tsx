@@ -1,13 +1,14 @@
 import { useEffect, useState } from 'react';
-import { SpaceInfo } from "../../../interfaces/modals"
+import { PlanType, SpaceInfo } from "../../../interfaces/modals"
 import { toast } from 'react-toastify';
 import { SpaceService } from '../../../services/space.service';
 import { useSelector } from "react-redux";
 import { RootState } from "@/redux/store/store";
-import { toStrdSpaceType } from "../../../utils/utils";
+import { toLocalSpaceType, toStrdSpaceType } from "../../../utils/utils";
 import SpaceForm from "./Space/SpaceForm";
 import { useParams } from "react-router-dom";
 import { getDueDate, getStatementDate } from "./Dashboard/CreditCardSummary";
+import Upgrade from './Subscription/Upgrade';
 
 export enum SpaceType {
    CASH = 'CASH',
@@ -18,6 +19,9 @@ export enum SpaceType {
    SAVING_GOAL = 'SAVING_GOAL'
 }
 
+export const starterSpaces = [SpaceType.CASH, SpaceType.BANK];
+export const plusSpaces = [SpaceType.CREDIT_CARD, SpaceType.LOAN_LENT, SpaceType.LOAN_BORROWED, SpaceType.SAVING_GOAL];
+
 export enum COLLABORATOR_STATUS {
    PENDING = 'PENDING',
    ACCEPTED = 'ACCEPTED',
@@ -27,46 +31,58 @@ export enum COLLABORATOR_STATUS {
 }
 
 export const collaboratorStatusInfo = [
-  { status: COLLABORATOR_STATUS.PENDING, color: "bg-yellow-500" },
-  { status: COLLABORATOR_STATUS.ACCEPTED, color: "bg-green-500" },
-  { status: COLLABORATOR_STATUS.REJECTED, color: "bg-red-500" },
-  { status: COLLABORATOR_STATUS.LEFT, color: "bg-gray-500" },
+   { status: COLLABORATOR_STATUS.PENDING, color: "bg-yellow-500" },
+   { status: COLLABORATOR_STATUS.ACCEPTED, color: "bg-green-500" },
+   { status: COLLABORATOR_STATUS.REJECTED, color: "bg-red-500" },
+   { status: COLLABORATOR_STATUS.LEFT, color: "bg-gray-500" },
 ];
 
 const defaultSpaceInputs = {
-      name: "",
-      type: "",
-      id: "",
-      loanPrincipal: 0.0,
-      loanStartDate: null,
-      loanEndDate: null,
-      creditCardLimit: 0.0,
-      statementDate: null,
-      dueDate: null,
-      targetAmount: 0,
-      savedAlready: 0,
-      desiredDate: null,
-      from: null,
-      to: null,
-      isCollaborative: false,
-      collaborator: "",
-      newCollaborators: [],
-      oldCollaborators: [],
-      plan: false
-   }
+   name: "",
+   type: "",
+   id: "",
+   loanPrincipal: 0.0,
+   loanStartDate: null,
+   loanEndDate: null,
+   creditCardLimit: 0.0,
+   statementDate: null,
+   dueDate: null,
+   targetAmount: 0,
+   savedAlready: 0,
+   desiredDate: null,
+   from: null,
+   to: null,
+   isCollaborative: false,
+   collaborator: "",
+   newCollaborators: [],
+   oldCollaborators: [],
+   plan: false
+}
 function Spaces({ onCancel, editSpaceId, summary }: { onCancel: () => void, editSpaceId?: string | null, summary?: any }) {
 
    const { spacetype } = useParams();
    const [newMode, setNewMode] = useState<boolean>(false)
    const [inputs, setInputs] = useState<SpaceInfo>(defaultSpaceInputs);
    const { createSpace, editSpace, existsUser, addCollaborator, removeCollaborator } = SpaceService();
-   const { spaces } = useSelector((state: RootState) => state.auth)
+   const { spaces, plan } = useSelector((state: RootState) => state.auth)
    const today = new Date().toISOString().split("T")[0];
+   const [upgradeMessage, setUpgradeMessage] = useState("");
+
+   console.log("plan: ", plan)
 
    const onNewModeInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
       const { name, value } = e.target as HTMLInputElement;
 
+      if (name === "type" && plusSpaces.includes(value as SpaceType) && plan === PlanType.STARTER) {
+         setUpgradeMessage(`Upgrade to unlock ${toLocalSpaceType(value as SpaceType)} space!`);
+         return;
+      }
+
       if (name == "isCollaborative") {
+         if (plan === PlanType.STARTER) {
+            setUpgradeMessage(`Upgrade to unlock collaborative spaces!`);
+            return;
+         }
          setInputs(prev => {
             return { ...prev, isCollaborative: (e.target as HTMLInputElement).checked }
          });
@@ -237,6 +253,9 @@ function Spaces({ onCancel, editSpaceId, summary }: { onCancel: () => void, edit
             onAddCollaborator={onAddCollaborator}
             onRemoveCollaborator={onRemoveCollaborator}
          />
+         {
+            upgradeMessage != "" && <Upgrade setUpgradeMode={setUpgradeMessage} message={upgradeMessage} />
+         }
       </>
    )
 }

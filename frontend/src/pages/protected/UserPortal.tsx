@@ -10,6 +10,8 @@ import Category from "../../components/user.portal/views/Category";
 import Schedule from "../../components/user.portal/views/Schedule";
 import Reports from "../../components/user.portal/views/Reports";
 import LoanRepaymentPlan from "../../components/user.portal/views/LoanRepaymentPlan";
+import Profile from "../../components/user.portal/views/Profile";
+import Subscription from "../../components/user.portal/views/Subscription";
 
 function UserPortal() {
 
@@ -39,6 +41,10 @@ function UserPortal() {
             return <Category />
          case UserPortalView.REPORTS:
             return <Reports />
+         case UserPortalView.SETTINGS_PROFILE:
+            return <Profile />
+         case UserPortalView.SETTINGS_BILLING:
+            return <Subscription />
          default:
             return <h1 className="text-xl text-text-light-primary dark:text-text-dark-primary">Default</h1>
       }

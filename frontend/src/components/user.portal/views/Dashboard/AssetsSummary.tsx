@@ -44,23 +44,23 @@ function AssetsSummary({ currency, summary }: { currency: string, summary: any }
                 <div className="flex flex-col gap-3 min-w-1/3 max-w-1/3 mt-3">
                     <div className={`px-3 py-2 border hover:bg-hover-light-primary hover:dark:bg-hover-dark-primary cursor-pointer ${space === "" ? "border-primary bg-hover-light-primary dark:bg-hover-dark-primary" : "border-border-light-primary dark:border-border-dark-primary"}`} onClick={() => setSpace("")}>
                         <h1 className="font-semibold">Total Assets:</h1>
-                        <h2 className="text-xl font-semibold text-text-light-secondary dark:text-text-dark-secondary">{summary.totalCashAssetAmount + summary.totalBankAssetAmount + summary.totalLoanLentAssetAmount} {currency}</h2>
+                        <h2 className="text-xl font-semibold text-text-light-secondary dark:text-text-dark-secondary">{(summary.totalCashAssetAmount + summary.totalBankAssetAmount + summary.totalLoanLentAssetAmount + summary.totalSavingGoalAssetAmount).toFixed(2)} {currency}</h2>
                     </div>
                     <div className={`px-3 py-2 border hover:bg-hover-light-primary hover:dark:bg-hover-dark-primary cursor-pointer ${space === SpaceType.CASH ? "border-primary bg-hover-light-primary dark:bg-hover-dark-primary" : "border-border-light-primary dark:border-border-dark-primary"}`} onClick={() => setSpace(SpaceType.CASH)}>
                         <h1 className="font-semibold">Cash Assets:</h1>
-                        <h2 className="text-xl font-semibold text-text-light-secondary dark:text-text-dark-secondary">{summary.totalCashAssetAmount} {currency}</h2>
+                        <h2 className="text-xl font-semibold text-text-light-secondary dark:text-text-dark-secondary">{summary.totalCashAssetAmount.toFixed(2)} {currency}</h2>
                     </div>
                     <div className={`px-3 py-2 border hover:bg-hover-light-primary hover:dark:bg-hover-dark-primary cursor-pointer ${space === SpaceType.BANK ? "border-primary bg-hover-light-primary dark:bg-hover-dark-primary" : "border-border-light-primary dark:border-border-dark-primary"}`} onClick={() => setSpace(SpaceType.BANK)}>
                         <h1 className="font-semibold">Bank Assets:</h1>
-                        <h2 className="text-xl font-semibold text-text-light-secondary dark:text-text-dark-secondary">{summary.totalBankAssetAmount} {currency}</h2>
+                        <h2 className="text-xl font-semibold text-text-light-secondary dark:text-text-dark-secondary">{summary.totalBankAssetAmount.toFixed(2)} {currency}</h2>
                     </div>
                     <div className={`px-3 py-2 border hover:bg-hover-light-primary hover:dark:bg-hover-dark-primary cursor-pointer ${space === SpaceType.LOAN_LENT ? "border-primary bg-hover-light-primary dark:bg-hover-dark-primary" : "border-border-light-primary dark:border-border-dark-primary"}`} onClick={() => setSpace(SpaceType.LOAN_LENT)}>
                         <h1 className="font-semibold">Loan Receivables:</h1>
-                        <h2 className="text-xl font-semibold text-text-light-secondary dark:text-text-dark-secondary">{summary.totalLoanLentAssetAmount} {currency}</h2>
+                        <h2 className="text-xl font-semibold text-text-light-secondary dark:text-text-dark-secondary">{summary.totalLoanLentAssetAmount.toFixed(2)} {currency}</h2>
                     </div>
                     <div className={`px-3 py-2 border hover:bg-hover-light-primary hover:dark:bg-hover-dark-primary cursor-pointer ${space === SpaceType.SAVING_GOAL ? "border-primary bg-hover-light-primary dark:bg-hover-dark-primary" : "border-border-light-primary dark:border-border-dark-primary"}`} onClick={() => setSpace(SpaceType.SAVING_GOAL)}>
                         <h1 className="font-semibold">Saving goals:</h1>
-                        <h2 className="text-xl font-semibold text-text-light-secondary dark:text-text-dark-secondary">{summary.totalSavingGoalAssetAmount} {currency}</h2>
+                        <h2 className="text-xl font-semibold text-text-light-secondary dark:text-text-dark-secondary">{summary.totalSavingGoalAssetAmount.toFixed(2)} {currency}</h2>
                     </div>
                 </div>
                 <div className="p-2 border border-border-light-primary dark:border-border-dark-primary mt-3">

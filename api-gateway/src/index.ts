@@ -41,4 +41,9 @@ app.use('/report', createProxyMiddleware({
 
 app.listen(port, () => {
    console.log("Api gateway running in port " + port)
+   console.log("User service url: " + process.env.USER_SERVICE_URL)
+   console.log("Finops service url: " + process.env.FINOPS_SERVICE_URL)
+   console.log("Notification service url: " + process.env.NOTIFICATION_SERVICE_URL)
+   console.log("Report service url: " + process.env.REPORT_SERVICE_URL)
+   console.log("Frontend url: " + process.env.FRONTEND_URL)
 })

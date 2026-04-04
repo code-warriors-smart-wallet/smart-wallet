@@ -1,4 +1,4 @@
-// require('dotenv').config();
+require('dotenv').config();
 const express = require("express");
 const cors = require('cors');
 const { createProxyMiddleware } = require('http-proxy-middleware')
@@ -10,7 +10,7 @@ const app = express();
 
 app.use(
     cors({
-      origin: "https://frontend-production-6ec8.up.railway.app",
+      origin: process.env.FRONTEND_URL || "http://localhostt:5173",
       credentials: true,
     })
 );

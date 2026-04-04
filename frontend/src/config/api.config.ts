@@ -57,6 +57,7 @@ export const refreshAccessToken = async () => {
                 token: response.data.data.object.accessToken,
                 currency: response.data.data.object.currency,
                 plan: response.data.data.object.plan,
+                profileImgUrl: response.data.data.object.profileImgUrl,
                 role: response.data.data.object.role,
                 spaces: response.data.data.object.spaces
             }

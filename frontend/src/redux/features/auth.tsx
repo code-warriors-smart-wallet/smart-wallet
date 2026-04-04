@@ -11,6 +11,7 @@ const initialState: AuthState = {
     isAuthenticated: false,
     OTPAttemptsRemaining: 3,
     currency: null,
+    profileImgUrl: null,
     plan: null,
     role: null,
     spaces: []
@@ -24,12 +25,13 @@ const authSlice = createSlice({
     initialState: initialState, // The initial state of the slice
     // reducer functions are accepting the previous state and the action and return the new state
     reducers: {
-        loginSuccess(state, action: { "payload": { username: string, email: string, token: string, currency: string, plan: PlanType, role: UserRole, spaces: {id: string, name: string, type: SpaceType}[] } }) {
+        loginSuccess(state, action: { "payload": { username: string, email: string, token: string, currency: string, plan: PlanType, profileImgUrl: string, role: UserRole, spaces: {id: string, name: string, type: SpaceType}[] } }) {
             console.log("login success: ", action.payload.token)
             state.username = action.payload.username;
             state.token = action.payload.token;
             state.email = action.payload.email;
             state.currency = action.payload.currency;
+            state.profileImgUrl = action.payload.profileImgUrl;
             state.plan = action.payload.plan
             state.isAuthenticated = true;
             state.role = action.payload.role

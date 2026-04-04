@@ -8,7 +8,7 @@ import { capitalize, toLocalSpaceType } from "../../utils/utils";
 import { useNavigate, useParams } from "react-router-dom";
 import DropDown from "../Dropdown";
 import { transactionTypesInfo } from "./views/Transactions";
-import { FaGlobe, FaPlus } from "react-icons/fa";
+import { FaGlobe, FaPlus, FaUser, FaUserAlt, FaUserAltSlash } from "react-icons/fa";
 import SearchInput from "./SearchInput";
 import { SpaceType } from "./views/Spaces";
 import { PlanType } from "../../interfaces/modals";
@@ -17,7 +17,7 @@ import Upgrade from "./views/Subscription/Upgrade";
 function NavBar({ setSideBarOpen, isSideBarOpen, view, spaceId, setSpaceFormToggle }: { setSideBarOpen: (isopen: boolean) => void, isSideBarOpen: boolean, view: UserPortalView, spaceId: string, setSpaceFormToggle: Dispatch<React.SetStateAction<boolean>> }) {
 
    const [isUserMenuOpen, setUserMenuOpen] = useState<boolean>(false)
-   const { email, username, spaces, plan } = useSelector((state: RootState) => state.auth)
+   const { email, username, spaces, plan, profileImgUrl } = useSelector((state: RootState) => state.auth)
    const [dropdownItems, setDropDownItems] = useState<string[]>([])
    const [dropdownIcons, setDropDownIcons] = useState<React.ReactNode[]>([])
    const [activeDropdownIcon, setActiveDropdownIcon] = useState<React.ReactNode>([])
@@ -146,7 +146,14 @@ function NavBar({ setSideBarOpen, isSideBarOpen, view, spaceId, setSpaceFormTogg
                         <div onClick={() => { setUserMenuOpen(!isUserMenuOpen) }}>
                            <button type="button" className="flex text-sm bg-gray-800 rounded-full focus:ring-4 focus:ring-gray-300 dark:focus:ring-gray-600" aria-expanded="false" data-dropdown-toggle="dropdown-user">
                               <span className="sr-only">Open user menu</span>
-                              <img className="w-8 h-8 rounded-full" src="https://flowbite.com/docs/images/people/profile-picture-5.jpg" alt="user photo" />
+                              
+                              {
+                                 profileImgUrl && profileImgUrl !== "" ? (
+                                    <img className="w-8 h-8 rounded-full" src={profileImgUrl} alt="user photo" />
+                                 ) : (
+                                    <FaUser size={40} className="rounded-full border border-border-light-primary dark:border-border-dark-primary text-text-light-primary dark:text-text-dark-primary"/> 
+                                 )
+                              }
                            </button>
                         </div>
                         {

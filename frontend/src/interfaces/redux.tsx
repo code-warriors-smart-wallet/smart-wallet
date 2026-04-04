@@ -6,6 +6,7 @@ export interface AuthState {
     token: string|null,
     isAuthenticated: boolean;
     OTPAttemptsRemaining: number;
+    profileImgUrl: string|null;
     currency: string|null;
     plan: PlanType|null;
     role: UserRole|null;

@@ -442,6 +442,7 @@ authRouter.post("/google", async (req: Request, res: Response) => {
                 email: existingUser.email,
                 currency: existingUser.currency,
                 plan: plan!.name,
+                profileImgUrl: existingUser?.profileImgUrl,
                 accessToken: accessToken,
                 role: existingUser.role,
                 spaces: spaces
@@ -537,6 +538,7 @@ authRouter.post("/login", async (req: Request, res: Response) => {
                         email: user.email,
                         currency: user.currency,
                         plan: plan!.name,
+                        profileImgUrl: user?.profileImgUrl,
                         accessToken: accessToken,
                         role: user.role,
                         spaces: spaces
@@ -614,6 +616,7 @@ authRouter.post('/refresh_token', async (req: Request, res: Response) => {
                     email: storedUser.email,
                     currency: storedUser.currency,
                     plan: plan!.name,
+                    profileImgUrl: storedUser?.profileImgUrl,
                     accessToken: newAccessToken,
                     role: storedUser.role,
                     spaces: spaces

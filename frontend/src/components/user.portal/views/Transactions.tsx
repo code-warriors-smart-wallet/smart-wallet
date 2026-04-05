@@ -190,21 +190,13 @@ function Transactions() {
    const [newOrEditMode, setNewMode] = useState<boolean>(false)
    const [viewMode, setViewMode] = useState<boolean>(false)
    const [editId, setEditId] = useState<string | null>(null)
-   // const [canEditTransaction, setCanEditTransaction] = useState<boolean>(false)
-   // const [transactions, setTransactions] = useState<any[]>([])
-   // const [total, setTotal] = useState<any>(0)
    const [categories, setCategories] = useState<CategoryInfo[]>([])
-   // const [page, setPage] = useState<number>(1);
-   // const [loading, setLoading] = useState<boolean>(false)
    const spaceInfo = transactionTypesInfo.find(info => toStrdSpaceType(activeSpaceType) === info.spaceType) || null
    const { pageLimit, createTransaction, editTransaction, deleteTransaction, getTransactionsByUser } = TransactionService();
    const { transactions, loading, page, total } = useSelector((state: RootState) => state.transaction)
 
    const { getCategories } = CategoryService();
    const dispatch = useDispatch();
-   // const pageLimit = 10;
-
-   console.log(transactions)
 
    const [allowedParentCategories, setAllowedParentCategories] = useState<any[]>([])
    const [allowedSubCategories, setAllowedSubCategories] = useState<CategoryInfo[]>([])
@@ -259,8 +251,9 @@ function Transactions() {
       if (!inputs.spaceId) {
          setInputs(prev => ({ ...prev, spaceId: activeSpaceId }));
       }
-      if (inputs.amount == 0.0) {
-         toast.error("Amount is required!")
+      
+      if (!/^[0-9]+$/.test(inputs.amount.toString()) || inputs.amount <= 0) {
+         toast.error("Invalid amount: " + inputs.amount);
          return;
       }
 
@@ -387,6 +380,8 @@ function Transactions() {
       }
       setAllowedSubCategories(scategories)
    }, [inputs.pcategory])
+
+   console.log(inputs)
 
    if (loading) return <Loading/>
 
@@ -554,7 +549,7 @@ function Transactions() {
                                     return transactionInfo?.fromSpaces.includes(s.type)
                                  }).map((s) => {
                                     return (
-                                       <option value={s.id}>
+                                       <option key={s.id} value={s.id}>
                                           {s.name.split("_").join(" ")}
                                        </option>
                                     )
@@ -597,7 +592,7 @@ function Transactions() {
                                     return transactionInfo?.toSpaces.includes(s.type) && s.id != activeSpaceId
                                  }).map((s) => {
                                     return (
-                                       <option value={s.id}>
+                                       <option key={s.id} value={s.id}>
                                           {s.name.split("_").join(" ").toUpperCase()}
                                        </option>
                                     )
@@ -623,7 +618,7 @@ function Transactions() {
                               {
                                  allowedParentCategories.map(cat => {
                                     return (
-                                       <option value={cat.parentCategoryId}>
+                                       <option key={cat.parentCategoryId} value={cat.parentCategoryId}>
                                           {cat.parentCategory}
                                        </option>
                                     )
@@ -649,7 +644,7 @@ function Transactions() {
                               {
                                  allowedSubCategories.map(cat => {
                                     return (
-                                       <option value={cat.subCategoryId}>
+                                       <option key={cat.subCategoryId} value={cat.subCategoryId}>
                                           {cat.subCategoryName}
                                        </option>
                                     )
@@ -683,6 +678,7 @@ function Transactions() {
                               className="mt-1 mb-1"
                            />
                         </div>
+
                         {/* note */}
                         <div className={inputs.type != "" ? `my-3` : `my-3 hidden`}>
                            <label className="text-text-light-primary dark:text-text-dark-primary">Note(*):</label>
@@ -706,6 +702,14 @@ function Transactions() {
                         <Button
                            text={editId ? "Save" : "Create"}
                            className="max-w-fit ml-3"
+                           disabled={
+                              inputs.type == "" || 
+                              inputs.amount == 0.0 || 
+                              (!spaceInfo?.transactionTypes.find(t => t.type === inputs.type)?.fromSpaces.every(sp => ["ACTIVE_SPACE", "OUTSIDE_MYWALLET"].includes(sp)) && !inputs.from) ||
+                              (!spaceInfo?.transactionTypes.find(t => t.type === inputs.type)?.toSpaces.every(sp => ["ACTIVE_SPACE", "OUTSIDE_MYWALLET"].includes(sp)) && !inputs.to) ||
+                              !inputs.date || 
+                              !inputs.pcategory || 
+                              !inputs.scategory}
                            onClick={onNewOrEditSubmit}
                         />
                      </div>
@@ -818,7 +822,7 @@ function Transactions() {
                               {
                                  spaces.map((s) => {
                                     return (
-                                       <option value={s.id}>
+                                       <option  key={s.id} value={s.id}>
                                           {s.name.split("_").join(" ")}
                                        </option>
                                     )
@@ -842,7 +846,7 @@ function Transactions() {
                               {
                                  spaces.map((s) => {
                                     return (
-                                       <option value={s.id}>
+                                       <option key={s.id} value={s.id}>
                                           {s.name.split("_").join(" ").toUpperCase()}
                                        </option>
                                     )
@@ -890,7 +894,7 @@ function Transactions() {
                               {
                                  categories.map(c => {
                                     return (
-                                       <option value={c.subCategoryId}>
+                                       <option key={c.subCategoryId} value={c.subCategoryId}>
                                           {c.subCategoryName}
                                        </option>
                                     )

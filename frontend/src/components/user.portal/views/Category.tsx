@@ -669,6 +669,11 @@ function Category() {
                                 />
                                 <Button
                                     text={editPid && editSid ? "Save" : "Create"}
+                                    disabled={
+                                        inputs.type === CategoryType.SUB_CATEGORY
+                                            ? inputs.subCategoryName == "" || inputs.parentCategoryId == "" || inputs.subCategorycolor == "" || inputs.transactionType == ""
+                                            : inputs.parentCategoryName == "" || inputs.parentCategorycolor == "" || inputs.subCategories.length == 0
+                                    }
                                     className="max-w-fit ml-3"
                                     onClick={onNewOrEditSubmit}
                                 />

@@ -433,6 +433,14 @@ function SpaceForm({ inputs, onInputChange, spaces, onSubmit, onAddOrEdit, onCan
                             <Button
                                 text={createSpaceLoading ? "Processing" : editSpaceId ? "Save" : "Create"}
                                 className="max-w-fit ml-3"
+                                disabled={
+                                    !inputs.type ||
+                                    !inputs.name ||
+                                    (inputs.type === SpaceType.LOAN_BORROWED && (!inputs.to || !inputs.loanPrincipal)) ||
+                                    (inputs.type === SpaceType.LOAN_LENT && (!inputs.from || !inputs.loanPrincipal)) ||
+                                    (inputs.type === SpaceType.CREDIT_CARD && !inputs.creditCardLimit) ||
+                                    (inputs.type === SpaceType.SAVING_GOAL && !inputs.targetAmount && !inputs.desiredDate)
+                                }
                                 onClick={onAddOrEdit}
                             />
                         </div>

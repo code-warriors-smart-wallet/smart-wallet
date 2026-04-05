@@ -14,6 +14,8 @@ import BudgetModal from "./Budgets/BudgetModal";
 import UpdateBudgetModal from "./Budgets/UpdateBudgetModal";
 import { PieChart, Calendar, TrendingUp, Donut } from "lucide-react";
 import Loading from "../../../components/Loading";
+import Upgrade from "./Subscription/Upgrade";
+import { PlanType } from "../../../interfaces/modals";
 
 export enum BudgetType {
   ONE_TIME = "ONE_TIME",
@@ -1381,6 +1383,9 @@ function Budget() {
 
   const [spaceSelectionPhase, setSpaceSelectionPhase] = useState<boolean>(false);
   const [selectedSpacesForAllSpaces, setSelectedSpacesForAllSpaces] = useState<string[]>([]);
+  const { plan } = useSelector((state: RootState) => state.auth)
+  const [upgradeMessage, setUpgradeMessage] = useState("");
+
 
   // Budget detail modal state
   const [detailModal, setDetailModal] = useState<{
@@ -1403,7 +1408,7 @@ function Budget() {
   const [inputs, setInputs] = useState<BudgetInfo>({
     name: "",
     amount: 0,
-    type: BudgetType.MONTHLY,
+    type: BudgetType.ONE_TIME,
     mainCategoryId: "",
     subCategoryIds: [],
     spaceIds: spaceid === "all" ? [] : spaceid ? [spaceid] : [],
@@ -1786,6 +1791,11 @@ function Budget() {
     } else if (name === "type") {
       // When budget type changes, recalculate end date if start date exists
       const newType = value as BudgetType;
+      if (plan === PlanType.STARTER && newType !== BudgetType.ONE_TIME) {
+        setUpgradeMessage("Upgrade to unlock recurring budgets!");
+        return;
+      }
+
       const { startDate, endDate } = calculateBudgetDates(newType);
 
       setInputs(prev => ({
@@ -2006,11 +2016,11 @@ function Budget() {
       setNewOrEditMode(true);
       setEditId(null);
 
-      const { startDate, endDate } = calculateBudgetDates(BudgetType.MONTHLY);
+      const { startDate, endDate } = calculateBudgetDates(BudgetType.ONE_TIME);
       setInputs({
         name: "",
         amount: 0,
-        type: BudgetType.MONTHLY,
+        type: BudgetType.ONE_TIME,
         mainCategoryId: "",
         subCategoryIds: [],
         spaceIds: [],
@@ -2027,7 +2037,7 @@ function Budget() {
       setNewOrEditMode(true);
       setEditId(null);
 
-      const { startDate, endDate } = calculateBudgetDates(BudgetType.MONTHLY);
+      const { startDate, endDate } = calculateBudgetDates(BudgetType.ONE_TIME);
 
       // Get current space info
       const currentSpace = spaces.find(s => s.id === spaceid);
@@ -2036,7 +2046,7 @@ function Budget() {
       setInputs({
         name: "",
         amount: 0,
-        type: BudgetType.MONTHLY,
+        type: BudgetType.ONE_TIME,
         mainCategoryId: "",
         subCategoryIds: [],
         spaceIds: spaceid ? [spaceid] : [],
@@ -2198,7 +2208,7 @@ function Budget() {
     setInputs({
       name: "",
       amount: 0,
-      type: BudgetType.MONTHLY,
+      type: BudgetType.ONE_TIME,
       mainCategoryId: "",
       subCategoryIds: [],
       spaceIds: spaceid === "all" ? [] : spaceid ? [spaceid] : [],
@@ -2581,7 +2591,7 @@ function Budget() {
 
       {/* Loading State */}
       {loading && budgets.length === 0 && (
-          <Loading/>
+        <Loading />
       )}
 
       {/* CHANGED: Updated Space Selection Modal for multi-space support */}
@@ -2742,6 +2752,10 @@ function Budget() {
         confirmText="Delete Budget"
         cancelText="Cancel"
       />
+
+      {
+        upgradeMessage != "" && <Upgrade setUpgradeMode={setUpgradeMessage} message={upgradeMessage} />
+      }
     </>
   );
 }

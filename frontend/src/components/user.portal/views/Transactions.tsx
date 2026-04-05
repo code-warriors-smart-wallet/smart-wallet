@@ -13,6 +13,7 @@ import { TransactionService } from "../../../services/transaction.service";
 import { FaArrowAltCircleDown, FaArrowAltCircleUp, FaCreditCard, FaEdit, FaMoneyBillWave, FaTimes, FaTrash, FaUniversity, FaBullseye, FaInfoCircle } from "react-icons/fa"
 import TransactionList from "./Transactions/TransactionList";
 import { setLoading, setPage } from "../../../redux/features/transaction";
+import Loading from "../../../components/Loading";
 
 export enum TransactionType {
    EXPENSE = 'EXPENSE',
@@ -387,7 +388,7 @@ function Transactions() {
       setAllowedSubCategories(scategories)
    }, [inputs.pcategory])
 
-   if (loading) return <h1 className="text-xl text-text-light-primary dark:text-text-dark-primary">Loading...</h1>
+   if (loading) return <Loading/>
 
    return (
       <>
@@ -430,10 +431,10 @@ function Transactions() {
                }
 
                {
-                  toStrdSpaceType(spacetype).startsWith("LOAN") &&
-                  transactions?.filter(t => t.loanRepaymentPlanId != null)?.length == 0 &&
+                  (toStrdSpaceType(spacetype).startsWith("LOAN") &&
+                  transactions?.filter(t => t.loanRepaymentPlanId != null)?.length == 0) ? <></> :
                   <Button
-                     text="New Transactions"
+                     text="New Transaction"
                      className="max-w-fit"
                      onClick={onNewOrEditMode}
                   />

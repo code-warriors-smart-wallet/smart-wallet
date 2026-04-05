@@ -13,6 +13,7 @@ import BudgetList from "./Budgets/BudgetList";
 import BudgetModal from "./Budgets/BudgetModal";
 import UpdateBudgetModal from "./Budgets/UpdateBudgetModal";
 import { PieChart, Calendar, TrendingUp, Donut } from "lucide-react";
+import Loading from "../../../components/Loading";
 
 export enum BudgetType {
   ONE_TIME = "ONE_TIME",
@@ -2580,9 +2581,7 @@ function Budget() {
 
       {/* Loading State */}
       {loading && budgets.length === 0 && (
-        <div className="text-center py-12">
-          <p className="text-text-light-secondary dark:text-text-dark-secondary">Loading budgets...</p>
-        </div>
+          <Loading/>
       )}
 
       {/* CHANGED: Updated Space Selection Modal for multi-space support */}

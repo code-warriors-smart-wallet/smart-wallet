@@ -13,6 +13,7 @@ import { TransactionType, transactionTypesInfo } from "./Transactions";
 import { ScheduleService } from "../../../services/schedule.service";
 import ScheduleList from "./Schedules/ScheduleList";
 import Upgrade from "./Subscription/Upgrade";
+import Loading from "../../../components/Loading";
 
 function Schedule() {
 
@@ -307,7 +308,7 @@ function Schedule() {
       setAllowedSubCategories(scategories)
    }, [inputs.pcategory])
 
-   if (loading) return <h1 className="text-xl text-text-light-primary dark:text-text-dark-primary">Loading...</h1>
+   if (loading) return <Loading/>
 
    console.log("inputs", inputs)
 

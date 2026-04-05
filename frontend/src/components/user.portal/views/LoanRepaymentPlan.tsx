@@ -17,6 +17,7 @@ import { LoanRepaymentPlanService } from "../../../services/loan_repayment_plan.
 import { start } from "repl";
 import { RiSendPlaneFill } from "react-icons/ri";
 import { MdCallReceived } from "react-icons/md";
+import Loading from "../../../components/Loading";
 
 export enum TransactionType {
     EXPENSE = 'EXPENSE',
@@ -685,8 +686,7 @@ function LoanRepaymentPlan() {
 
     }, [inputs.interestType])
 
-    if (loading) return <h1 className="text-xl text-text-light-primary dark:text-text-dark-primary">Loading...</h1>
-
+    if (loading) return <Loading />
     return (
         <>
             {/* sub header */}

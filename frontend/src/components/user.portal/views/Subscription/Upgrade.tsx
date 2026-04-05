@@ -4,6 +4,7 @@ import { PlanInfo, PlanType } from "../../../../interfaces/modals";
 import { AuthService } from "../../../../services/auth/auth.service";
 import { useEffect, useState } from "react";
 import { useLocation } from "react-router-dom";
+import Loading from "../../../../components/Loading";
 
 function Upgrade({setUpgradeMode, message}: {setUpgradeMode: React.Dispatch<React.SetStateAction<string>>, message: string}) {
 
@@ -32,21 +33,11 @@ function Upgrade({setUpgradeMode, message}: {setUpgradeMode: React.Dispatch<Reac
 
     if (loading) {
         return (
-            <div
-                className="fixed top-0 left-0 w-screen h-screen z-[9999] grid place-items-center bg-opacity-50 overflow-auto p-4 modal-bg pt-10"
-            >
-                <div
-                    className="relative w-full max-w-lg rounded-lg bg-bg-light-secondary dark:bg-bg-dark-secondary shadow-sm p-3"
-                >
-                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900"></div>
-
-                </div>
-            </div>
+            <Loading/>
         )
 
 
     }
-
 
     return (
         <div

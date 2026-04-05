@@ -10,6 +10,7 @@ import { SpaceType } from "./Spaces";
 import { ReportInfo, TransactionInfo } from "@/interfaces/modals";
 import SpaceSelector from "../SpaceSelector";
 import { ReportService } from "../../../services/report.service";
+import Loading from "../../../components/Loading";
 
 export enum REPORT {
     ACCOUNT_LEDGER = "ACCOUNT_LEDGER",
@@ -119,9 +120,7 @@ function Reports() {
 
     if (loading) {
         return (
-            <div className="flex items-center justify-center h-64">
-                <div className="loader ease-linear rounded-full border-8 border-t-8 border-gray-200 h-16 w-16"></div>
-            </div>
+            <Loading />
         )
     }
 

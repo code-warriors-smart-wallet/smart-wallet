@@ -19,6 +19,7 @@ import AllSpaceSummary from "./Dashboard/AllSpaceSummary";
 import SavingGoalSummary from "./Dashboard/SavingGoalSummary";
 import Button from "../../../components/Button";
 import { FaInfoCircle } from "react-icons/fa";
+import Loading from "../../../components/Loading";
 
 enum SpaceAction {
    EDIT_DETAILS = "EDIT_DETAILS",
@@ -184,7 +185,7 @@ function DashBoard() {
    }, [selectedAction])
 
    return (
-      loading || !summary ? <h1 className="text-xl text-text-light-primary dark:text-text-dark-primary">Loading...</h1> : (
+      loading || !summary ? <Loading/> : (
          <>
             {/* sub header */}
             <div className="flex justify-between items-center">

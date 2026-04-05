@@ -24,10 +24,10 @@ function SpaceSelector({ setShowSelectSpacesModal, selectedSpacesInput, onSelect
                         type="checkbox"
                         name="all"
                         id="all"
-                        checked={selectedSpaces.length === spaces.length}
+                        checked={selectedSpaces.length === spaces.filter(space => !allowedSpaceTypes || allowedSpaceTypes.includes(space.type)).length}
                         onChange={(e) => {
                             if (e.target.checked) {
-                                const allSpaces = spaces.map((space) => ({ _id: space.id, name: space.name, type: space.type }));
+                                const allSpaces = spaces.filter(space => !allowedSpaceTypes || allowedSpaceTypes.includes(space.type)).map((space) => ({ _id: space.id, name: space.name, type: space.type }));
                                 setSelectedSpaces(allSpaces);
                             } else {
                                 setSelectedSpaces([]);

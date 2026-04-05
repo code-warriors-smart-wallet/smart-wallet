@@ -34,7 +34,7 @@ function DropDown({ title, headerTexts, dropdownItems, lastItem, onClick }: Drop
             <button id="dropdownInformationButton" data-dropdown-toggle="dropdownInformation"
                 onClick={() => setDropdowntoggle(true)}
                 className="mr-3 py-2 px-3 border-2 border-border-light-primary dark:border-border-dark-primary rounded-md bg-bg-light-primary dark:bg-bg-dark-primary text-text-light-primary dark:text-text-dark-primary focus:border-primary text-sm text-center inline-flex items-center capitalize" type="button">{title}<svg className="w-2.5 h-2.5 ms-3" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 10 6">
-                    <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m1 1 4 4 4-4" />
+                    <path stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="m1 1 4 4 4-4" />
                 </svg>
             </button>
 

@@ -15,7 +15,7 @@ function SidebarDropdownItem({ name, Icon, children }: { name: string, Icon?: Re
             {Icon && <Icon/>}
             <span className="flex-1 ms-3 text-left rtl:text-right whitespace-nowrap capitalize">{name}</span>
             <svg className="w-3 h-3" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 10 6">
-               <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m1 1 4 4 4-4" />
+               <path stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="m1 1 4 4 4-4" />
             </svg>
          </button>
          {

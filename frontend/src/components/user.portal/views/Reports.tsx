@@ -10,6 +10,7 @@ import { SpaceType } from "./Spaces";
 import { ReportInfo, TransactionInfo } from "@/interfaces/modals";
 import SpaceSelector from "../SpaceSelector";
 import { ReportService } from "../../../services/report.service";
+import Loading from "../../../components/Loading";
 
 export enum REPORT {
     ACCOUNT_LEDGER = "ACCOUNT_LEDGER",
@@ -28,11 +29,11 @@ export const reportsInfo = [
     },
     {
         type: REPORT.LOAN_LEDGER,
-        spaces: [SpaceType.LOAN_BORROWED, SpaceType.LOAN_LENT],
+        spaces: [SpaceType.LOAN_BORROWED, SpaceType.LOAN_LENT,],
     },
     {
         type: REPORT.CREDIT_CARD_LEDGER,
-        spaces: [SpaceType.CREDIT_CARD],
+        spaces: [SpaceType.CREDIT_CARD, ],
     },
     {
         type: REPORT.INCOME_VS_EXPENSE_BY_CATEGORY,
@@ -119,9 +120,7 @@ function Reports() {
 
     if (loading) {
         return (
-            <div className="flex items-center justify-center h-64">
-                <div className="loader ease-linear rounded-full border-8 border-t-8 border-gray-200 h-16 w-16"></div>
-            </div>
+            <Loading />
         )
     }
 
@@ -193,7 +192,7 @@ function Reports() {
 
                     {/* spaces */}
                     {
-                        inputs.type && inputs.type === REPORT.ACCOUNT_LEDGER && spaceid === "all" && (
+                        spaceid === "all" && reportsInfo.find((report) => report.type === inputs.type)?.spaces.includes("ALL") && (
                             <div className={`my-3`}>
                                 <div className="flex items-center gap-3">
                                     <label className="text-text-light-primary dark:text-text-dark-primary">Select spaces:</label>
@@ -252,6 +251,12 @@ function Reports() {
                             text="Export"
                             type="button"
                             className="mt-4 max-w-fit px-5 py-2 text-sm"
+                            disabled = {
+                                inputs.type === "" ||
+                                inputs.type === REPORT.ACCOUNT_LEDGER && (inputs.spaces.length === 0 || inputs.fromdate === "" || inputs.todate === "") ||
+                                inputs.type === REPORT.LOAN_LEDGER && (inputs.spaces.length === 0 || inputs.todate === "") ||
+                                inputs.type === REPORT.CREDIT_CARD_LEDGER && (inputs.spaces.length === 0 || inputs.fromdate === "" || inputs.todate === "")
+                            }
                             onClick={() => {
                                 console.log("inputs", inputs)
                                 if (inputs.type === REPORT.ACCOUNT_LEDGER) {

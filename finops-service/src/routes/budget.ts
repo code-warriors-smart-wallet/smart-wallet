@@ -234,7 +234,7 @@ const checkAndCreateNewEntries = async (userId: string) => {
         const budgets = await Budget.find({ userId: userId });
 
         for (const budget of budgets) {
-            if (budget.type === 'MONTHLY' && isFirstDayOfMonth) {
+            if (budget.type === 'MONTHLY') {
                 const lastApplied = new Date(budget.last_applied_date);
                 if (lastApplied.getMonth() !== today.getMonth() ||
                     lastApplied.getFullYear() !== today.getFullYear()) {
@@ -247,7 +247,7 @@ const checkAndCreateNewEntries = async (userId: string) => {
                     budget.last_applied_date = today;
                     await budget.save();
                 }
-            } else if (budget.type === 'WEEKLY' && isFirstDayOfWeekMonday) {
+            } else if (budget.type === 'WEEKLY') {
                 const lastApplied = new Date(budget.last_applied_date);
                 const lastAppliedStart = getStartOfWeek(lastApplied);
                 const currentStart = getStartOfWeek(today);
@@ -671,6 +671,9 @@ budgetRouter.get("/space-type/:spaceType", authenticate, async (req: Request, re
     try {
         const userId: string = (req as any).user.id;
         const { spaceType } = req.params;
+
+        await checkAndCreateNewEntries(userId); 
+
 
         // Find budgets that have this spaceType in their spaceTypes array
         const budgets = await Budget.find({

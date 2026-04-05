@@ -13,6 +13,7 @@ import { TransactionType, transactionTypesInfo } from "./Transactions";
 import { ScheduleService } from "../../../services/schedule.service";
 import ScheduleList from "./Schedules/ScheduleList";
 import Upgrade from "./Subscription/Upgrade";
+import Loading from "../../../components/Loading";
 
 function Schedule() {
 
@@ -97,7 +98,7 @@ function Schedule() {
       if (plan === PlanType.STARTER && name === "frequency" && value === Frequency.RECURRENT) {
          setUpgradeMessage("Upgrade to unlock recurring schedules!");
          return;
-      } 
+      }
       setInputs((prev: ScheduleInfo) => {
          return { ...prev, [name]: value }
       });
@@ -114,8 +115,8 @@ function Schedule() {
          return;
       }
 
-      if (inputs.amount == 0.0) {
-         toast.error("Amount is required!")
+      if (!/^[0-9]+$/.test(inputs.amount.toString()) || inputs.amount <= 0) {
+         toast.error("Invalid amount: " + inputs.amount);
          return;
       }
 
@@ -307,7 +308,7 @@ function Schedule() {
       setAllowedSubCategories(scategories)
    }, [inputs.pcategory])
 
-   if (loading) return <h1 className="text-xl text-text-light-primary dark:text-text-dark-primary">Loading...</h1>
+   if (loading) return <Loading />
 
    console.log("inputs", inputs)
 
@@ -750,6 +751,18 @@ function Schedule() {
                         <Button
                            text={editId ? "Save" : "Create"}
                            className="max-w-fit ml-3"
+                           disabled={
+                              inputs.type == "" || 
+                              inputs.amount == 0.0 || 
+                              (!spaceInfo?.transactionTypes.find(t => t.type === inputs.type)?.fromSpaces.every(sp => ["ACTIVE_SPACE", "OUTSIDE_MYWALLET"].includes(sp)) && !inputs.from) ||
+                              (!spaceInfo?.transactionTypes.find(t => t.type === inputs.type)?.toSpaces.every(sp => ["ACTIVE_SPACE", "OUTSIDE_MYWALLET"].includes(sp)) && !inputs.to) ||
+                              !inputs.pcategory || 
+                              !inputs.scategory ||
+                              !inputs.frequency ||
+                              !inputs.startDate ||
+                              (inputs.frequency === Frequency.RECURRENT && inputs.continue === ContinueType.UNTIL_A_DATE && !inputs.endDate) ||
+                              (inputs.frequency === Frequency.RECURRENT && (!inputs.repeat || !inputs.interval || !inputs.continue))
+                           }
                            onClick={onNewOrEditSubmit}
                         />
                      </div>

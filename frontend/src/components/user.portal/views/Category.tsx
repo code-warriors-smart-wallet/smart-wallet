@@ -10,6 +10,8 @@ import { RootState } from "../../../redux/store/store";
 import { toast } from "react-toastify";
 import { PlanType } from "../../../interfaces/modals";
 import Upgrade from "./Subscription/Upgrade";
+import Loading from "../../../components/Loading";
+
 
 enum CategoryType {
     PARENT_CATEGORY = "PARENT_CATEGORY",
@@ -297,7 +299,7 @@ function Category() {
         setAllowedTransactionTypesToCreate(findAllowedTransactionTypesToCreate() || [])
     }, [spacetype, spaceid])
 
-    if (loading) return <h1 className="text-xl text-text-light-primary dark:text-text-dark-primary">Loading...</h1>
+    if (loading) return <Loading/>
 
     return (
         <>
@@ -667,6 +669,11 @@ function Category() {
                                 />
                                 <Button
                                     text={editPid && editSid ? "Save" : "Create"}
+                                    disabled={
+                                        inputs.type === CategoryType.SUB_CATEGORY
+                                            ? inputs.subCategoryName == "" || inputs.parentCategoryId == "" || inputs.subCategorycolor == "" || inputs.transactionType == ""
+                                            : inputs.parentCategoryName == "" || inputs.parentCategorycolor == "" || inputs.subCategories.length == 0
+                                    }
                                     className="max-w-fit ml-3"
                                     onClick={onNewOrEditSubmit}
                                 />

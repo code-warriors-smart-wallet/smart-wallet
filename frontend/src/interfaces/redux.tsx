@@ -1,6 +1,7 @@
 import { PlanType, UserRole } from "./modals";
 
 export interface AuthState {
+    userId: string | null;
     username: string|null,
     email: string|null,
     token: string|null,

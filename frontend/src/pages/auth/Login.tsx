@@ -9,11 +9,18 @@ import { AuthService } from "../../services/auth/auth.service";
 import LoadingButton from "../../components/LoadingButton";
 import { useGoogleLogin } from '@react-oauth/google';
 
+declare global {
+  interface Window {
+    FB: any;
+    fbAsyncInit: () => void;
+  }
+}
+
 // TODO: Check login with social media
 function Login() {
     const [inputs, setInputs] = useState<LoginInfo>({ email: "", password: "" });
     const [loggingIn, setLoggingIn] = useState<boolean>(false)
-    const { login, loginWithGoogle } = AuthService()
+    const { login, loginWithGoogle, loginWithFacebook } = AuthService()
     const {redirect} = Object.fromEntries(new URLSearchParams(window.location.search));
 
     const onInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -42,6 +49,22 @@ function Login() {
         },
         onError: () => toast.error("Login failed!")
     });
+
+    const onFacebookLogin = () => {
+        if (!window.FB) {
+            toast.error("Facebook SDK not loaded yet. Please try again.");
+            return;
+        }
+
+        window.FB.login((response: any) => {
+            if (response.authResponse) {
+                const accessToken = response.authResponse.accessToken;
+                loginWithFacebook({ token: accessToken }, redirect);
+            } else {
+                toast.error("Facebook login failed or was cancelled.");
+            }
+        }, { scope: 'public_profile,email' });
+    };
 
     return (
         <div className="font-main dark">
@@ -93,7 +116,11 @@ function Login() {
 
                         {/* <GoogleLogin onSuccess={responseMessage} onError={errorMessage} /> */}
 
-                        <button type="button" className='active:scale-98 hs-XqwWvWI-3ad3e02c8d29hs-XqwWvWI- w-full hs-XqwWvWI-3ad3e02c8dhs-XqwWvWI- hs-XqwWvWI-8c9b928e0a29hs-XqwWvWI- flex hs-XqwWvWI-8c9b928e0ahs-XqwWvWI- hs-XqwWvWI-8fa3992b2029hs-XqwWvWI- items-center hs-XqwWvWI-8fa3992b20hs-XqwWvWI- hs-XqwWvWI-f9a4827d4d29hs-XqwWvWI- justify-center hs-XqwWvWI-f9a4827d4dhs-XqwWvWI- hs-XqwWvWI-e577dc2bef29hs-XqwWvWI- gap-4 hs-XqwWvWI-e577dc2befhs-XqwWvWI- hs-XqwWvWI-8395fae57b29hs-XqwWvWI- py-3 hs-XqwWvWI-8395fae57bhs-XqwWvWI- hs-XqwWvWI-ccddc7d62629hs-XqwWvWI- px-6 hs-XqwWvWI-ccddc7d626hs-XqwWvWI- hs-XqwWvWI-36ff319a6829hs-XqwWvWI- text-sm hs-XqwWvWI-36ff319a68hs-XqwWvWI- hs-XqwWvWI-6f1bbbe2f729hs-XqwWvWI- tracking-wide hs-XqwWvWI-6f1bbbe2f7hs-XqwWvWI- hs-XqwWvWI-b7c9ae9a9029hs-XqwWvWI- text-text-light-secondary dark:text-text-dark-secondary hs-XqwWvWI-b7c9ae9a90hs-XqwWvWI- hs-XqwWvWI-9ff09b5fd029hs-XqwWvWI- border hs-XqwWvWI-9ff09b5fd0hs-XqwWvWI- hs-XqwWvWI-1b1ab7973029hs-XqwWvWI- border-border-light-primary dark:border-border-dark-primary hs-XqwWvWI-1b1ab79730hs-XqwWvWI- hs-XqwWvWI-d05034dc4d29hs-XqwWvWI- rounded-md hs-XqwWvWI-d05034dc4dhs-XqwWvWI- hs-XqwWvWI-8e263205c629hs-XqwWvWI- bg-bg-light-primary dark:bg-bg-dark-primary hs-XqwWvWI-8e263205c6hs-XqwWvWI- hs-XqwWvWI-8e06a6b0a629hs-XqwWvWI- hover:bg-hover-light-primary dark:hover:bg-hover-dark-primary hs-XqwWvWI-8e06a6b0a6hs-XqwWvWI- hs-XqwWvWI-5d4084d3cd29hs-XqwWvWI- focus:outline-none hs-XqwWvWI-5d4084d3cdhs-XqwWvWI-'>
+                        <button 
+                            type="button" 
+                            className='active:scale-98 hs-XqwWvWI-3ad3e02c8d29hs-XqwWvWI- w-full hs-XqwWvWI-3ad3e02c8dhs-XqwWvWI- hs-XqwWvWI-8c9b928e0a29hs-XqwWvWI- flex hs-XqwWvWI-8c9b928e0ahs-XqwWvWI- hs-XqwWvWI-8fa3992b2029hs-XqwWvWI- items-center hs-XqwWvWI-8fa3992b20hs-XqwWvWI- hs-XqwWvWI-f9a4827d4d29hs-XqwWvWI- justify-center hs-XqwWvWI-f9a4827d4dhs-XqwWvWI- hs-XqwWvWI-e577dc2bef29hs-XqwWvWI- gap-4 hs-XqwWvWI-e577dc2befhs-XqwWvWI- hs-XqwWvWI-8395fae57b29hs-XqwWvWI- py-3 hs-XqwWvWI-8395fae57bhs-XqwWvWI- hs-XqwWvWI-ccddc7d62629hs-XqwWvWI- px-6 hs-XqwWvWI-ccddc7d626hs-XqwWvWI- hs-XqwWvWI-36ff319a6829hs-XqwWvWI- text-sm hs-XqwWvWI-36ff319a68hs-XqwWvWI- hs-XqwWvWI-6f1bbbe2f729hs-XqwWvWI- tracking-wide hs-XqwWvWI-6f1bbbe2f7hs-XqwWvWI- hs-XqwWvWI-b7c9ae9a9029hs-XqwWvWI- text-text-light-secondary dark:text-text-dark-secondary hs-XqwWvWI-b7c9ae9a90hs-XqwWvWI- hs-XqwWvWI-9ff09b5fd029hs-XqwWvWI- border hs-XqwWvWI-9ff09b5fd0hs-XqwWvWI- hs-XqwWvWI-1b1ab7973029hs-XqwWvWI- border-border-light-primary dark:border-border-dark-primary hs-XqwWvWI-1b1ab79730hs-XqwWvWI- hs-XqwWvWI-d05034dc4d29hs-XqwWvWI- rounded-md hs-XqwWvWI-d05034dc4dhs-XqwWvWI- hs-XqwWvWI-8e263205c629hs-XqwWvWI- bg-bg-light-primary dark:bg-bg-dark-primary hs-XqwWvWI-8e263205c6hs-XqwWvWI- hs-XqwWvWI-8e06a6b0a629hs-XqwWvWI- hover:bg-hover-light-primary dark:hover:bg-hover-dark-primary hs-XqwWvWI-8e06a6b0a6hs-XqwWvWI- hs-XqwWvWI-5d4084d3cd29hs-XqwWvWI- focus:outline-none hs-XqwWvWI-5d4084d3cdhs-XqwWvWI-'
+                            onClick={onFacebookLogin}
+                        >
                             <FacebookIcon />
                             Continue with Facebook
                         </button>

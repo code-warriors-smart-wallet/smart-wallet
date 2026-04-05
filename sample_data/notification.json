@@ -1,0 +1,26 @@
+[
+  {
+    "userId": "65f1a2b3c4d5e6f7a8b9c0d1",
+    "title": "Welcome to Smart Wallet!",
+    "type": "WELCOME",
+    "message": "We are glad to have you here. Start tracking your expenses today!",
+    "isRead": false,
+    "actionUrl": "https://smartwallet.com/dashboard"
+  },
+  {
+    "userId": "65f1a2b3c4d5e6f7a8b9c0d1",
+    "spaceId": "65f1a2b3c4d5e6f7a8b9c0d2",
+    "title": "Space Invitation",
+    "type": "INVITATION",
+    "message": "You have been invited to join the 'Family Expenses' space.",
+    "isRead": false,
+    "actionUrl": "https://smartwallet.com/spaces/65f1a2b3c4d5e6f7a8b9c0d2/join"
+  },
+  {
+    "userId": "65f1a2b3c4d5e6f7a8b9c0d3",
+    "title": "New Transaction",
+    "type": "TRANSACTION",
+    "message": "A new transaction of Rs. 500 has been recorded in your Cash space.",
+    "isRead": true
+  }
+]

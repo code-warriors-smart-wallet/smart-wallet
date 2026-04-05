@@ -10,15 +10,17 @@ import Category from "../../components/user.portal/views/Category";
 import Schedule from "../../components/user.portal/views/Schedule";
 import Reports from "../../components/user.portal/views/Reports";
 import LoanRepaymentPlan from "../../components/user.portal/views/LoanRepaymentPlan";
-import Profile from "../../components/user.portal/views/Profile";
-import Subscription from "../../components/user.portal/views/Subscription";
+// import Profile from "../../components/user.portal/views/Profile";
+// import Subscription from "../../components/user.portal/views/Subscription";
+import Notifications from "../../components/user.portal/views/Notifications";
+
 
 function UserPortal() {
 
    const [isSideBarOpen, setSideBarOpen] = useState<boolean>(false)
    const { spacetype, spaceid, view } = useParams()
    const [spaceFormToggle, setSpaceFormToggle] = useState(false)
-   
+
    const navigate = useNavigate()
 
    if (!view) {
@@ -41,10 +43,13 @@ function UserPortal() {
             return <Category />
          case UserPortalView.REPORTS:
             return <Reports />
-         case UserPortalView.SETTINGS_PROFILE:
-            return <Profile />
-         case UserPortalView.SETTINGS_BILLING:
-            return <Subscription />
+//          case UserPortalView.SETTINGS_PROFILE:
+//             return <Profile />
+//          case UserPortalView.SETTINGS_BILLING:
+//             return <Subscription />
+         case UserPortalView.NOTIFICATIONS:
+            return <Notifications />
+
          default:
             return <h1 className="text-xl text-text-light-primary dark:text-text-dark-primary">Default</h1>
       }
@@ -57,17 +62,17 @@ function UserPortal() {
 
    return (
       <main className="font-main dark bg-bg-light-primary dark:bg-bg-dark-primary">
-         <NavBar 
-            isSideBarOpen={isSideBarOpen} 
-            setSideBarOpen={setSideBarOpen} 
-            view={view as UserPortalView ?? UserPortalView.DASHBOARD} 
+         <NavBar
+            isSideBarOpen={isSideBarOpen}
+            setSideBarOpen={setSideBarOpen}
+            view={view as UserPortalView ?? UserPortalView.DASHBOARD}
             spaceId={spaceid || ""}
             setSpaceFormToggle={setSpaceFormToggle}
          />
 
-         <SideBar 
-            isSideBarOpen={isSideBarOpen} 
-            view={view as UserPortalView ?? UserPortalView.DASHBOARD} 
+         <SideBar
+            isSideBarOpen={isSideBarOpen}
+            view={view as UserPortalView ?? UserPortalView.DASHBOARD}
             spacetype={spacetype || ""}
             spaceid={spaceid || ""}
          />
@@ -79,7 +84,7 @@ function UserPortal() {
          </div>
 
          {
-            spaceFormToggle && <Spaces onCancel={onCancelSpaceAction}/>
+            spaceFormToggle && <Spaces onCancel={onCancelSpaceAction} />
          }
 
       </main>

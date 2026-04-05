@@ -4,14 +4,34 @@ import Space, { ISpace, SpaceType } from '../models/space';
 import { authenticate } from '../middlewares/auth';
 import { Types } from 'mongoose';
 import mongoose from 'mongoose';
+import { checkDeadlines } from '../jobs/financial-monitor';
 
 const transactionRouter = express.Router();
+
+transactionRouter.get('/trigger-monitor', async (req: Request, res: Response) => {
+    try {
+        console.log(">>>> Manual Monitor Triggered");
+        await checkDeadlines();
+        res.status(200).json({
+            success: true,
+            message: 'Financial monitor triggered and executed successfully'
+        });
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            error: { message: 'Error triggering monitor: ' + (error instanceof Error ? error.message : 'Unknown') }
+        });
+    }
+});
 
 transactionRouter.post('/', authenticate, async (req: Request, res: Response) => {
     try {
         const userId: string = (req as any).user.id;
 
         const transaction = await Transaction.create({ ...req.body, userId: userId })
+
+        // Trigger the financial monitor asynchronously to process goal milestones instantly
+        checkDeadlines().catch(err => console.error("Error running monitor after transaction creation", err));
 
         res.status(201).json({
             success: true,
@@ -115,6 +135,9 @@ transactionRouter.put('/:id', authenticate, async (req: Request, res: Response) 
             { new: true, runValidators: true }
         );
 
+        // Trigger the financial monitor asynchronously to process goal milestones instantly
+        checkDeadlines().catch(err => console.error("Error running monitor after transaction update", err));
+
         // const transaction = await Transaction.updateOne({ _id: id }, { $set: { ...req.body, userId: userId } })
 
         res.status(200).json({
@@ -167,6 +190,9 @@ transactionRouter.delete('/:id', authenticate, async (req: Request, res: Respons
         const transactionData = { ...existingTransaction.toObject() };
 
         await Transaction.deleteOne({ _id: id });
+
+        // Trigger the financial monitor asynchronously to process goal milestones instantly
+        checkDeadlines().catch(err => console.error("Error running monitor after transaction deletion", err));
 
         res.status(200).json({
             success: true,

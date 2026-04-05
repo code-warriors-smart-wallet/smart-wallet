@@ -4,9 +4,25 @@ export interface MailOptions {
     text: string
 }
 
-export interface MailRequest extends Document {
+export interface MailRequest {
    userId: string;
-   mailOptions: MailOptions,
-   datetime: string,
-   type: string,
+   mailOptions: MailOptions;
+   type: string;
+}
+
+export interface NotificationPreference {
+    action: string;
+    inAppEnabled: boolean;
+    emailEnabled: boolean;
+}
+
+export interface DispatchNotificationRequest {
+    userId: string;
+    userEmail: string;
+    type: string;
+    title: string;
+    message: string;
+    spaceId?: string;
+    actionUrl?: string;
+    userPreferences?: NotificationPreference[]; // Optional override from caller
 }

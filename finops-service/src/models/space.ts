@@ -41,7 +41,8 @@ export interface ISpace extends Document {
    targetAmount: Schema.Types.Decimal128,
    desiredDate: Schema.Types.Date,
    isCollaborative: boolean,
-   collaborators: ICollaborator[]
+   collaborators: ICollaborator[],
+   lastThresholdNotified?: number
 }
 
 const CollaboratorSchema = new Schema<ICollaborator>({
@@ -70,7 +71,8 @@ const SpaceSchema: Schema = new Schema({
    isDefault: { type: Boolean, default: false },
    targetAmount: { type: Schema.Types.Decimal128},
    desiredDate: { type: Schema.Types.Date},
-   collaborators: { type: [CollaboratorSchema], default: []}
+   collaborators: { type: [CollaboratorSchema], default: []},
+   lastThresholdNotified: { type: Number, default: 0 }
 }, {
    timestamps: true
 });

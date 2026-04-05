@@ -19,6 +19,24 @@ export async function sendRegisterOTPEmail(userId: any, email: string, otp: stri
         }
     }
 
+export async function sendWelcomeEmail(userId: any, email: string, username: string): Promise<boolean> {
+    try {
+        const mailReq =  {
+            mailOptions: {
+                to: email,
+                subject: 'Welcome to Smart Wallet!',
+                text: `Hi ${username}, \n\nWelcome to Smart Wallet! We are excited to have you on board. Start tracking your finances and achieving your goals today.`
+            },
+            userId: userId,
+            type: "NEW_USER_WELCOME_SEND"
+        };
+        const response = await api.post(`notification/email/send/`, mailReq);
+        return response.data.success;
+    } catch (error) {
+        return false;
+    }
+}
+
 export async function sendSpaceInvitationEmail(userId: any, email: string, space: string, link: string): Promise<boolean> {
         try {
         const mailReq =  {

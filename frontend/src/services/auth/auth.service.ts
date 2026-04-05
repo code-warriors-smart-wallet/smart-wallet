@@ -126,6 +126,7 @@ export function AuthService() {
                 // })
                 localStorage.setItem("smart-wallet-token", response.data.data.object.accessToken);
                 const userData = {
+                    userId: response.data.data.object._id,
                     username: response.data.data.object.username,
                     email: response.data.data.object.email,
                     token: response.data.data.object.accessToken,
@@ -168,12 +169,14 @@ export function AuthService() {
             const response = await api.post(`user/auth/google`, body, { withCredentials: true });
             console.log(response.data)
             if (response.data.success) {
+                localStorage.setItem("smart-wallet-token", response.data.data.object.accessToken);
                 // const spacesInfo: any = response.data.data.object.spaces
                 // const spaces: {id: string, name: string, type: String, isCollaborative: boolean}[] = []
                 // spacesInfo.forEach((s: any) => {
                 //     spaces.push({id: s._id, name: s.name, type: s.type, isCollaborative: s.isCollaborative})
                 // })
                 const userData = {
+                    userId: response.data.data.object._id,
                     username: response.data.data.object.username,
                     email: response.data.data.object.email,
                     token: response.data.data.object.accessToken,
@@ -210,6 +213,49 @@ export function AuthService() {
         }
     }
 
+    async function loginWithFacebook(body: {token: string, currency?: string}, redirect: string) {
+        try {
+            const response = await api.post(`user/auth/facebook`, body, { withCredentials: true });
+            console.log(response.data)
+            if (response.data.success) {
+                localStorage.setItem("smart-wallet-token", response.data.data.object.accessToken);
+                const userData = {
+                    userId: response.data.data.object._id,
+                    username: response.data.data.object.username,
+                    email: response.data.data.object.email,
+                    token: response.data.data.object.accessToken,
+                    currency: response.data.data.object.currency,
+                    plan: response.data.data.object.plan,
+                    role: response.data.data.object.role,
+                    spaces: response.data.data.object.spaces
+                }
+                dispatch(loginSuccess(userData))
+                toast.success("Login successful!");
+                if (redirect) {
+                    navigate(redirect);
+                } else {
+                    navigate(`/user-portal/all/all/${UserPortalView.DASHBOARD}`);
+                }
+            }
+        } catch (error) {
+            if (axios.isAxiosError(error) && error.response) {
+                const errorMessage = error.response.data?.data?.message || "An error occurred while processing your request.";
+                const status = error.response.data?.data?.object?.status
+                if (status === LoginStatus.BLOCKED || status === LoginStatus.INVALID_CREDENTIALS) {
+                    toast.error(errorMessage);
+                } else if (status === LoginStatus.VERIFICATION_REQUIRED) {
+                    toast.error(errorMessage);
+                    await sendOTP({email: error.response.data?.data?.object.email })
+                } else {
+                    processError(error)
+                }
+            } else {
+                toast.error("An unexpected error occurred. Please try again later.");
+            }
+            console.error("Error details:", error);
+        }
+    }
+
     const logOut = async () => {
         try {
             const response = await api.post(`user/auth/logout`, {}, { withCredentials: true }); 
@@ -222,7 +268,7 @@ export function AuthService() {
         }
     };
 
-    return { register, sendOTP, verifyOTP, getAllPlans, subscribePlan, updateCurrency, login, loginWithGoogle, protectedRoute, logOut };
+    return { register, sendOTP, verifyOTP, getAllPlans, subscribePlan, updateCurrency, login, loginWithGoogle, loginWithFacebook, protectedRoute, logOut };
 }
 
 function processError(error: unknown): void {

@@ -6,6 +6,7 @@ import Transaction from "../models/transaction";
 import Category from "../models/category";
 import { TransactionType } from "../models/transaction";
 import mongoose, { Types } from "mongoose";
+import { createNotification, NotificationType } from "../services/notification.service";
 
 const budgetRouter = express.Router();
 
@@ -1097,6 +1098,80 @@ budgetRouter.post("/:id/update-spent", authenticate, async (req: Request, res: R
         budgetEntry.spent = newSpent;
 
         await budgetEntry.save();
+
+        // Calculate usage percentage and trigger notifications
+        const percentage = (newSpent / budgetEntry.amount) * 100;
+        const oldPercentage = (currentSpent / budgetEntry.amount) * 100;
+
+        console.log(`Budget usage: ${percentage.toFixed(2)}% (was ${oldPercentage.toFixed(2)}%)`);
+
+        // Find the specific spaceType for the current spaceId being updated
+        const spaceIndex = budget.spaceIds.findIndex((id: any) => id.toString() === spaceId.toString());
+        const rawSpaceType = spaceIndex !== -1 ? budget.spaceTypes[spaceIndex] : 'CASH';
+        const localSpaceType = rawSpaceType.toLowerCase().replace(/_/g, '-');
+        const budgetActionUrl = `/user-portal/${localSpaceType}/${spaceId}/budgets`;
+
+        if (percentage >= 100 && oldPercentage < 100) {
+            await createNotification({
+                userId: userId,
+                title: 'Budget Critical',
+                type: NotificationType.BUDGET_CRITICAL,
+                message: `You have reached 100% of your budget "${budget.name}".`,
+                spaceId: spaceId,
+                actionUrl: budgetActionUrl
+            });
+        } else if (percentage >= 90 && oldPercentage < 90) {
+            await createNotification({
+                userId: userId,
+                title: 'Budget Warning (90%)',
+                type: NotificationType.BUDGET_90_WARNING,
+                message: `You have used 90% of your budget "${budget.name}".`,
+                spaceId: spaceId,
+                actionUrl: budgetActionUrl
+            });
+        } else if (percentage >= 75 && oldPercentage < 75) {
+            await createNotification({
+                userId: userId,
+                title: 'Budget Warning (75%)',
+                type: NotificationType.BUDGET_75_WARNING,
+                message: `You have used 75% of your budget "${budget.name}".`,
+                spaceId: spaceId,
+                actionUrl: budgetActionUrl
+            });
+        }
+
+        // --- Saving Goal Milestone Notifications ---
+        if (budget.spaceIds.length === 1 && spaceId === budget.spaceIds[0].toString()) {
+            const space = await mongoose.model('Space').findById(spaceId);
+            if (space && space.type === 'SAVING_GOAL' && space.targetAmount) {
+                const target = parseFloat(space.targetAmount.toString());
+                if (target > 0) {
+                    const goalPercentage = (newSpent / target) * 100;
+                    const oldGoalPercentage = (currentSpent / target) * 100;
+
+                    const milestones = [
+                        { p: 100, t: NotificationType.SAVING_GOAL_100, msg: 'Congratulations! You have reached your saving goal' },
+                        { p: 75, t: NotificationType.SAVING_GOAL_75, msg: 'Great job! You have reached 75% of your saving goal' },
+                        { p: 50, t: NotificationType.SAVING_GOAL_50, msg: 'Halfway there! You have reached 50% of your saving goal' },
+                        { p: 25, t: NotificationType.SAVING_GOAL_25, msg: 'Good start! You have reached 25% of your saving goal' }
+                    ];
+
+                    for (const m of milestones) {
+                        if (goalPercentage >= m.p && oldGoalPercentage < m.p) {
+                            await createNotification({
+                                userId: userId,
+                                title: 'Goal Milestone',
+                                type: m.t,
+                                message: `${m.msg} "${space.name}".`,
+                                spaceId: spaceId,
+                                actionUrl: `/user-portal/saving-goal/${spaceId}/goals`
+                            });
+                            break; // Trigger only the highest milestone reached in this step
+                        }
+                    }
+                }
+            }
+        }
 
         console.log(`Successfully updated budget entry ${budgetEntry._id} for budget ${id} and space ${spaceId}. ` +
             `Transaction amount: ${transactionAmount}, Old spent: ${currentSpent}, New spent: ${newSpent}`);

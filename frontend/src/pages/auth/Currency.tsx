@@ -17,8 +17,9 @@ function Currency() {
    const [loading, setLoading] = useState(false);
    const location = useLocation();
    const token = location.state?.token;
+   const type = location.state?.type;
 
-   const { loginWithGoogle } = AuthService();
+   const { loginWithGoogle, loginWithFacebook } = AuthService();
 
    useEffect(() => {
       // TODO: set loading tru until fetch currencies
@@ -66,7 +67,11 @@ function Currency() {
          return;
       }
       setLoading(true);
-      await loginWithGoogle({ token: token, currency: selectedCurrency })
+      if (type === 'facebook') {
+         await loginWithFacebook({ token: token, currency: selectedCurrency }, "");
+      } else {
+         await loginWithGoogle({ token: token, currency: selectedCurrency }, "");
+      }
       setLoading(false)
    };
 

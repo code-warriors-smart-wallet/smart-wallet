@@ -98,7 +98,7 @@ function LiabilitiesSummary({ currency, summary }: { currency: string, summary: 
                                     {
                                         liabilitiesInfo?.map((info: any) => {
                                             return (
-                                                <div className="flex gap-2 items-center">
+                                                <div key={info.x} className="flex gap-2 items-center">
                                                     <span style={{ backgroundColor: info.color }} className="w-3 h-3">
                                                     </span>
                                                     <span className="capitalize">{info.x} ({(Number(info.y) / total * 100).toFixed(2)}%)<span className="text-xs text-text-light-secondary dark:text-text-dark-secondary"> - {currency}. {Number(info.y).toFixed(2)}</span></span>

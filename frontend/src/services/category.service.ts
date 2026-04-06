@@ -10,9 +10,9 @@ export function CategoryService() {
 
     async function getCategories(spaceType?: string): Promise<any[]> {
         try {
-            const response = await api.get(`finops/category/`, {
+            const response = await api.get(`finops/category`, {
                 headers: {
-                    "authorization": `Bearer ${token}`
+                    "Authorization": `Bearer ${token}`
                 }
             });
             if (response.data.success) {
@@ -29,7 +29,7 @@ export function CategoryService() {
         try {
             const response = await api.get(`finops/category/space/${spaceid}`, {
                 headers: {
-                    "authorization": `Bearer ${token}`
+                    "Authorization": `Bearer ${token}`
                 }
             });
             console.log(response.data.data.object)
@@ -47,7 +47,7 @@ export function CategoryService() {
         try {
             const response = await api.post(`finops/category/sub`, body, {
                 headers: {
-                    "authorization": `Bearer ${token}`
+                    "Authorization": `Bearer ${token}`
                 }
             });
             if (response.data.success) {
@@ -63,7 +63,7 @@ export function CategoryService() {
         try {
             const response = await api.put(`finops/category/sub`, body, {
                 headers: {
-                    "authorization": `Bearer ${token}`
+                    "Authorization": `Bearer ${token}`
                 }
             });
             if (response.data.success) {
@@ -79,7 +79,7 @@ export function CategoryService() {
         try {
             const response = await api.delete(`finops/category/sub/${pid}/${sid}`, {
                 headers: {
-                    "authorization": `Bearer ${token}`
+                    "Authorization": `Bearer ${token}`
                 }
             });
             if (response.data.success) {
@@ -95,7 +95,7 @@ export function CategoryService() {
         try {
             const response = await api.post(`finops/category/main`, body, {
                 headers: {
-                    "authorization": `Bearer ${token}`
+                    "Authorization": `Bearer ${token}`
                 }
             });
             if (response.data.success) {

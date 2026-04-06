@@ -133,6 +133,7 @@ export function AuthService() {
                     plan: response.data.data.object.plan,
                     profileImgUrl: response.data.data.object.profileImgUrl,
                     role: response.data.data.object.role,
+                    theme: response.data.data.object.theme,
                     spaces: response.data.data.object.spaces
                 }
                 dispatch(loginSuccess(userData))
@@ -181,6 +182,7 @@ export function AuthService() {
                     plan: response.data.data.object.plan,
                     profileImgUrl: response.data.data.object.profileImgUrl,
                     role: response.data.data.object.role,
+                    theme: response.data.data.object.theme,
                     spaces: response.data.data.object.spaces
                 }
                 dispatch(loginSuccess(userData))

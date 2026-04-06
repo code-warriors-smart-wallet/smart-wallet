@@ -3,7 +3,7 @@ import { logout, setIsAuthenticated, loginSuccess } from '../redux/features/auth
 import store from '../redux/store/store'; // Import your Redux store
 import { toast } from 'react-toastify';
 
-export const API_BASE_URL = import.meta.env.VITE_API_GATEWAY_BASE_URL || "http://localhost:8080/";
+export const API_BASE_URL = import.meta.env.VITE_API_GATEWAY_BASE_URL || "http://localhost:8085/";
 
 export const API_CONFIG = {
     baseURL: API_BASE_URL,
@@ -20,7 +20,7 @@ api.interceptors.response.use(
     response => response,
     async (error) => {
 
-        const dispatch = store.dispatch; 
+        const dispatch = store.dispatch;
         if (error?.response?.status === 403) { // Token expired
             console.log(">>> intercepter: Token expired or not found")
             dispatch(setIsAuthenticated({ isAuthenticated: false }));
@@ -42,35 +42,52 @@ api.interceptors.response.use(
 
 export const refreshAccessToken = async () => {
     const dispatch = store.dispatch;
-    try {
-        console.log(">>>> Requesting refresh token")
-        const response = await api.post(`user/auth/refresh_token`, {}, { withCredentials: true });
-        if (response.data.success) {
-            // const spacesInfo = response.data.data.object.spaces
-            // const spaces: {id: string, name: string, type: String, isCollaborative: boolean}[] = []
-            // spacesInfo.forEach((s: any) => {
-            //     spaces.push({id: s._id, name: s.name, type: s.type, isCollaborative: s.isCollaborative})
-            // })
-            const userData = {
-                username: response.data.data.object.username,
-                email: response.data.data.object.email,
-                token: response.data.data.object.accessToken,
-                currency: response.data.data.object.currency,
-                plan: response.data.data.object.plan,
-                profileImgUrl: response.data.data.object.profileImgUrl,
-                role: response.data.data.object.role,
-                spaces: response.data.data.object.spaces
-            }
-            
-            dispatch(loginSuccess(userData))
-        }
 
-        console.log(">>> Refresh token pass")
-    } catch (error) {
-        console.log(">>> Refresh token expired. navigate to login: ", error)
+    try {
+        console.log(">>>> Requesting refresh token");
+
+        // Send current theme to backend
+        const currentTheme = localStorage.getItem('theme') || 'dark';
+
+        const payload = {
+            theme: currentTheme
+        };
+
+        const response = await api.post(
+            `user/auth/refresh_token`,
+            payload,
+            { withCredentials: true }
+        );
+
+        if (response.data.success) {
+            const userObject = response.data.data.object;   // ← Define it once here
+
+            const userData = {
+                username: userObject.username,
+                email: userObject.email,
+                token: userObject.accessToken,
+                currency: userObject.currency,
+                plan: userObject.plan,
+                profileImgUrl: userObject.profileImgUrl,
+                role: userObject.role,
+                spaces: userObject.spaces,
+                theme: userObject.theme || currentTheme   // Safe fallback
+            };
+
+            dispatch(loginSuccess(userData));
+
+            // Sync theme back to localStorage (prevents erasure on refresh)
+            if (userObject.theme) {
+                localStorage.setItem('theme', userObject.theme);
+            }
+
+            console.log(">>> Refresh token successful with theme:", userObject.theme || currentTheme);
+        }
+    } catch (error: any) {
+        console.error(">>> Refresh token failed:", error);
         dispatch(logout());
-        window.location.href = '/login'; 
-        toast.info("Your session has expired. Please login.")
+        window.location.href = '/login';
+        toast.info("Your session has expired. Please login.");
     }
 };
 

@@ -25,3 +25,10 @@ dist-ssr
 *.env
 
 backend
+
+api-gateway/.env.example
+api-gateway/.env.example
+finops-service/.env.example
+frontend/.env.example
+user-service/.env.example
+

@@ -8,6 +8,7 @@ export interface AuthState {
     OTPAttemptsRemaining: number;
     profileImgUrl: string|null;
     currency: string|null;
+    theme: string|null;
     plan: PlanType|null;
     role: UserRole|null;
     spaces: {id: string, name: string, type: string, isCollaborative: boolean, isOwner: boolean}[]

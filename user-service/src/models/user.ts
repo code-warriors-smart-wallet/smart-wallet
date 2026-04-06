@@ -12,6 +12,7 @@ export interface IUser extends Document {
     password: string;
     profileImgUrl?: string;
     currency: string;
+    theme: string;
     enabled: boolean;
     role: UserRole;
     blockedUntil?: Date;
@@ -24,6 +25,7 @@ const UserSchema: Schema = new Schema({
     password: { type: String },
     profileImgUrl: { type: String },
     currency: { type: String, default: 'USD' },
+    theme: { type: String, enum: ['light', 'dark'], default: 'dark' },
     enabled: { type: Boolean, default: true },
     role: { type: String, enum: Object.values(UserRole), default: UserRole.USER },
     blockedUntil: { type: Date },

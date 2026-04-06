@@ -46,21 +46,21 @@ function DropDown({ title, titleIcon, headerTexts, dropdownItems, dropdownIcons,
 
             {
                 dropdowntoggle && (
-                    <div id="dropdownInformation" ref={dropdownBtnRef} className="absolute top-full mt-2 right-0 z-10 divide-y divide-border-light-primary dark:divide-border-dark-primary border-1 border-border-light-primary dark:border-border-dark-primary  rounded-lg shadow-sm w-44 bg-bg-light-primary dark:bg-bg-dark-primary">
+                    <div id="dropdownInformation" ref={dropdownBtnRef} className="absolute top-full mt-2 left-0 z-50 divide-y divide-border-light-primary dark:divide-border-dark-primary border border-border-light-primary dark:border-border-dark-primary rounded-xl shadow-2xl w-64 bg-bg-light-primary dark:bg-bg-dark-primary overflow-hidden">
                         {
                             headerTexts && headerTexts?.length > 0 && (
-                                <div className="px-4 py-3 text-sm text-gray-900 dark:text-white">
+                                <div className="px-4 py-3 text-sm text-gray-900 dark:text-white bg-gray-50 dark:bg-gray-800/50">
                                     {
                                         headerTexts.map(text => {
                                             return (
-                                                <div className="capitalize">{text}</div>
+                                                <div key={text} className="capitalize font-bold">{text}</div>
                                             )
                                         })
                                     }
                                 </div>
                             )
                         }
-                        <ul className="py-2 text-sm text-gray-700 dark:text-gray-200" aria-labelledby="dropdownInformationButton">
+                        <ul className="py-2 text-sm text-gray-700 dark:text-gray-200 max-h-60 overflow-y-auto scrollbar-thin scrollbar-thumb-primary/20" aria-labelledby="dropdownInformationButton">
                             {
                                 dropdownItems.map((item, index) => {
                                     return (

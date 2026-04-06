@@ -23,6 +23,7 @@ function NavBar({ setSideBarOpen, isSideBarOpen, view, spaceId, setSpaceFormTogg
    const [activeDropdownIcon, setActiveDropdownIcon] = useState<React.ReactNode>([])
    const [activeDropdownText, setActiveDropdownText] = useState<string>("")
    const [upgradeMessage, setUpgradeMessage] = useState("");
+   const { spacetype, spaceid } = useParams();
    const navigate = useNavigate();
 
    console.log(spaces)
@@ -54,17 +55,17 @@ function NavBar({ setSideBarOpen, isSideBarOpen, view, spaceId, setSpaceFormTogg
       const lastIcon = <FaPlus />
 
       // --- Filter spaces for Budget view ---
-      let filteredSpaces = spaces;
-      if (view === UserPortalView.BUDGETS) {
+      let filteredSpaces = (spaces || []);
+      if (view === UserPortalView.DASHBOARD || view === UserPortalView.TRANSACTIONS || view === UserPortalView.BUDGETS || view === UserPortalView.CATEGORIES) {
          const allowedTypes = [SpaceType.BANK, SpaceType.CASH, SpaceType.CREDIT_CARD];
-         filteredSpaces = spaces.filter((space) =>
+         filteredSpaces = (spaces || []).filter((space) =>
             allowedTypes.includes(space.type as SpaceType)
          );
       }
 
       if (view === UserPortalView.SCHEDULES) {
          const allowedTypes = [SpaceType.BANK, SpaceType.CASH, SpaceType.CREDIT_CARD, SpaceType.SAVING_GOAL];
-         filteredSpaces = spaces.filter((space) =>
+         filteredSpaces = (spaces || []).filter((space) =>
             allowedTypes.includes(space.type as SpaceType)
          );
       }
@@ -114,7 +115,7 @@ function NavBar({ setSideBarOpen, isSideBarOpen, view, spaceId, setSpaceFormTogg
 
    return (
       <>
-         <nav className="fixed top-0 z-50 w-full bg-bg-light-primary dark:bg-bg-dark-primary border-b border-border-light-primary dark:border-border-dark-primary h-20">
+         <nav className="fixed top-0 z-50 w-full bg-surface border-b border-border-main h-20 transition-colors duration-300">
             <div className="px-3 py-3 lg:px-5 lg:pl-3 h-full">
                <div className="flex items-center justify-between h-full">
                   <div className="flex items-center justify-start rtl:justify-end w-65">
@@ -151,22 +152,48 @@ function NavBar({ setSideBarOpen, isSideBarOpen, view, spaceId, setSpaceFormTogg
                                  profileImgUrl && profileImgUrl !== "" ? (
                                     <img className="w-8 h-8 rounded-full" src={profileImgUrl} alt="user photo" />
                                  ) : (
-                                    <FaUser size={40} className="rounded-full border border-border-light-primary dark:border-border-dark-primary text-text-light-primary dark:text-text-dark-primary"/> 
+                                     <FaUser size={40} className="rounded-full border border-border-main text-text-main transition-colors duration-300"/> 
                                  )
                               }
                            </button>
                         </div>
                         {
                            isUserMenuOpen && (
-                              <div className="absolute top-1/2 right-0 z-50 my-4 text-base list-none bg-bg-light-primary divide-y divide-gray-100 rounded-sm shadow-sm dark:bg-bg-dark-primary dark:divide-gray-600" id="dropdown-user">
+                              <div className="absolute top-12 right-0 z-50 my-4 text-base list-none bg-surface divide-y divide-border-main rounded-sm shadow-2xl border border-border-main" id="dropdown-user">
                                  <div className="px-4 py-3" role="none">
-                                    <p className="text-sm text-text-light-primary dark:text-text-dark-primary" role="none">
+                                    <p className="text-sm text-text-main font-bold" role="none">
                                        {username}
                                     </p>
-                                    <p className="text-sm font-medium text-text-light-primary dark:text-text-dark-primary truncate" role="none">
+                                    <p className="text-sm font-medium text-gray-500 truncate" role="none">
                                        {email}
                                     </p>
                                  </div>
+                                 <ul className="py-1" role="none">
+                                    <li>
+                                       <button 
+                                          onClick={() => { navigate(`/user-portal/${spacetype}/${spaceid}/${UserPortalView.SETTINGS_PROFILE}`); setUserMenuOpen(false); }}
+                                          className="block w-full text-left px-4 py-2 text-sm text-text-light-primary hover:bg-gray-100 dark:text-text-dark-primary dark:hover:bg-gray-600 dark:hover:text-white" role="menuitem"
+                                       >
+                                          Profile Settings
+                                       </button>
+                                    </li>
+                                    <li>
+                                       <button 
+                                          onClick={() => { navigate(`/user-portal/${spacetype}/${spaceid}/${UserPortalView.SETTINGS_BILLING}`); setUserMenuOpen(false); }}
+                                          className="block w-full text-left px-4 py-2 text-sm text-text-light-primary hover:bg-gray-100 dark:text-text-dark-primary dark:hover:bg-gray-600 dark:hover:text-white" role="menuitem"
+                                       >
+                                          Billing & Subscription
+                                       </button>
+                                    </li>
+                                    <li>
+                                       <button 
+                                          onClick={() => { /* Add logout logic here */ setUserMenuOpen(false); }}
+                                          className="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-100 dark:text-red-400 dark:hover:bg-gray-600 dark:hover:text-white" role="menuitem"
+                                       >
+                                          Log out
+                                       </button>
+                                    </li>
+                                 </ul>
                               </div>
                            )
                         }

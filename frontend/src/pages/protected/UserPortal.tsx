@@ -56,7 +56,7 @@ function UserPortal() {
    }
 
    return (
-      <main className="font-main dark bg-bg-light-primary dark:bg-bg-dark-primary">
+      <main className="font-main bg-surface text-text-main transition-colors duration-300">
          <NavBar 
             isSideBarOpen={isSideBarOpen} 
             setSideBarOpen={setSideBarOpen} 
@@ -73,7 +73,7 @@ function UserPortal() {
          />
 
          <div className="p-4 sm:ml-64 mt-5">
-            <div className="p-4 border-1 border-border-light-primary rounded-lg dark:border-border-dark-primary mt-14 min-h-screen h-fit">
+            <div className="p-4 border border-border-main rounded-lg mt-14 min-h-screen h-fit">
                <>{ViewComponent()}</>
             </div>
          </div>

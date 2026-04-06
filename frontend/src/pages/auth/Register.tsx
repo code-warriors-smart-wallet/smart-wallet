@@ -25,7 +25,7 @@ function Register() {
     useEffect(() => {
         const fetchCurrencies = async () => {
             try {
-                const response = await fetch("https://restcountries.com/v3.1/all?fields=currencies");
+                const response = await fetch("https://restcountries.com/v3.1/all?fields=name,currencies");
                 const data = await response.json();
                 const currencyList: Currency[] = [];
 

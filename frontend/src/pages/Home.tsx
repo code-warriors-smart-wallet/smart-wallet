@@ -14,7 +14,7 @@ function Home() {
       isAuthenticated ? (
         <>
           <h1>Welcome {username}</h1>
-          <Link to={`/user-portal/${UserPortalView.DASHBOARD}`}><Button text="Go to Dashboard" ></Button></Link>
+          <Link to={`/user-portal/all/all/${UserPortalView.DASHBOARD}`}><Button text="Go to Dashboard" ></Button></Link>
         </>
       ) : (
         <Button text="Login" onClick={refreshAccessToken}/>

@@ -2,6 +2,24 @@
 
 @custom-variant dark (&:where(.dark, .dark *));
 
+:root {
+    --color-bg-primary: #ffffff;
+    --color-bg-secondary: oklch(0.932 0.032 255.585);
+    --color-text-primary: oklch(0.21 0.034 264.665);
+    --color-text-secondary: oklch(0.551 0.027 264.364);
+    --color-border-primary: oklch(0.97 0.014 254.604);
+    --color-hover-primary: oklch(0.97 0.014 254.604);
+}
+
+.dark {
+    --color-bg-primary: #000000;
+    --color-bg-secondary: oklch(0.21 0.034 264.665);
+    --color-text-primary: oklch(0.928 0.006 264.531);
+    --color-text-secondary: oklch(0.707 0.022 261.325);
+    --color-border-primary: oklch(0.446 0.03 256.802);
+    --color-hover-primary: oklch(0.21 0.034 264.665);
+}
+
 @theme {
     --color-bg-light-secondary: oklch(0.932 0.032 255.585);
     --color-bg-dark-secondary: oklch(0.21 0.034 264.665);
@@ -24,8 +42,15 @@
     --color-hover-dark-primary: oklch(0.21 0.034 264.665);
     --color-border-dark-primary: oklch(0.446 0.03 256.802);
 
-    --font-main: "Quattrocento Sans", sans-serif;
+    /* Dynamic Theme Tokens */
+    --color-surface: var(--color-bg-primary);
+    --color-surface-secondary: var(--color-bg-secondary);
+    --color-text-main: var(--color-text-primary);
+    --color-text-muted: var(--color-text-secondary);
+    --color-border-main: var(--color-border-primary);
+    --color-hover-main: var(--color-hover-primary);
 
+    --font-main: "Quattrocento Sans", sans-serif;
 }
 
 .Toastify__toast {
@@ -33,13 +58,8 @@
 }
 
 @keyframes spin {
-    0% {
-        transform: rotate(0deg);
-    }
-
-    100% {
-        transform: rotate(360deg);
-    }
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
 }
 
 .modal-bg {

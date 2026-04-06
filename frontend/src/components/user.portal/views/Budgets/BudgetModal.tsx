@@ -4,6 +4,9 @@ import { BudgetType, BudgetInfo } from "../Budget";
 import { capitalize } from "../../../../utils/utils";
 import UpdateBudgetModal from "./UpdateBudgetModal";
 import { toast } from "react-toastify";
+import { useSelector } from "react-redux";
+import { RootState } from "../../../../redux/store/store";
+import { PlanType } from "../../../../interfaces/modals";
 
 interface BudgetModalProps {
   isOpen: boolean;
@@ -45,6 +48,7 @@ const BudgetModal: React.FC<BudgetModalProps> = ({
   selectedSpacesForAllSpaces,
   onUpdateAmount
 }) => {
+  const { plan } = useSelector((state: RootState) => state.auth);
   const [isUpdateBudgetModalOpen, setIsUpdateBudgetModalOpen] = useState(false);
   const [tempAmount, setTempAmount] = useState<string>("");
 
@@ -296,12 +300,19 @@ const BudgetModal: React.FC<BudgetModalProps> = ({
                     }`}
                   required
                 >
-                  {Object.values(BudgetType).map((type) => (
-                    <option key={type} value={type}>
-                      {capitalize(type.toLowerCase().replace('_', ' '))}
-                    </option>
-                  ))}
+                  <option value={BudgetType.ONE_TIME}>One Time</option>
+                  {plan !== PlanType.STARTER && (
+                    <>
+                      <option value={BudgetType.WEEKLY}>Weekly</option>
+                      <option value={BudgetType.MONTHLY}>Monthly</option>
+                    </>
+                  )}
                 </select>
+                {plan === PlanType.STARTER && (
+                  <p className="text-xs text-secondary mt-1">
+                    Upgrade to Plus to enable Weekly and Monthly recurring budgets.
+                  </p>
+                )}
               </div>
 
               <>

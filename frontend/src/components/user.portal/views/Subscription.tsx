@@ -1,11 +1,16 @@
+import { useState } from "react";
 import { useSelector } from "react-redux";
-import { RootState } from "@/redux/store/store";
-import { MdPayment, MdHistory, MdCardMembership, MdCheckCircle, MdStar, MdOutlineStars } from "react-icons/md";
+import { RootState } from "../../../redux/store/store";
+import { MdPayment, MdHistory, MdCardMembership, MdCheckCircle, MdStar, MdOutlineStars, MdCancel } from "react-icons/md";
 import Button from "../../Button";
 import { PlanType } from "../../../interfaces/modals";
+import { AuthService } from "../../../services/auth/auth.service";
+import Upgrade from "./Subscription/Upgrade";
 
 function Subscription() {
-    const { plan } = useSelector((state: RootState) => state.auth);
+    const { plan, subscriptionId } = useSelector((state: RootState) => state.auth);
+    const [upgradeMode, setUpgradeMode] = useState<string>("");
+    const { cancelSubscription } = AuthService();
 
     const plans = [
         {
@@ -18,23 +23,23 @@ function Subscription() {
                 "Standard Reports",
                 "Community Support"
             ],
-            current: plan === PlanType.STARTER,
+            current: (plan || PlanType.STARTER) === PlanType.STARTER,
             icon: MdCardMembership,
             color: "text-gray-400"
         },
         {
-            name: PlanType.PRO,
-            price: "Rs. 990/mo",
-            description: "Advanced tools for serious financial management.",
+            name: PlanType.PLUS,
+            price: "LKR 1999/mo",
+            description: "Unlock the full power of your money and financial tools.",
             features: [
                 "Unlimited Spaces",
-                "Advanced Analytics & AI",
-                "Multi-device Sync",
-                "Priority 24/7 Support",
+                "Advanced AI Assistant",
+                "Detailed Reports & Analytics",
+                "Recurring Schedules & Budgets",
                 "Custom Categories",
-                "Exportable Data (CSV/PDF)"
+                "Loan Repayment Management"
             ],
-            current: plan === PlanType.PRO,
+            current: plan === PlanType.PLUS,
             icon: MdStar,
             color: "text-primary"
         }
@@ -94,14 +99,25 @@ function Subscription() {
 
                         {!p.current ? (
                             <Button 
-                                text="Upgrade to Pro" 
-                                onClick={() => {}} 
+                                text={`Upgrade to ${p.name}`} 
+                                onClick={() => setUpgradeMode("upgrade")} 
                                 priority="primary" 
                                 className="w-full py-4 rounded-2xl shadow-lg border-none hover:shadow-primary/20"
                             />
+                        ) : p.name === PlanType.PLUS ? (
+                            <Button 
+                                text="Cancel Subscription" 
+                                onClick={() => {
+                                    if (subscriptionId) {
+                                        cancelSubscription(subscriptionId);
+                                    }
+                                }} 
+                                priority="secondary" 
+                                className="w-full py-4 rounded-2xl border-2 border-red-500/20 text-red-500 hover:bg-red-500/5 hover:border-red-500/50 transition-all font-bold"
+                            />
                         ) : (
                             <Button 
-                                text="Current Subscriptions" 
+                                text="Current Plan" 
                                 disabled 
                                 onClick={() => {}} 
                                 priority="secondary" 
@@ -111,6 +127,10 @@ function Subscription() {
                     </div>
                 ))}
             </div>
+
+            {upgradeMode !== "" && (
+                <Upgrade message="Unlock all premium features today!" setUpgradeMode={setUpgradeMode} />
+            )}
 
             {/* Secondary Sections Grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mt-12">

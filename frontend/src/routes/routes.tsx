@@ -10,6 +10,7 @@ import { useSelector } from "react-redux";
 import { RootState } from "@/redux/store/store";
 import { refreshAccessToken } from "../config/api.config";
 import SpaceInvitation from "../pages/protected/SpaceInvitation";
+import PaymentGateway from "../pages/protected/PaymentGateway";
 import { ToastContainer } from 'react-toastify';
 
 function AppContainer() {
@@ -44,6 +45,14 @@ function AppContainer() {
                 <Route path="/verify-otp" element={<OTPVerification />} />
                 <Route path="/register/currency" element={<Currency />} />
                 <Route path="/invite" element={<SpaceInvitation />} />
+                <Route
+                    path="/subscriptions/:id/payment"
+                    element={
+                        <ProtectedRoute>
+                            <PaymentGateway />
+                        </ProtectedRoute>
+                    }
+                />
                 <Route
                     path="/user-portal/:spacetype/:spaceid/:view"
                     element={

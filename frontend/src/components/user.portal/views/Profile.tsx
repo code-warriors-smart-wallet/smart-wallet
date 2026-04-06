@@ -8,6 +8,7 @@ import Loading from "../../Loading";
 import DropDown from "../../Dropdown";
 import { MdEdit, MdSecurity, MdPerson, MdLanguage, MdPalette, MdPhotoCamera, MdAddAPhoto } from "react-icons/md";
 import { toast } from "react-toastify";
+import { PlanType } from "../../../interfaces/modals";
 
 interface CurrencyInfo {
     code: string;
@@ -16,7 +17,7 @@ interface CurrencyInfo {
 }
 
 function Profile() {
-    const { email, username, currency, theme, profileImgUrl } = useSelector((state: RootState) => state.auth);
+    const { email, username, currency, theme, profileImgUrl, plan } = useSelector((state: RootState) => state.auth);
     const { updateProfile, changePassword } = UserService();
     const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -219,7 +220,9 @@ function Profile() {
                         <div className="mt-10 w-full space-y-3">
                             <div className="flex justify-between items-center p-4 rounded-2xl bg-bg-light-primary dark:bg-black/20 border border-border-light-primary dark:border-border-dark-primary/30">
                                 <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Plan</span>
-                                <span className="text-[10px] font-black text-primary uppercase bg-primary/10 px-2.5 py-1 rounded-md">Pro Member</span>
+                                <span className={`text-[10px] font-black uppercase px-2.5 py-1 rounded-md ${plan === PlanType.PLUS ? "text-primary bg-primary/10" : "text-gray-400 bg-gray-100 dark:bg-white/5"}`}>
+                                    {plan === PlanType.PLUS ? "Plus Member" : "Starter Member"}
+                                </span>
                             </div>
                             <div className="flex justify-between items-center p-4 rounded-2xl bg-bg-light-primary dark:bg-black/20 border border-border-light-primary dark:border-border-dark-primary/30">
                                 <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Currency</span>

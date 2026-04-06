@@ -4,6 +4,7 @@ import Plan, { PlanType } from '../models/plan';
 import Subscription, { SubscriptionStatus } from '../models/subscription';
 import Payment from '../models/payment';
 import { CreateSubscriptionRequest, SavePaymentRequest } from '../interfaces/requests';
+import { NotificationService, NotificationType } from '../services/notification.service';
 
 const subscriptionRouter = express.Router();
 
@@ -156,7 +157,19 @@ subscriptionRouter.post('/:subscriptionId/activate', async (req: Request, res: R
                 paymentId
             },
             { new: true }
-        );
+        ).populate('planId');
+
+        // Trigger Notification
+        if (activatedSubscription) {
+            const plan = activatedSubscription.planId as any;
+            await NotificationService.sendMultiChannelNotification(
+                user._id.toString(),
+                user.email,
+                `Your ${plan.name} subscription is now active! Enjoy your premium features.`,
+                'Subscription Activated',
+                NotificationType.PLAN_CHANGE
+            );
+        }
 
         res.status(200).json({
             success: true,
@@ -224,6 +237,16 @@ subscriptionRouter.patch('/:subscriptionId/cancel', async (req: Request, res: Re
                 autoRenew: false
             },
             { new: true }
+        );
+
+        // When a user cancels, they are immediately moved to STARTER conceptually by the auth logic
+        // but let's notify them.
+        await NotificationService.sendMultiChannelNotification(
+            user._id.toString(),
+            user.email,
+            `Your subscription has been cancelled. You will revert to the Starter plan.`,
+            'Subscription Cancelled',
+            NotificationType.PLAN_CHANGE
         );
 
         res.status(200).json({

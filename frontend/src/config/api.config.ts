@@ -25,13 +25,17 @@ api.interceptors.response.use(
             console.log(">>> intercepter: Token expired or not found")
             dispatch(setIsAuthenticated({ isAuthenticated: false }));
             await refreshAccessToken(); // Attempt token refresh
-            const authState = store.getState().auth;
-            console.log(">>>> refresh token finished: ", authState)
-            if (authState.isAuthenticated) {
-                error.config.headers['Authorization'] = `Bearer ${authState.token}`;
-                return axios(error.config); // Retry the request
+            const updatedState = store.getState().auth;
+            console.log(">>>> refresh token finished: ", updatedState)
+            if (updatedState.isAuthenticated && updatedState.token) {
+                // Return a retry of the original request with the new token
+                error.config.headers = {
+                    ...error.config.headers,
+                    'Authorization': `Bearer ${updatedState.token}`
+                };
+                return api(error.config); 
             } else {
-                toast.error(INTERNAL_SERVER_ERROR)
+                toast.error("Session expired. Please log in again.");
                 console.log("Not authenticated. error while getting access token via refresh token....")
             }
             return
@@ -53,8 +57,8 @@ export const refreshAccessToken = async () => {
             theme: currentTheme
         };
 
-        const response = await api.post(
-            `user/auth/refresh_token`,
+        const response = await axios.post(
+            `${API_BASE_URL}user/auth/refresh_token`,
             payload,
             { withCredentials: true }
         );
@@ -63,11 +67,13 @@ export const refreshAccessToken = async () => {
             const userObject = response.data.data.object;   // ← Define it once here
 
             const userData = {
+                id: userObject.id || userObject._id,
                 username: userObject.username,
                 email: userObject.email,
                 token: userObject.accessToken,
                 currency: userObject.currency,
                 plan: userObject.plan,
+                subscriptionId: userObject.subscriptionId,
                 profileImgUrl: userObject.profileImgUrl,
                 role: userObject.role,
                 spaces: userObject.spaces,

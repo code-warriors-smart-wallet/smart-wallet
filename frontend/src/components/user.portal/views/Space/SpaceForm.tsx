@@ -1,11 +1,11 @@
-import { SpaceInfo } from "@/interfaces/modals"
+import { SpaceInfo, PlanType } from "../../../../interfaces/modals";
 import Button from "../../../../components/Button"
 import Input from "../../../../components/Input"
 import { FaTimes } from "react-icons/fa";
 import { SpaceService } from "../../../../services/space.service";
 import { COLLABORATOR_STATUS, collaboratorStatusInfo } from "../Spaces";
 import { FiRefreshCw } from "react-icons/fi";
-import { RootState } from "@/redux/store/store";
+import { RootState } from "../../../../redux/store/store";
 import { useSelector } from "react-redux";
 import { useState } from "react";
 
@@ -41,6 +41,7 @@ export const collaborativeSpaceTypes = [SpaceType.CASH, SpaceType.BANK, SpaceTyp
 function SpaceForm({ inputs, onInputChange, spaces, onSubmit, onAddOrEdit, onCancel, editSpaceId, onAddCollaborator, onRemoveCollaborator }: SpaceFormProps) {
 
     const today = new Date().toISOString().split("T")[0];
+    const { plan } = useSelector((state: RootState) => state.auth);
     const { createSpaceLoading, addColLoading } = SpaceService()
     const canEdit = spaces.find(sp => sp.id === editSpaceId)?.isOwner;
     console.log(inputs, canEdit)
@@ -75,6 +76,10 @@ function SpaceForm({ inputs, onInputChange, spaces, onSubmit, onAddOrEdit, onCan
                             </option>
                             {
                                 Object.values(SpaceType).map((st) => {
+                                    const isRestricted = plan === PlanType.STARTER && ![SpaceType.CASH, SpaceType.BANK].includes(st);
+                                    
+                                    if (isRestricted) return null;
+
                                     return (
                                         <option key={st} value={st}>
                                             {st.split("_").join(" ")}

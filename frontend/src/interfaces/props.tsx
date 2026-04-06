@@ -23,4 +23,6 @@ export interface InputProps {
     disabled?: boolean
     error?: string;
     helperText?: string;
+    label?: string;
+    icon?: React.ReactNode;
 }

@@ -5,6 +5,7 @@ import { AuthState } from "@/interfaces/redux";
 import { createSlice } from "@reduxjs/toolkit";
 
 const initialState: AuthState = {
+    id: null,
     email: null,
     username: null,
     token: null, 
@@ -14,6 +15,7 @@ const initialState: AuthState = {
     profileImgUrl: null,
     theme: 'dark',
     plan: null,
+    subscriptionId: null,
     role: null,
     spaces: []
 };
@@ -26,8 +28,9 @@ const authSlice = createSlice({
     initialState: initialState, // The initial state of the slice
     // reducer functions are accepting the previous state and the action and return the new state
     reducers: {
-        loginSuccess(state, action: { "payload": { username: string, email: string, token: string, currency: string, plan: PlanType, profileImgUrl: string, role: UserRole, theme: string, spaces: {id: string, name: string, type: string, isCollaborative: boolean, isOwner: boolean}[] } }) {
+        loginSuccess(state, action: { "payload": { id: string, username: string, email: string, token: string, currency: string, plan: PlanType, subscriptionId: string, profileImgUrl: string, role: UserRole, theme: string, spaces: {id: string, name: string, type: string, isCollaborative: boolean, isOwner: boolean}[] } }) {
             console.log("login success: ", action.payload.token)
+            state.id = action.payload.id;
             state.username = action.payload.username;
             state.token = action.payload.token;
             state.email = action.payload.email;
@@ -35,6 +38,7 @@ const authSlice = createSlice({
             state.profileImgUrl = action.payload.profileImgUrl;
             state.theme = action.payload.theme;
             state.plan = action.payload.plan
+            state.subscriptionId = action.payload.subscriptionId
             state.isAuthenticated = true;
             state.role = action.payload.role
             state.spaces = action.payload.spaces
@@ -43,6 +47,7 @@ const authSlice = createSlice({
             Object.assign(state, action.payload);
         },
         logout(state) {
+            state.id = null;
             state.username = null;
             state.token = null;
             state.email = null;

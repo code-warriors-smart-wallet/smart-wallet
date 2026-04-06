@@ -1,6 +1,7 @@
 import { PlanType, UserRole } from "./modals";
 
 export interface AuthState {
+    id: string|null,
     username: string|null,
     email: string|null,
     token: string|null,
@@ -10,6 +11,7 @@ export interface AuthState {
     currency: string|null;
     theme: string|null;
     plan: PlanType|null;
+    subscriptionId: string|null;
     role: UserRole|null;
     spaces: {id: string, name: string, type: string, isCollaborative: boolean, isOwner: boolean}[]
 }

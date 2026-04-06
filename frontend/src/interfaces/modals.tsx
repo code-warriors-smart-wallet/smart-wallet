@@ -23,8 +23,7 @@ export interface verifyOtpRequest {
 
 export enum PlanType {
     STARTER = "Starter",
-    PLUS = "Plus",
-    PRO = "Pro"
+    PLUS = "Plus"
 }
 
 export interface SubscribeRequest {
@@ -57,6 +56,26 @@ export interface ApiResponse {
 export enum UserRole {
     ADMIN = 'ADMIN',
     USER = 'USER'
+}
+
+export enum PaymentType {
+    CREDIT_CARD = 'CREDIT_CARD',
+    DEBIT_CARD = 'DEBIT_CARD',
+    PAYPAL = 'PAYPAL'
+}
+
+export interface PaymentDetails {
+    cardType?: string;
+    lastFourDigits?: string;
+    expiryDate?: string;
+    paypalEmail?: string;
+}
+
+export interface SavePaymentRequest {
+    email: string;
+    type: PaymentType;
+    details: PaymentDetails;
+    isDefault: boolean;
 }
 
 export enum LoginStatus {

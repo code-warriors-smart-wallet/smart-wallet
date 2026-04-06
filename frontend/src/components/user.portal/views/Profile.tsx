@@ -24,7 +24,36 @@ function Profile() {
     const [editCurrency, setEditCurrency] = useState(currency || "USD");
     const [editTheme, setEditTheme] = useState(theme || "dark");
     const [editProfileImg, setEditProfileImg] = useState(profileImgUrl || "");
+    const [imageUrlError, setImageUrlError] = useState("");
     const [loading, setLoading] = useState(false);
+
+    // Validate image URL
+    useEffect(() => {
+        if (!editProfileImg || editProfileImg.startsWith('data:') || editProfileImg.startsWith('[Uploaded Image]')) {
+            setImageUrlError("");
+            return;
+        }
+
+        // Basic format check
+        if (!editProfileImg.startsWith('http')) {
+            setImageUrlError("URL must start with http:// or https://");
+            return;
+        }
+
+        // Check for common non-image page indicators
+        const pageIndicators = ['/search', '/view', 'shutterstock.com/search', 'google.com/imgres'];
+        if (pageIndicators.some(ind => editProfileImg.includes(ind))) {
+            setImageUrlError("This looks like a webpage link, not a direct image address.");
+            return;
+        }
+
+        // Attempt to load as image for final confirmation
+        const img = new Image();
+        img.onload = () => setImageUrlError("");
+        img.onerror = () => setImageUrlError("Could not load image. Please ensure this is a direct image address.");
+        img.src = editProfileImg;
+        
+    }, [editProfileImg]);
 
     // Password states
     const [currentPassword, setCurrentPassword] = useState("");
@@ -272,7 +301,6 @@ function Profile() {
                         </div>
 
                         <div className="mt-10 pt-10 border-t border-border-light-primary dark:border-border-dark-primary/30">
-                            <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3 block">Profile Image URL (External)</label>
                             <Input 
                                 name="profileImgUrl" 
                                 type="text"
@@ -280,16 +308,15 @@ function Profile() {
                                 value={editProfileImg.startsWith('data:') ? "[Uploaded Image]" : editProfileImg} 
                                 onChange={(e) => setEditProfileImg(e.target.value)}
                                 className="h-10 text-xs"
+                                error={imageUrlError}
+                                helperText="Tip: Right-click any image and select 'Copy Image Address' to get the best results."
                             />
-                            <p className="text-[10px] text-gray-400 mt-3 italic leading-relaxed">
-                                You can click the avatar above to upload a photo directly, or paste a URL here.
-                            </p>
                         </div>
 
                         <div className="mt-10 flex justify-end">
                             <Button 
                                 text={loading ? "Saving Progress..." : "Save Profile Changes"} 
-                                disabled={loading}
+                                disabled={loading || !!imageUrlError}
                                 onClick={handleUpdateProfile}
                                 className="w-full sm:w-auto px-12 rounded-2xl h-14 font-bold shadow-primary/20"
                             />

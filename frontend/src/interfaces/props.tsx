@@ -21,4 +21,6 @@ export interface InputProps {
     max?: number|undefined
     id?:string
     disabled?: boolean
+    error?: string;
+    helperText?: string;
 }

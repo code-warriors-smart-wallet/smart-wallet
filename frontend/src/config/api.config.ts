@@ -14,31 +14,82 @@ export const API_CONFIG = {
 
 export const api = axios.create(API_CONFIG);
 
+api.interceptors.request.use(
+    (config) => {
+        const token = store.getState().auth.token || localStorage.getItem("smart-wallet-token");
+        if (token) {
+            config.headers["Authorization"] = `Bearer ${token}`;
+        }
+        return config;
+    },
+    (error) => {
+        return Promise.reject(error);
+    }
+);
+
 export const INTERNAL_SERVER_ERROR = "Internal server error!"
+
+let isRefreshing = false;
+let refreshQueue: any[] = [];
+
+const processQueue = (error: any, token: string | null = null) => {
+    refreshQueue.forEach((prom: any) => {
+        if (error) {
+            prom.reject(error);
+        } else {
+            prom.resolve(token);
+        }
+    });
+    refreshQueue = [];
+};
 
 api.interceptors.response.use(
     response => response,
     async (error) => {
-
+        const originalRequest = error.config;
         const dispatch = store.dispatch;
-        if (error?.response?.status === 403) { // Token expired
-            console.log(">>> intercepter: Token expired or not found")
-            dispatch(setIsAuthenticated({ isAuthenticated: false }));
-            await refreshAccessToken(); // Attempt token refresh
-            const updatedState = store.getState().auth;
-            console.log(">>>> refresh token finished: ", updatedState)
-            if (updatedState.isAuthenticated && updatedState.token) {
-                // Return a retry of the original request with the new token
-                error.config.headers = {
-                    ...error.config.headers,
-                    'Authorization': `Bearer ${updatedState.token}`
-                };
-                return api(error.config); 
-            } else {
-                toast.error("Session expired. Please log in again.");
-                console.log("Not authenticated. error while getting access token via refresh token....")
+
+        if (error?.response?.status === 403 && !originalRequest._retry) {
+            if (isRefreshing) {
+                return new Promise((resolve, reject) => {
+                    refreshQueue.push({ resolve, reject });
+                })
+                    .then((token) => {
+                        originalRequest._retry = true;
+                        originalRequest.headers['Authorization'] = `Bearer ${token}`;
+                        return api(originalRequest);
+                    })
+                    .catch((err) => {
+                        return Promise.reject(err);
+                    });
             }
-            return
+
+            originalRequest._retry = true;
+            isRefreshing = true;
+
+            return new Promise(async (resolve, reject) => {
+                try {
+                    console.log(">>> intercepter: Initializing single refresh token call");
+                    await refreshAccessToken();
+                    
+                    const updatedState = store.getState().auth;
+                    const newToken = updatedState.token;
+
+                    if (updatedState.isAuthenticated && newToken) {
+                        processQueue(null, newToken);
+                        originalRequest.headers['Authorization'] = `Bearer ${newToken}`;
+                        resolve(api(originalRequest));
+                    } else {
+                        throw new Error("Refresh failed to authenticate");
+                    }
+                } catch (refreshErr) {
+                    processQueue(refreshErr, null);
+                    dispatch(logout());
+                    reject(refreshErr);
+                } finally {
+                    isRefreshing = false;
+                }
+            });
         }
         return Promise.reject(error);
     }
@@ -80,12 +131,16 @@ export const refreshAccessToken = async () => {
                 theme: userObject.theme || currentTheme   // Safe fallback
             };
 
-            dispatch(loginSuccess(userData));
-
-            // Sync theme back to localStorage (prevents erasure on refresh)
+            // Sync token and theme back to localStorage
+            if (userObject.accessToken) {
+                localStorage.setItem("smart-wallet-token", userObject.accessToken);
+            }
             if (userObject.theme) {
                 localStorage.setItem('theme', userObject.theme);
             }
+
+            // CRITICAL: Update Redux state so the interceptor retry uses the new token
+            dispatch(loginSuccess(userData));
 
             console.log(">>> Refresh token successful with theme:", userObject.theme || currentTheme);
         }

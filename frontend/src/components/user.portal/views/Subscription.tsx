@@ -1,16 +1,79 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useSelector } from "react-redux";
 import { RootState } from "../../../redux/store/store";
-import { MdPayment, MdHistory, MdCardMembership, MdCheckCircle, MdStar, MdOutlineStars, MdCancel } from "react-icons/md";
+import { MdPayment, MdHistory, MdCardMembership, MdCheckCircle, MdStar, MdOutlineStars, MdCancel, MdMoreVert, MdDeleteOutline } from "react-icons/md";
+import { FaCcVisa, FaCcMastercard, FaCcAmex, FaCcDiscover } from "react-icons/fa";
 import Button from "../../Button";
-import { PlanType } from "../../../interfaces/modals";
+import { PlanType, PaymentType } from "../../../interfaces/modals";
 import { AuthService } from "../../../services/auth/auth.service";
 import Upgrade from "./Subscription/Upgrade";
+import { api } from "../../../config/api.config";
+import { toast } from "react-toastify";
+import 'react-toastify/dist/ReactToastify.css';
 
 function Subscription() {
-    const { plan, subscriptionId } = useSelector((state: RootState) => state.auth);
+    const { plan, subscriptionId, email } = useSelector((state: RootState) => state.auth);
     const [upgradeMode, setUpgradeMode] = useState<string>("");
+    const [payments, setPayments] = useState<any[]>([]);
+    const [invoices, setInvoices] = useState<any[]>([]);
+    const [loadingPayments, setLoadingPayments] = useState(true);
+    const [loadingInvoices, setLoadingInvoices] = useState(true);
     const { cancelSubscription } = AuthService();
+
+    useEffect(() => {
+        const fetchPayments = async () => {
+            if (!email) return;
+            try {
+                const res = await api.get(`user/subscription/${email}/payments`);
+                if (res.data.success) {
+                    setPayments(res.data.data.object || []);
+                }
+            } catch (err) {
+                console.error("Failed to fetch payments:", err);
+            } finally {
+                setLoadingPayments(false);
+            }
+        };
+
+        const fetchInvoices = async () => {
+            if (!email) return;
+            try {
+                const res = await api.get(`user/subscription/${email}/invoices`);
+                if (res.data.success) {
+                    setInvoices(res.data.data.object || []);
+                }
+            } catch (err) {
+                console.error("Failed to fetch invoices:", err);
+            } finally {
+                setLoadingInvoices(false);
+            }
+        };
+
+        fetchPayments();
+        fetchInvoices();
+    }, [email]);
+
+    const getCardIcon = (type: string) => {
+        switch (type?.toLowerCase()) {
+            case 'visa': return <FaCcVisa className="text-[#1A1F71]" size={32} />;
+            case 'mastercard': return <FaCcMastercard className="text-[#EB001B]" size={32} />;
+            case 'amex': return <FaCcAmex className="text-[#007BC1]" size={32} />;
+            default: return <MdPayment className="text-gray-400" size={32} />;
+        }
+    };
+
+    const handleDeletePayment = async (paymentId: string) => {
+        if (!window.confirm("Are you sure you want to delete this payment method?")) return;
+        try {
+            const res = await api.delete(`user/subscription/payments/${paymentId}`);
+            if (res.data.success) {
+                toast.success("Payment method deleted");
+                setPayments(payments.filter(p => p._id !== paymentId));
+            }
+        } catch (err: any) {
+            toast.error(err.response?.data?.error?.message || "Failed to delete payment method");
+        }
+    };
 
     const plans = [
         {
@@ -107,11 +170,7 @@ function Subscription() {
                         ) : p.name === PlanType.PLUS ? (
                             <Button 
                                 text="Cancel Subscription" 
-                                onClick={() => {
-                                    if (subscriptionId) {
-                                        cancelSubscription(subscriptionId);
-                                    }
-                                }} 
+                                onClick={() => setUpgradeMode("upgrade")} 
                                 priority="secondary" 
                                 className="w-full py-4 rounded-2xl border-2 border-red-500/20 text-red-500 hover:bg-red-500/5 hover:border-red-500/50 transition-all font-bold"
                             />
@@ -132,9 +191,7 @@ function Subscription() {
                 <Upgrade message="Unlock all premium features today!" setUpgradeMode={setUpgradeMode} />
             )}
 
-            {/* Secondary Sections Grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mt-12">
-                {/* Payment Methods */}
                 <div className="bg-bg-light-secondary dark:bg-bg-dark-secondary p-10 rounded-3xl border border-border-light-primary dark:border-border-dark-primary shadow-xl group">
                     <div className="flex items-center justify-between mb-8">
                         <div className="flex items-center gap-3">
@@ -145,19 +202,56 @@ function Subscription() {
                         </div>
                     </div>
                     
-                    <div className="bg-bg-light-primary dark:bg-black/20 p-8 rounded-2xl border border-dashed border-gray-300 dark:border-gray-700 text-center flex flex-col items-center">
-                        <div className="p-4 bg-gray-50 dark:bg-gray-800 rounded-full mb-4">
-                            <MdPayment className="text-gray-300 dark:text-gray-600 text-3xl" />
-                        </div>
-                        <p className="text-sm font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-2">No Cards Saved</p>
-                        <p className="text-xs text-gray-400 leading-relaxed max-w-[200px] mb-6">Safe, secure payment options powered by Stripe.</p>
-                        
-                        <Button 
-                            text="Add Payment Method" 
-                            onClick={() => {}} 
-                            priority="secondary" 
-                            className="w-auto px-8 rounded-xl h-10 text-xs border-primary/20 hover:border-primary/50 text-primary" 
-                        />
+                    <div className="space-y-4">
+                        {loadingPayments ? (
+                            <div className="flex justify-center py-8">
+                                <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-primary"></div>
+                            </div>
+                        ) : payments.length > 0 ? (
+                            payments.map((p) => (
+                                <div key={p._id} className="bg-bg-light-primary dark:bg-black/20 p-5 rounded-2xl border border-border-light-primary dark:border-border-dark-primary flex items-center justify-between group/card hover:border-primary/50 transition-all shadow-sm">
+                                    <div className="flex items-center gap-4">
+                                        <div className="bg-white dark:bg-gray-800 p-2 rounded-lg shadow-sm">
+                                            {getCardIcon(p.details?.cardType || 'visa')}
+                                        </div>
+                                        <div>
+                                            <p className="text-sm font-black text-text-light-primary dark:text-text-dark-primary uppercase tracking-wider">
+                                                {p.type === PaymentType.CREDIT_CARD ? 'Credit Card' : 'Debit Card'}
+                                            </p>
+                                            <p className="text-xs text-gray-500 font-bold tracking-widest mt-0.5">
+                                                •••• •••• •••• {p.details?.lastFourDigits || '0000'}
+                                            </p>
+                                        </div>
+                                    </div>
+                                    <div className="flex items-center gap-2">
+                                        {p.isDefault && (
+                                            <span className="text-[9px] font-black uppercase tracking-widest bg-emerald-500/10 text-emerald-500 px-2 py-1 rounded-md mr-2">Default</span>
+                                        )}
+                                        <button 
+                                            onClick={() => handleDeletePayment(p._id)}
+                                            className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-500/10 rounded-full transition-all opacity-0 group-hover/card:opacity-100"
+                                        >
+                                            <MdDeleteOutline size={18} />
+                                        </button>
+                                    </div>
+                                </div>
+                            ))
+                        ) : (
+                            <div className="bg-bg-light-primary dark:bg-black/20 p-8 rounded-2xl border border-dashed border-gray-300 dark:border-gray-700 text-center flex flex-col items-center">
+                                <div className="p-4 bg-gray-50 dark:bg-gray-800 rounded-full mb-4">
+                                    <MdPayment className="text-gray-300 dark:text-gray-600 text-3xl" />
+                                </div>
+                                <p className="text-sm font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-2">No Cards Saved</p>
+                                <p className="text-xs text-gray-400 leading-relaxed max-w-[200px] mb-6">Safe, secure payment options powered by Stripe.</p>
+                                
+                                <Button 
+                                    text="Add Payment Method" 
+                                    onClick={() => {}} 
+                                    priority="secondary" 
+                                    className="w-auto px-8 rounded-xl h-10 text-xs border-primary/20 hover:border-primary/50 text-primary" 
+                                />
+                            </div>
+                        )}
                     </div>
                 </div>
 
@@ -171,13 +265,43 @@ function Subscription() {
                     </div>
 
                     <div className="space-y-4">
-                        <div className="flex items-center justify-center h-[180px] text-center px-6">
-                            <div>
-                                <MdHistory className="mx-auto text-gray-200 dark:text-gray-800 text-5xl mb-4" />
-                                <p className="text-sm font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest">No Recent Activity</p>
-                                <p className="text-xs text-gray-400 mt-2">When you subscribe, your invoices will appear here.</p>
+                        {loadingInvoices ? (
+                            <div className="flex justify-center py-8">
+                                <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-primary"></div>
                             </div>
-                        </div>
+                        ) : invoices.length > 0 ? (
+                            <div className="space-y-3">
+                                {invoices.map((inv) => (
+                                    <div key={inv._id} className="flex items-center justify-between p-4 bg-bg-light-primary dark:bg-black/20 rounded-xl border border-border-light-primary dark:border-border-dark-primary hover:border-primary/30 transition-all group/inv">
+                                        <div className="flex items-center gap-3">
+                                            <div className="p-2 bg-emerald-500/10 rounded-lg text-emerald-600">
+                                                <MdCheckCircle size={18} />
+                                            </div>
+                                            <div>
+                                                <p className="text-xs font-black text-text-light-primary dark:text-text-dark-primary uppercase tracking-tight">
+                                                    {inv.planId?.name} Plan Subscription
+                                                </p>
+                                                <p className="text-[10px] text-gray-500 font-bold uppercase mt-0.5">
+                                                    {new Date(inv.billingDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                                                </p>
+                                            </div>
+                                        </div>
+                                        <div className="text-right">
+                                            <p className="text-sm font-black text-primary tracking-tighter">LKR {inv.amount}</p>
+                                            <p className="text-[8px] font-black text-emerald-500 uppercase tracking-widest mt-0.5">Paid</p>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        ) : (
+                            <div className="flex items-center justify-center h-[180px] text-center px-6">
+                                <div>
+                                    <MdHistory className="mx-auto text-gray-200 dark:text-gray-800 text-5xl mb-4" />
+                                    <p className="text-sm font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest">No Recent Activity</p>
+                                    <p className="text-xs text-gray-400 mt-2">When you subscribe, your invoices will appear here.</p>
+                                </div>
+                            </div>
+                        )}
                     </div>
                 </div>
             </div>

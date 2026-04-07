@@ -32,7 +32,12 @@ function Upgrade({setUpgradeMode, message}: {setUpgradeMode: React.Dispatch<Reac
 
     async function handleUpgrade(planItem: PlanInfo): Promise<void> {
         if (!email) return;
-        await subscribePlan({ autoRenew: false, email: email, planId: planItem._id }, planItem.name);
+        if (!planItem._id) {
+            console.error(">>>> Upgrade failed: Plan ID is missing!", planItem);
+            return;
+        }
+        console.log(">>>> Upgrading to:", planItem.name, "with ID:", planItem._id);
+        await subscribePlan({ autoRenew: false, email: email, planId: planItem._id, paymentId: null }, planItem.name);
         setUpgradeMode(""); // Close modal after successful action start/completion
     }
 
@@ -96,7 +101,7 @@ function Upgrade({setUpgradeMode, message}: {setUpgradeMode: React.Dispatch<Reac
                                     ) : (
                                         <div className="flex flex-col gap-3">
                                             <Button
-                                                text="Upgrade"
+                                                text={(plan === PlanType.PLUS && planItem.name === PlanType.STARTER) ? "Switch to Starter" : "Upgrade"}
                                                 className="w-full py-3 text-lg font-semibold cursor-pointer shadow-lg shadow-primary/25"
                                                 onClick={() => handleUpgrade(planItem)}
                                             />

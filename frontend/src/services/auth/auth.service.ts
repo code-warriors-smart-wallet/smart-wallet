@@ -89,22 +89,32 @@ export function AuthService() {
 
     async function subscribePlan(body: SubscribeRequest, planName: string): Promise<void> {
         try {
-            console.log("Subscribing to plan:", planName, body);
+            console.log(">>>> Sending subscribe request:", body);
             const response = await api.post(`user/subscription/subscribe`, body);
-            console.log("Subscribe response:", response.data);
+            console.log(">>>> Subscribe response:", response.data);
 
             if (response.data.success) {
                 const subObject = response.data.data.object;
                 const subId = subObject.id || subObject._id;
 
                 if (planName.toLowerCase() === PlanType.STARTER.toLowerCase()) {
-                    navigate('/currency', { state: { email: subObject.email } });
+                    // Only navigate to currency if user doesn't have one and isn't fully logged in yet
+                    const { currency, token } = store.getState().auth;
+                    if (!currency && !token) {
+                        navigate('/currency', { state: { email: subObject.email } });
+                    } else {
+                        toast.success(`Plan updated to ${planName} successfully!`);
+                        await refreshAccessToken();
+                    }
                 } else {
                     console.log("Navigating to payment for subscription:", subId);
                     navigate(`/subscriptions/${subId}/payment`);
                 }
             }
         } catch (error) {
+            if (axios.isAxiosError(error) && error.response) {
+                console.error(">>>> [AuthService] Subscription Error Response:", error.response.data);
+            }
             processError(error);
         }
     }
@@ -248,7 +258,12 @@ export function AuthService() {
 
 function processError(error: unknown): void {
     if (axios.isAxiosError(error) && error.response) {
-        const errorMessage = error.response.data?.error?.message || "An error occurred while processing your request.";
+        // Log deep error data for debugging
+        console.error(">>>> Detailed Error Data:", error.response.data);
+        
+        const errorMessage = error.response.data?.error?.message || 
+                           error.response.data?.data?.message || 
+                           "An error occurred while processing your request.";
         toast.error(errorMessage);
     } else {
         toast.error("An unexpected error occurred. Please try again later.");

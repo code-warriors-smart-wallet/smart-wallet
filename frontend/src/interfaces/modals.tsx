@@ -29,6 +29,7 @@ export enum PlanType {
 export interface SubscribeRequest {
     email: string;
     planId: string;
+    paymentId: string | null;
     autoRenew: boolean;
 }
 
@@ -61,7 +62,8 @@ export enum UserRole {
 export enum PaymentType {
     CREDIT_CARD = 'CREDIT_CARD',
     DEBIT_CARD = 'DEBIT_CARD',
-    PAYPAL = 'PAYPAL'
+    PAYPAL = 'PAYPAL',
+    GOOGLE_PAY = 'GOOGLE_PAY'
 }
 
 export interface PaymentDetails {

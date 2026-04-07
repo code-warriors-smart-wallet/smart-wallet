@@ -9,6 +9,7 @@ import subscriptionRouter from "./routes/subscription";
 import settingsRouter from "./routes/settings";
 import { initSubscriptionJobs } from './jobs/subscription';
 import { connectDatabase } from './config/database';
+import { seedPlans } from './utils/seed';
 import path from 'path';
 
 // Load environment variables
@@ -27,7 +28,9 @@ app.use(cookieParser());
 
 // Connect to database
 connectDatabase()
-    .then(() => {
+    .then(async () => {
+        // Seed plans
+        await seedPlans();
         // Routes
         app.use("/auth", authRouter);
         app.use("/space", spaceRouter);
@@ -43,7 +46,7 @@ connectDatabase()
             console.log(`User service server is listening on port ${PORT}`);
         });
     })
-    .catch((error) => {
+    .catch((error: any) => {
         console.error('Failed to start user-service server:', error);
         process.exit(1);
     });

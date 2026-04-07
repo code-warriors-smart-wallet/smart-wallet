@@ -18,6 +18,8 @@ export interface ISubscription extends Document {
     cancelledAt?: Date;
     lastBillingDate: Date;
     nextBillingDate: Date;
+    createdAt: Date;
+    updatedAt: Date;
 }
 
 const SubscriptionSchema: Schema = new Schema({

@@ -114,7 +114,7 @@ function NavBar({ setSideBarOpen, isSideBarOpen, view, spaceId, setSpaceFormTogg
 
    return (
       <>
-         <nav className="fixed top-0 z-50 w-full bg-bg-light-primary dark:bg-bg-dark-primary border-b border-border-light-primary dark:border-border-dark-primary h-20">
+         <nav className="fixed top-0 z-50 w-full bg-bg-light-primary dark:bg-bg-dark-primary app-nav border-b border-border-light-primary dark:border-border-dark-primary h-20">
             <div className="px-3 py-3 lg:px-5 lg:pl-3 h-full">
                <div className="flex items-center justify-between h-full">
                   <div className="flex items-center justify-start rtl:justify-end w-65">
@@ -127,20 +127,21 @@ function NavBar({ setSideBarOpen, isSideBarOpen, view, spaceId, setSpaceFormTogg
                      </button>
                      <Logo />
                   </div>
-                  <SearchInput
-                     view={view}
-                  />
-                  <div className="max-w-sm ml-3">
-                     <DropDown
-                        title={activeDropdownText}
-                        titleIcon={activeDropdownIcon}
-                        dropdownItems={dropdownItems}
-                        dropdownIcons={dropdownIcons}
-                        lastItem={"New Space"}
-                        lastIcon={<FaPlus />}
-                        onClick={(text) => onInputChange(text)}
-                     />
+                  <div className="hidden sm:block">
+                     <SearchInput view={view} />
                   </div>
+                  <div className="flex items-center">
+                     <div className="max-w-[140px] sm:max-w-sm ml-2 sm:ml-3">
+                        <DropDown
+                           title={activeDropdownText}
+                           titleIcon={activeDropdownIcon}
+                           dropdownItems={dropdownItems}
+                           dropdownIcons={dropdownIcons}
+                           lastItem={"New Space"}
+                           lastIcon={<FaPlus />}
+                           onClick={(text) => onInputChange(text)}
+                        />
+                     </div>
                   <div className="flex items-center relative">
                      <div className="flex items-center ms-3">
                         <div onClick={() => { setUserMenuOpen(!isUserMenuOpen) }}>
@@ -173,6 +174,7 @@ function NavBar({ setSideBarOpen, isSideBarOpen, view, spaceId, setSpaceFormTogg
                      </div>
                   </div>
                </div>
+            </div>
             </div>
          </nav>
          {

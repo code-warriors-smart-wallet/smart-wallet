@@ -6,7 +6,7 @@ import { SpaceType } from "../Spaces";
 function AssetsSummary({ currency, summary }: { currency: string, summary: any }) {
 
     const [space, setSpace] = useState("");
-    const [total, setTotal] = useState<number>(summary.totalCashAssetAmount + summary.totalBankAssetAmount + summary.totalLoanLentAssetAmount);
+    const [total, setTotal] = useState<number>((summary?.totalCashAssetAmount ?? 0) + (summary?.totalBankAssetAmount ?? 0) + (summary?.totalLoanLentAssetAmount ?? 0));
     const [assetsInfo, setAssetsInfo] = useState([])
 
     useEffect(() => {
@@ -27,13 +27,13 @@ function AssetsSummary({ currency, summary }: { currency: string, summary: any }
             spaces = [SpaceType.SAVING_GOAL]
             setTotal(summary.totalSavingGoalAssetAmount)
         }
-        let assetsInfo = summary.assetsInfo?.filter((info: any) => spaces.includes(info.spaceType))
-        assetsInfo = assetsInfo?.map((rec: any, index: any) => ({ ...rec, color: `hsl(${(index / assetsInfo.length) * 360}, 70%, 50%)` }));
+        let assetsInfo = summary?.assetsInfo?.filter((info: any) => spaces.includes(info.spaceType)) ?? []
+        assetsInfo = assetsInfo.map((rec: any, index: any) => ({ ...rec, color: `hsl(${(index / assetsInfo.length) * 360}, 70%, 50%)` }));
         setAssetsInfo(assetsInfo)
     }, [space, summary])
 
     return (
-        <section className="rounded my-3 py-2 px-3 border border-border-light-primary dark:border-border-dark-primary *:text-text-light-primary *:dark:text-text-dark-primary">
+        <section className="app-card *:text-text-light-primary *:dark:text-text-dark-primary">
             {/* title */}
             <div className="rounded flex justify-between items-center">
                 <span className="flex gap-3 items-center text-xl font-bold"><MdSavings />Assets summary</span>
@@ -41,10 +41,10 @@ function AssetsSummary({ currency, summary }: { currency: string, summary: any }
 
             {/* Assets classificaion across spaces chart */}
             <div className="flex gap-3 flex-wrap *:flex-1">
-                <div className="flex flex-col gap-3 min-w-1/3 max-w-1/3 mt-3">
+                <div className="flex flex-col gap-3 w-full sm:min-w-1/3 sm:max-w-1/3 mt-3">
                     <div className={`px-3 py-2 border hover:bg-hover-light-primary hover:dark:bg-hover-dark-primary cursor-pointer ${space === "" ? "border-primary bg-hover-light-primary dark:bg-hover-dark-primary" : "border-border-light-primary dark:border-border-dark-primary"}`} onClick={() => setSpace("")}>
                         <h1 className="font-semibold">Total Assets:</h1>
-                        <h2 className="text-xl font-semibold text-text-light-secondary dark:text-text-dark-secondary">{(summary.totalCashAssetAmount + summary.totalBankAssetAmount + summary.totalLoanLentAssetAmount + summary.totalSavingGoalAssetAmount)?.toFixed(2)} {currency}</h2>
+                        <h2 className="text-xl font-semibold text-text-light-secondary dark:text-text-dark-secondary">{((summary?.totalCashAssetAmount ?? 0) + (summary?.totalBankAssetAmount ?? 0) + (summary?.totalLoanLentAssetAmount ?? 0) + (summary?.totalSavingGoalAssetAmount ?? 0)).toFixed(2)} {currency}</h2>
                     </div>
                     <div className={`px-3 py-2 border hover:bg-hover-light-primary hover:dark:bg-hover-dark-primary cursor-pointer ${space === SpaceType.CASH ? "border-primary bg-hover-light-primary dark:bg-hover-dark-primary" : "border-border-light-primary dark:border-border-dark-primary"}`} onClick={() => setSpace(SpaceType.CASH)}>
                         <h1 className="font-semibold">Cash Assets:</h1>
@@ -66,11 +66,10 @@ function AssetsSummary({ currency, summary }: { currency: string, summary: any }
                 <div className="p-2 border border-border-light-primary dark:border-border-dark-primary mt-3">
                     {
                         assetsInfo.length > 0 ? (
-                            <div className="flex items-center justify-center gap-3">
+                            <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
                                 <svg
-                                    width={400}
-                                    height={300}
-                                // ref={chartRef}
+                                    viewBox="0 0 400 300"
+                                    style={{ width: '100%', maxWidth: 400 }}
                                 >
                                     <VictoryPie
                                         standalone={false}

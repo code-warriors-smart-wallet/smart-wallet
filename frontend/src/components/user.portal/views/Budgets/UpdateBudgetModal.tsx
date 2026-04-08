@@ -7,6 +7,7 @@ interface UpdateBudgetModalProps {
     onSelectScope: (scope: 'current' | 'future' | 'all') => void;
     budgetType: string;
     currentPeriod: string;
+    customMessage?: string;
 }
 
 const UpdateBudgetModal: React.FC<UpdateBudgetModalProps> = ({
@@ -14,9 +15,21 @@ const UpdateBudgetModal: React.FC<UpdateBudgetModalProps> = ({
     onClose,
     onSelectScope,
     budgetType,
-    currentPeriod
+    currentPeriod,
+    customMessage
 }) => {
     if (!isOpen) return null;
+
+    // Helper function to format budget type for display
+    const getDisplayType = (type: string): string => {
+        const lowerType = type.toLowerCase();
+        if (lowerType === 'monthly') return 'month';
+        if (lowerType === 'weekly') return 'week';
+        if (lowerType === 'one_time') return 'one-time budget';
+        return type;
+    };
+
+    const displayType = getDisplayType(budgetType);
 
     return (
         <div className="fixed top-0 left-0 w-screen h-screen z-[1001] grid place-items-center bg-black/50 overflow-auto p-4">
@@ -30,13 +43,21 @@ const UpdateBudgetModal: React.FC<UpdateBudgetModalProps> = ({
                         How would you like to apply the amount change?
                     </p>
 
+                    {customMessage && (
+                        <div className="p-3 bg-blue-50 dark:bg-blue-900/20 rounded border border-blue-200 dark:border-blue-800">
+                            <p className="text-sm text-blue-600 dark:text-blue-400">
+                                {customMessage}
+                            </p>
+                        </div>
+                    )}
+
                     <div className="space-y-3">
                         <button
                             onClick={() => onSelectScope('current')}
                             className="w-full p-4 text-left border border-border-light-primary dark:border-border-dark-primary rounded-lg hover:bg-bg-light-primary dark:hover:bg-bg-dark-primary transition-colors cursor-pointer"
                         >
                             <div className="font-medium text-text-light-primary dark:text-text-dark-primary">
-                                This {budgetType.toLowerCase()} only
+                                This {displayType} only
                             </div>
                             <div className="text-sm text-text-light-secondary dark:text-text-dark-secondary mt-1">
                                 Update only {currentPeriod}
@@ -48,7 +69,7 @@ const UpdateBudgetModal: React.FC<UpdateBudgetModalProps> = ({
                             className="w-full p-4 text-left border border-border-light-primary dark:border-border-dark-primary rounded-lg hover:bg-bg-light-primary dark:hover:bg-bg-dark-primary transition-colors cursor-pointer"
                         >
                             <div className="font-medium text-text-light-primary dark:text-text-dark-primary">
-                                This and all future {budgetType.toLowerCase()}s
+                                This and all future {displayType}s
                             </div>
                             <div className="text-sm text-text-light-secondary dark:text-text-dark-secondary mt-1">
                                 Update from {currentPeriod} onwards (including current period)
@@ -60,7 +81,7 @@ const UpdateBudgetModal: React.FC<UpdateBudgetModalProps> = ({
                             className="w-full p-4 text-left border border-border-light-primary dark:border-border-dark-primary rounded-lg hover:bg-bg-light-primary dark:hover:bg-bg-dark-primary transition-colors cursor-pointer"
                         >
                             <div className="font-medium text-text-light-primary dark:text-text-dark-primary">
-                                All {budgetType.toLowerCase()}s (past and future)
+                                All {displayType}s (past and future)
                             </div>
                             <div className="text-sm text-text-light-secondary dark:text-text-dark-secondary mt-1">
                                 Update all periods including past ones

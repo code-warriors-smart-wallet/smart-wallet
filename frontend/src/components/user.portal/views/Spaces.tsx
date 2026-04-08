@@ -79,10 +79,10 @@ function Spaces({ onCancel, editSpaceId, summary }: { onCancel: () => void, edit
       }
 
       if (name == "isCollaborative") {
-         if (plan === PlanType.STARTER) {
-            setUpgradeMessage(`Upgrade to unlock collaborative spaces!`);
-            return;
-         }
+         // if (plan === PlanType.STARTER) {
+         //    setUpgradeMessage(`Upgrade to unlock collaborative spaces!`);
+         //    return;
+         // }
          setInputs(prev => {
             return { ...prev, isCollaborative: (e.target as HTMLInputElement).checked }
          });

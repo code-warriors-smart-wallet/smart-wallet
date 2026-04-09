@@ -3,10 +3,9 @@ import Button from "../../../../components/Button";
 import { PlanInfo, PlanType } from "../../../../interfaces/modals";
 import { AuthService } from "../../../../services/auth/auth.service";
 import { useEffect, useState } from "react";
-import { useLocation } from "react-router-dom";
+import { useLocation, useNavigate, useParams } from "react-router-dom";
 import Loading from "../../../../components/Loading";
-import { useSelector } from "react-redux";
-import { RootState } from "../../../../redux/store/store";
+import { UserPortalView } from "../../SideBar";
 
 function Upgrade({setUpgradeMode, message}: {setUpgradeMode: React.Dispatch<React.SetStateAction<string>>, message: string}) {
 
@@ -15,6 +14,8 @@ function Upgrade({setUpgradeMode, message}: {setUpgradeMode: React.Dispatch<Reac
     const { getAllPlans, subscribePlan } = AuthService();
     const { email, plan } = useSelector((state: RootState) => state.auth);
     const location = useLocation();
+    const { spacetype, spaceid } = useParams()
+    const navigate = useNavigate();
 
     useEffect(() => {
         const fetchPlans = async () => {
@@ -30,23 +31,14 @@ function Upgrade({setUpgradeMode, message}: {setUpgradeMode: React.Dispatch<Reac
         fetchPlans();
     }, []);
 
-    async function handleUpgrade(planItem: PlanInfo): Promise<void> {
-        if (!email) return;
-        if (!planItem._id) {
-            console.error(">>>> Upgrade failed: Plan ID is missing!", planItem);
-            return;
-        }
-        console.log(">>>> Upgrading to:", planItem.name, "with ID:", planItem._id);
-        await subscribePlan({ autoRenew: false, email: email, planId: planItem._id, paymentId: null }, planItem.name);
-        setUpgradeMode(""); // Close modal after successful action start/completion
+    async function handleUpgrade(): Promise<void> {
+        navigate(`/user-portal/${spacetype}/${spaceid}/${UserPortalView.SETTINGS_BILLING}`)
     }
 
     if (loading) {
         return (
             <Loading/>
         )
-
-
     }
 
     return (

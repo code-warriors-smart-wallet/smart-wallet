@@ -22,10 +22,10 @@
 
 @theme {
     --color-bg-light-secondary: oklch(0.932 0.032 255.585);
-    --color-bg-dark-secondary: oklch(0.21 0.034 264.665);
+    --color-bg-dark-secondary: #0d0d28;
 
     --color-bg-light-primary: #fff;
-    --color-bg-dark-primary: #000;
+    --color-bg-dark-primary: #07071a;
 
     --color-text-light-secondary: oklch(0.551 0.027 264.364);
     --color-text-dark-secondary: oklch(0.707 0.022 261.325);
@@ -51,6 +51,34 @@
     --color-hover-main: var(--color-hover-primary);
 
     --font-main: "Quattrocento Sans", sans-serif;
+}
+
+/* ===== APP SHELL STYLES ===== */
+
+/* .app-sidebar {
+    background: linear-gradient(180deg, #0b0b24 0%, #07071a 100%);
+    border-right: 1px solid rgba(124, 58, 237, 0.22);
+} */
+
+.app-sidebar-active {
+    background: linear-gradient(90deg, rgba(124, 58, 237, 0.28) 0%, rgba(99, 102, 241, 0.08) 100%);
+    border-left: 3px solid #7c3aed;
+    border-radius: 8px;
+}
+
+/* .app-nav {
+    background: rgba(7, 7, 26, 0.88) !important;
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border-bottom: 1px solid rgba(124, 58, 237, 0.22) !important;
+} */
+
+.app-card {
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px solid rgba(124, 58, 237, 0.18);
+    border-radius: 12px;
+    padding: 12px 14px;
+    margin: 10px 0;
 }
 
 .Toastify__toast {

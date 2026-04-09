@@ -131,6 +131,7 @@ authRouter.post('/verify-otp', async (req: Request, res: Response) => {
                 },
                 data: null
             });
+            return;
         }
 
         // Find valid OTP

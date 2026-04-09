@@ -12,6 +12,7 @@ import Reports from "../../components/user.portal/views/Reports";
 import LoanRepaymentPlan from "../../components/user.portal/views/LoanRepaymentPlan";
 import Profile from "../../components/user.portal/views/Profile";
 import Subscription from "../../components/user.portal/views/Subscription";
+import AIAssistant from "../../components/user.portal/views/AIAssistant";
 
 function UserPortal() {
 
@@ -45,6 +46,8 @@ function UserPortal() {
             return <Profile />
          case UserPortalView.SETTINGS_BILLING:
             return <Subscription />
+         case UserPortalView.AI_ASSISTANT:
+            return <AIAssistant />
          default:
             return <h1 className="text-xl text-text-light-primary dark:text-text-dark-primary">Default</h1>
       }
@@ -73,7 +76,7 @@ function UserPortal() {
          />
 
          <div className="p-4 sm:ml-64 mt-5">
-            <div className="p-4 border border-border-main rounded-lg mt-14 min-h-screen h-fit">
+            <div className="p-4 mt-14 min-h-screen h-fit border-1 border-border-light-primary rounded-lg dark:border-border-dark-primary">
                <>{ViewComponent()}</>
             </div>
          </div>

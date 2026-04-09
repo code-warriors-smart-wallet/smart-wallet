@@ -78,6 +78,7 @@ function SpaceForm({ inputs, onInputChange, spaces, onSubmit, onAddOrEdit, onCan
                                 Object.values(SpaceType).map((st) => {
                                     
 
+                                    return (
                                         <option key={st} value={st}>
                                             {st.split("_").join(" ")}
                                         </option>

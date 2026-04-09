@@ -3,8 +3,9 @@ import Button from "../../../../components/Button";
 import { PlanInfo, PlanType } from "../../../../interfaces/modals";
 import { AuthService } from "../../../../services/auth/auth.service";
 import { useEffect, useState } from "react";
-import { useLocation } from "react-router-dom";
+import { useLocation, useNavigate, useParams } from "react-router-dom";
 import Loading from "../../../../components/Loading";
+import { UserPortalView } from "../../SideBar";
 
 function Upgrade({setUpgradeMode, message}: {setUpgradeMode: React.Dispatch<React.SetStateAction<string>>, message: string}) {
 
@@ -12,6 +13,8 @@ function Upgrade({setUpgradeMode, message}: {setUpgradeMode: React.Dispatch<Reac
     const [loading, setLoading] = useState(true);
     const { getAllPlans, subscribePlan } = AuthService();
     const location = useLocation();
+    const { spacetype, spaceid } = useParams()
+    const navigate = useNavigate();
 
     useEffect(() => {
         const fetchPlans = async () => {
@@ -28,15 +31,13 @@ function Upgrade({setUpgradeMode, message}: {setUpgradeMode: React.Dispatch<Reac
     }, []);
 
     async function handleUpgrade(): Promise<void> {
-        // await subscribePlan({ autoRenew: false, email: email, planId: plan._id }, plan.name);
+        navigate(`/user-portal/${spacetype}/${spaceid}/${UserPortalView.SETTINGS_BILLING}`)
     }
 
     if (loading) {
         return (
             <Loading/>
         )
-
-
     }
 
     return (

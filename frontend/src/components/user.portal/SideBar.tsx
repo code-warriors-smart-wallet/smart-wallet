@@ -102,12 +102,12 @@ function SideBar({ isSideBarOpen, view, spacetype, spaceid }: { isSideBarOpen: b
                   )
                }
                {/* <SideBarItem name={UserPortalView.GOALS} isActive={view == UserPortalView.GOALS} onClick={onClickSideBarItem} Icon={GoalIcon} /> */}
-               {/* <SideBarItem name={UserPortalView.NOTIFICATIONS} isActive={view == UserPortalView.NOTIFICATIONS} pc={5} onClick={onClickSideBarItem} Icon={NotificationIcon} /> */}
+               {<SideBarItem name={UserPortalView.NOTIFICATIONS} isActive={view == UserPortalView.NOTIFICATIONS} pc={5} onClick={onClickSideBarItem} Icon={NotificationIcon} /> }
                <SideBarItem name={UserPortalView.CATEGORIES} isActive={view == UserPortalView.CATEGORIES} onClick={onClickSideBarItem} Icon={CategoryIcon} />
                <SideBarItem name={UserPortalView.REPORTS} isActive={view == UserPortalView.REPORTS} onClick={onClickSideBarItem} Icon={ReportIcon} />
                <SideBarItem name={UserPortalView.AI_ASSISTANT} isActive={view == UserPortalView.AI_ASSISTANT} onClick={onClickSideBarItem} Icon={AIAssistantIcon} />
                {/* <SideBarItem name={UserPortalView.MANAGE_SPACE} isActive={view == UserPortalView.MANAGE_SPACE} onClick={onClickSideBarItem} Icon={SpaceIcon} /> */}
-               <SidebarDropdownItem name={UserPortalView.SETTINGS} onClick={() => {}} Icon={SettingsIcon}>
+                <SidebarDropdownItem name={UserPortalView.SETTINGS} Icon={SettingsIcon}>
                   <SideBarItem name={UserPortalView.SETTINGS_PROFILE} onClick={onClickSideBarItem} isActive={view == UserPortalView.SETTINGS_PROFILE} />
                   <SideBarItem name={UserPortalView.SETTINGS_BILLING} onClick={onClickSideBarItem} isActive={view == UserPortalView.SETTINGS_BILLING} />
                </SidebarDropdownItem>

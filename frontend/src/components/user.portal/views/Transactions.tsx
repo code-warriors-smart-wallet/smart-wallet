@@ -251,7 +251,7 @@ function Transactions() {
       if (!inputs.spaceId) {
          setInputs(prev => ({ ...prev, spaceId: activeSpaceId }));
       }
-      
+
       if (!/^[0-9]+$/.test(inputs.amount.toString()) || inputs.amount <= 0) {
          toast.error("Invalid amount: " + inputs.amount);
          return;
@@ -317,7 +317,7 @@ function Transactions() {
       }
 
       if (spaceInfo?.transactionTypes.find(t => t.type === inputs.type)?.toSpaces.includes("ACTIVE_SPACE")) {
-            console.log("test", 3)
+         console.log("test", 3)
          setInputs((prev: any) => {
             return { ...prev, to: activeSpaceId }
          });
@@ -389,7 +389,7 @@ function Transactions() {
 
    console.log(inputs)
 
-   if (loading) return <Loading/>
+   if (loading) return <Loading />
 
    return (
       <>
@@ -433,12 +433,12 @@ function Transactions() {
 
                {
                   (toStrdSpaceType(spacetype).startsWith("LOAN") &&
-                  transactions?.filter(t => t.loanRepaymentPlanId != null)?.length == 0) ? <></> :
-                  <Button
-                     text="New Transaction"
-                     className="max-w-fit"
-                     onClick={onNewOrEditMode}
-                  />
+                     transactions?.filter(t => t.loanRepaymentPlanId != null)?.length == 0) ? <></> :
+                     <Button
+                        text="New Transaction"
+                        className="max-w-fit"
+                        onClick={onNewOrEditMode}
+                     />
                }
             </div>
          </div>
@@ -709,12 +709,12 @@ function Transactions() {
                            text={editId ? "Save" : "Create"}
                            className="max-w-fit ml-3"
                            disabled={
-                              inputs.type == "" || 
-                              inputs.amount == 0.0 || 
+                              inputs.type == "" ||
+                              inputs.amount == 0.0 ||
                               (!spaceInfo?.transactionTypes.find(t => t.type === inputs.type)?.fromSpaces.every(sp => ["ACTIVE_SPACE", "OUTSIDE_MYWALLET"].includes(sp)) && !inputs.from) ||
                               (!spaceInfo?.transactionTypes.find(t => t.type === inputs.type)?.toSpaces.every(sp => ["ACTIVE_SPACE", "OUTSIDE_MYWALLET"].includes(sp)) && !inputs.to) ||
-                              !inputs.date || 
-                              !inputs.pcategory || 
+                              !inputs.date ||
+                              !inputs.pcategory ||
                               !inputs.scategory}
                            onClick={onNewOrEditSubmit}
                         />
@@ -828,7 +828,7 @@ function Transactions() {
                               {
                                  spaces.map((s) => {
                                     return (
-                                       <option  key={s.id} value={s.id}>
+                                       <option key={s.id} value={s.id}>
                                           {s.name.split("_").join(" ")}
                                        </option>
                                     )

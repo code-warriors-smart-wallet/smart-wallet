@@ -30,6 +30,8 @@ app.use(cors({
 app.use(express.json());
 app.use(cookieParser());
 
+import { initSummaryJobs } from './jobs/summary-jobs';
+
 // Connect to database
 connectDatabase()
     .then(() => {
@@ -38,6 +40,7 @@ connectDatabase()
         app.use("/export", reportRouter)
 
         // Cron jobs
+        initSummaryJobs();
 
         // Start the server
         app.listen(PORT, () => {

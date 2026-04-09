@@ -4,6 +4,7 @@
 // //     "paymentId": "payment_id_here"
 // //     "autoRenew": "true"
 // // }
+// // import { createNotification, NotificationType } from '../services/notification.service';
 // authRouter.post('/subscriptions/subscribe', async (req: Request, res: Response) => {
 //     try {
 //         // TODO: check auto renew, for now it is false
@@ -71,7 +72,15 @@
 //             data: { object: {...subscription, email: user.email}, message: 'Subscription is successfull' },
 //             error: null
 //         });
-
+//
+//         // // Prepare Notification Hook
+//         // await createNotification({
+//         //     userId: user._id.toString(),
+//         //     title: 'Plan Upgraded',
+//         //     type: NotificationType.PLAN_UPGRADE_SUCCESS,
+//         //     message: `Your subscription to ${plan.name} was successful.`
+//         // });
+//
 //     } catch (error) {
 //         const errorMessage = error instanceof Error ? error.message : 'Unknown error';
 //         res.status(500).json({
@@ -79,6 +88,14 @@
 //             error: { message: 'Error creating subscription: ' + errorMessage },
 //             data: null
 //         });
+//
+//         // // Prepare Notification Hook
+//         // await createNotification({
+//         //     userId: user?._id.toString() || '',
+//         //     title: 'Plan Upgrade Failed',
+//         //     type: NotificationType.PLAN_UPGRADE_FAIL,
+//         //     message: `Your subscription attempt failed: ${errorMessage}`
+//         // });
 //     }
 // });
 // 

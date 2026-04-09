@@ -14,6 +14,11 @@ export interface VerifyOTPRequest {
     otpCode: string;
 }
 
+export interface FacebookLoginRequest {
+    token: string;
+    currency?: string;
+}
+
 export interface UpdateCurrencyRequest {
     email: string;
     currency: string;

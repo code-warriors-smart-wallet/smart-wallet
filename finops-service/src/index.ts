@@ -1,4 +1,6 @@
 import { initScheduleJobs } from './jobs/schedule';
+import { initFinancialMonitorJobs } from './jobs/financial-monitor';
+import { initTransactionReminderJobs } from './jobs/transaction-reminder';
 import { seedCategories } from './models/category';
 
 import express from 'express';
@@ -45,6 +47,8 @@ connectDatabase()
 
         // Cron jobs
         initScheduleJobs();
+        initTransactionReminderJobs();
+        initFinancialMonitorJobs();
 
         // seedCategories();
 

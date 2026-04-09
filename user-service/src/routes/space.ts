@@ -11,6 +11,7 @@ import { updateTransactionMemberStatus } from '../services/transaction.service';
 import dotenv from 'dotenv';
 import { Types } from 'mongoose';
 import { updateScheduleMemberStatus } from '../services/schedule.service';
+import { createNotification, NotificationType } from '../services/notification.service';
 
 dotenv.config();
 const FRONTEND_URL = process.env.FRONTEND_URL;
@@ -308,7 +309,34 @@ spaceRouter.put('/invite/accept/:token', authenticate, async (req: Request, res:
         }
         if (space && collaborator && (collaborator.expiredAt as unknown as Date).getTime() >= Date.now()) {
             collaborator.status = COLLABORATOR_STATUS.ACCEPTED;
-            await Space.updateOne({ _id: space._id }, { $set: space })
+            await Space.updateOne({ _id: space._id }, { $set: space });
+
+            // Fetch the user details to get the username
+            const acceptingUser = await User.findById(userId);
+            const username = acceptingUser?.username || 'A collaborator';
+
+            const localSpaceType = (space.type as string).toLowerCase().replace(/_/g, '-');
+            const spaceActionUrl = `/user-portal/${localSpaceType}/${(space._id as any).toString()}/dashboard`;
+
+            // Notify Owner
+            await createNotification({
+                userId: space.ownerId.toString(),
+                title: 'Invitation Accepted',
+                type: NotificationType.SPACE_INVITATION_ACCEPTED,
+                message: `User ${username} has joined successfully the space "${space.name}".`,
+                spaceId: (space._id as any).toString(),
+                actionUrl: spaceActionUrl
+            });
+
+            // Notify Invited User
+            await createNotification({
+                userId: userId,
+                title: 'Joined Space Successfully',
+                type: NotificationType.SPACE_INVITATION_ACCEPTED,
+                message: `You have successfully joined the space "${space.name}".`,
+                spaceId: (space._id as any).toString(),
+                actionUrl: spaceActionUrl
+            });
         } else if (space && collaborator && (collaborator.expiredAt as unknown as Date).getTime() < Date.now()) {
             res.status(400).json({ success: false, data: { message: "Invitation Link expired" } });
         }
@@ -316,8 +344,8 @@ spaceRouter.put('/invite/accept/:token', authenticate, async (req: Request, res:
             success: true,
             data: {
                 object: {
-                    id: space?._id,
-                    type: space?.type
+                    id: (space as any)?._id,
+                    type: (space as any)?.type
                 },
                 message: 'Invitation accepted'
             },
@@ -352,7 +380,20 @@ spaceRouter.put('/invite/reject/:token', authenticate, async (req: Request, res:
         }
         if (space && collaborator && (collaborator.expiredAt as unknown as Date).getTime() > Date.now()) {
             collaborator.status = COLLABORATOR_STATUS.REJECTED;
-            await Space.updateOne({ _id: space._id }, { $set: space })
+            await Space.updateOne({ _id: space._id }, { $set: space });
+
+            // Fetch the user details to get the username
+            const rejectingUser = await User.findById(userId);
+            const username = rejectingUser?.username || 'A collaborator';
+
+            // Notify Owner
+            await createNotification({
+                userId: space.ownerId.toString(),
+                title: 'Invitation Rejected',
+                type: NotificationType.SPACE_INVITATION_REJECTED,
+                message: `User ${username} has rejected your invitation to join the space "${space.name}".`,
+                spaceId: (space._id as any).toString()
+            });
         } else {
             res.status(400).json({ success: false, data: { message: "Link expired" } });
         }
@@ -360,8 +401,8 @@ spaceRouter.put('/invite/reject/:token', authenticate, async (req: Request, res:
             success: true,
             data: {
                 object: {
-                    id: space?._id,
-                    type: space?.type
+                    id: (space as any)?._id,
+                    type: (space as any)?.type
                 },
                 message: 'Invitation rejected'
             },
@@ -811,7 +852,16 @@ spaceRouter.delete('/col/remove', authenticate, async (req: Request, res: Respon
 
         if (existingSpace && collaborator) {
             collaborator.status = COLLABORATOR_STATUS.REMOVED;
-            await Space.updateOne({ _id: existingSpace._id }, { $set: existingSpace })
+            await Space.updateOne({ _id: existingSpace._id }, { $set: existingSpace });
+
+            // Notify Removed User
+            await createNotification({
+                userId: existingUser._id.toString(),
+                title: 'Access Removed',
+                type: NotificationType.USER_REMOVED_FROM_SPACE,
+                message: `Your access to the space "${existingSpace.name}" has been removed by the owner.`,
+                spaceId: (existingSpace._id as any).toString()
+            });
         }
 
         await updateTransactionMemberStatus(
@@ -825,7 +875,10 @@ spaceRouter.delete('/col/remove', authenticate, async (req: Request, res: Respon
         return res.status(200).json({
             success: true,
             data: {
-                object: existingSpace,
+                object: {
+                    ...existingSpace.toObject(),
+                    id: (existingSpace._id as any).toString()
+                },
                 message: "Collaborator removed successfully"
             },
             error: null
@@ -880,7 +933,37 @@ spaceRouter.delete('/col/left', authenticate, async (req: Request, res: Response
 
         if (existingSpace && collaborator) {
             collaborator.status = COLLABORATOR_STATUS.LEFT;
-            await Space.updateOne({ _id: existingSpace._id }, { $set: existingSpace })
+            await Space.updateOne({ _id: existingSpace._id }, { $set: existingSpace });
+
+            const localSpaceType = (existingSpace.type as string).toLowerCase().replace(/_/g, '-');
+            const spaceActionUrl = `/user-portal/${localSpaceType}/${(existingSpace._id as any).toString()}/dashboard`;
+
+            // Notify Owner
+            await createNotification({
+                userId: existingSpace.ownerId.toString(),
+                title: 'Member Left Space',
+                type: NotificationType.USER_LEFT_SPACE,
+                message: `User ${existingUser.username} has left your space "${existingSpace.name}".`,
+                spaceId: (existingSpace._id as any).toString(),
+                actionUrl: spaceActionUrl
+            });
+
+            // Notify all other accepted members
+            const otherMembers = existingSpace.collaborators.filter(
+                col => col.status === COLLABORATOR_STATUS.ACCEPTED && 
+                       col.userId.toString() !== existingUser._id.toString()
+            );
+
+            for (const member of otherMembers) {
+                await createNotification({
+                    userId: (member.userId as any).toString(),
+                    title: 'Member Left Space',
+                    type: NotificationType.USER_LEFT_SPACE,
+                    message: `User ${existingUser.username} has left the space "${existingSpace.name}".`,
+                    spaceId: (existingSpace._id as any).toString(),
+                    actionUrl: spaceActionUrl
+                });
+            }
         }
 
         await updateTransactionMemberStatus(
@@ -894,7 +977,10 @@ spaceRouter.delete('/col/left', authenticate, async (req: Request, res: Response
         return res.status(200).json({
             success: true,
             data: {
-                object: existingSpace,
+                object: {
+                    ...existingSpace.toObject(),
+                    id: (existingSpace._id as any).toString()
+                },
                 message: "Collaborator left successfully"
             },
             error: null

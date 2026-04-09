@@ -13,13 +13,14 @@ import LoanRepaymentPlan from "../../components/user.portal/views/LoanRepaymentP
 import Profile from "../../components/user.portal/views/Profile";
 import Subscription from "../../components/user.portal/views/Subscription";
 import AIAssistant from "../../components/user.portal/views/AIAssistant";
+import Notifications from "../../components/user.portal/views/Notifications"; // Added missing Notifications import
 
 function UserPortal() {
 
    const [isSideBarOpen, setSideBarOpen] = useState<boolean>(false)
    const { spacetype, spaceid, view } = useParams()
    const [spaceFormToggle, setSpaceFormToggle] = useState(false)
-   
+
    const navigate = useNavigate()
 
    if (!view) {
@@ -48,7 +49,10 @@ function UserPortal() {
             return <Subscription />
          case UserPortalView.AI_ASSISTANT:
             return <AIAssistant />
+         case UserPortalView.NOTIFICATIONS: // Restored the Notifications view case
+            return <Notifications />
          default:
+            // Fallback for any unknown views
             return <h1 className="text-xl text-text-light-primary dark:text-text-dark-primary">Default</h1>
       }
    }
@@ -60,17 +64,17 @@ function UserPortal() {
 
    return (
       <main className="font-main dark bg-bg-light-primary dark:bg-bg-dark-primary">
-         <NavBar 
-            isSideBarOpen={isSideBarOpen} 
-            setSideBarOpen={setSideBarOpen} 
-            view={view as UserPortalView ?? UserPortalView.DASHBOARD} 
+         <NavBar
+            isSideBarOpen={isSideBarOpen}
+            setSideBarOpen={setSideBarOpen}
+            view={view as UserPortalView ?? UserPortalView.DASHBOARD}
             spaceId={spaceid || ""}
             setSpaceFormToggle={setSpaceFormToggle}
          />
 
-         <SideBar 
-            isSideBarOpen={isSideBarOpen} 
-            view={view as UserPortalView ?? UserPortalView.DASHBOARD} 
+         <SideBar
+            isSideBarOpen={isSideBarOpen}
+            view={view as UserPortalView ?? UserPortalView.DASHBOARD}
             spacetype={spacetype || ""}
             spaceid={spaceid || ""}
          />
@@ -82,7 +86,7 @@ function UserPortal() {
          </div>
 
          {
-            spaceFormToggle && <Spaces onCancel={onCancelSpaceAction}/>
+            spaceFormToggle && <Spaces onCancel={onCancelSpaceAction} />
          }
 
       </main>

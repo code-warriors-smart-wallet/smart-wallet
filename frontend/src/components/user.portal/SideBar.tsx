@@ -6,10 +6,11 @@ import { AuthService } from "../../services/auth/auth.service";
 import { MdFileDownload } from "react-icons/md";
 import { SpaceType } from "./views/Spaces";
 import { toStrdSpaceType } from "./../../utils/utils";
-import { RootState } from "@/redux/store/store";
+import { useEffect, useState } from "react";
 import { useSelector } from "react-redux";
+import { RootState } from "../../redux/store/store";
+import { api } from "../../config/api.config";
 import { PlanType } from "../../interfaces/modals";
-import { useState } from "react";
 import Upgrade from "./views/Subscription/Upgrade";
 
 export enum UserPortalView {
@@ -18,7 +19,7 @@ export enum UserPortalView {
    MANAGE_SPACE = "manage space",
    SCHEDULES = "schedules",
    BUDGETS = "budgets",
-   LOAN_REPAYMENT_PLAN="loan repayment plan",
+   LOAN_REPAYMENT_PLAN = "loan repayment plan",
    GOALS = "goals",
    CATEGORIES = "categories",
    NOTIFICATIONS = "notifications",
@@ -31,12 +32,45 @@ export enum UserPortalView {
 }
 
 function SideBar({ isSideBarOpen, view, spacetype, spaceid }: { isSideBarOpen: boolean, view: UserPortalView, spacetype: string, spaceid: string }) {
-   const sideBarStyleSM = isSideBarOpen ? "" : "-translate-x-full"
+   const sideBarStyleSM = isSideBarOpen ? "" : "-translate-x-full";
+   const [unreadCount, setUnreadCount] = useState<number>(0);
+   const userId = useSelector((state: RootState) => state.auth.userId);
 
-   const navigate = useNavigate()
-   const {logOut} = AuthService();
-   const { plan } = useSelector((state: RootState) => state.auth)
+   const navigate = useNavigate();
+   const { logOut } = AuthService();
+   const { plan } = useSelector((state: RootState) => state.auth);
    const [upgradeMessage, setUpgradeMessage] = useState("");
+
+   useEffect(() => {
+      if (view === UserPortalView.NOTIFICATIONS) {
+         localStorage.setItem(`lastNotificationViewTime_${userId}`, Date.now().toString());
+         setUnreadCount(0);
+      } else if (userId) {
+         fetchUnreadCount();
+      }
+   }, [userId, view]);
+
+   const fetchUnreadCount = async () => {
+      try {
+         // Using the new "Transaction Method": identification via token
+         // The backend now identifies the user from the Authorization header.
+         const response = await api.get(`notification/user`);
+         if (response.data.success) {
+            const lastViewTimeStr = localStorage.getItem(`lastNotificationViewTime_${userId}`);
+            const lastViewTime = lastViewTimeStr ? parseInt(lastViewTimeStr) : 0;
+
+            const newUnread = response.data.data.object.filter((n: any) => {
+               const isNew = new Date(n.createdAt).getTime() > lastViewTime;
+               return !n.isRead && isNew;
+            }).length;
+
+            setUnreadCount(newUnread);
+         }
+      } catch (error) {
+         console.error("Error fetching notification count:", error);
+      }
+   };
+
 
    const onClickSideBarItem = (newView: string) => {
       if (plan === PlanType.STARTER && [UserPortalView.LOAN_REPAYMENT_PLAN, UserPortalView.REPORTS, UserPortalView.AI_ASSISTANT].includes(newView as UserPortalView)) {
@@ -70,12 +104,13 @@ function SideBar({ isSideBarOpen, view, spacetype, spaceid }: { isSideBarOpen: b
                   )
                }
                {/* <SideBarItem name={UserPortalView.GOALS} isActive={view == UserPortalView.GOALS} onClick={onClickSideBarItem} Icon={GoalIcon} /> */}
-               {/* <SideBarItem name={UserPortalView.NOTIFICATIONS} isActive={view == UserPortalView.NOTIFICATIONS} pc={5} onClick={onClickSideBarItem} Icon={NotificationIcon} /> */}
+               {/* Fix: Replaced hardcoded count '5' with dynamic unreadCount to show real notification stats */}
+               {<SideBarItem name={UserPortalView.NOTIFICATIONS} isActive={view == UserPortalView.NOTIFICATIONS} pc={unreadCount} onClick={onClickSideBarItem} Icon={NotificationIcon} /> }
                <SideBarItem name={UserPortalView.CATEGORIES} isActive={view == UserPortalView.CATEGORIES} onClick={onClickSideBarItem} Icon={CategoryIcon} />
                <SideBarItem name={UserPortalView.REPORTS} isActive={view == UserPortalView.REPORTS} onClick={onClickSideBarItem} Icon={ReportIcon} />
                <SideBarItem name={UserPortalView.AI_ASSISTANT} isActive={view == UserPortalView.AI_ASSISTANT} onClick={onClickSideBarItem} Icon={AIAssistantIcon} />
                {/* <SideBarItem name={UserPortalView.MANAGE_SPACE} isActive={view == UserPortalView.MANAGE_SPACE} onClick={onClickSideBarItem} Icon={SpaceIcon} /> */}
-               <SidebarDropdownItem name={UserPortalView.SETTINGS} onClick={() => {}} Icon={SettingsIcon}>
+                <SidebarDropdownItem name={UserPortalView.SETTINGS} Icon={SettingsIcon}>
                   <SideBarItem name={UserPortalView.SETTINGS_PROFILE} onClick={onClickSideBarItem} isActive={view == UserPortalView.SETTINGS_PROFILE} />
                   <SideBarItem name={UserPortalView.SETTINGS_BILLING} onClick={onClickSideBarItem} isActive={view == UserPortalView.SETTINGS_BILLING} />
                </SidebarDropdownItem>

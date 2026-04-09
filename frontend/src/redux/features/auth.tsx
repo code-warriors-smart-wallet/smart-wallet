@@ -5,9 +5,10 @@ import { AuthState } from "@/interfaces/redux";
 import { createSlice } from "@reduxjs/toolkit";
 
 const initialState: AuthState = {
+    userId: null,
     email: null,
     username: null,
-    token: null, 
+    token: null,
     isAuthenticated: false,
     OTPAttemptsRemaining: 3,
     currency: null,
@@ -25,8 +26,9 @@ const authSlice = createSlice({
     initialState: initialState, // The initial state of the slice
     // reducer functions are accepting the previous state and the action and return the new state
     reducers: {
-        loginSuccess(state, action: { "payload": { username: string, email: string, token: string, currency: string, plan: PlanType, profileImgUrl: string, role: UserRole, spaces: {id: string, name: string, type: SpaceType}[] } }) {
+        loginSuccess(state, action: { "payload": { userId: string, username: string, email: string, token: string, currency: string, plan: PlanType, role: UserRole, spaces: { id: string, name: string, type: string, isCollaborative: boolean, isOwner: boolean }[] } }) {
             console.log("login success: ", action.payload.token)
+            state.userId = action.payload.userId;
             state.username = action.payload.username;
             state.token = action.payload.token;
             state.email = action.payload.email;

@@ -8,29 +8,34 @@ const port = process.env.API_GATEWAY_PORT || 8080
 
 const app = express();
 
+// Middleware
 app.use(
     cors({
       origin: process.env.FRONTEND_URL || "http://localhost:5173",
       credentials: true,
-    })
+   })
 );
+
+// Explicitly handle preflight requests for all routes
+app.options('*', cors());
+
 
 app.use('/user', createProxyMiddleware({
    target: process.env.USER_SERVICE_URL || "http://localhost:8081",
    changeOrigin: true,
-   pathRewrite: {'^/user': ''}
+   pathRewrite: { '^/user': '' }
 }))
 
 app.use('/finops', createProxyMiddleware({
    target: process.env.FINOPS_SERVICE_URL || "http://localhost:8082",
    changeOrigin: true,
-   pathRewrite: {'^/finops': ''}
+   pathRewrite: { '^/finops': '' }
 }))
 
 app.use('/notification', createProxyMiddleware({
    target: process.env.NOTIFICATION_SERVICE_URL || "http://localhost:8083",
    changeOrigin: true,
-   pathRewrite: {'^/notification': ''}
+   pathRewrite: { '^/notification': '' }
 }))
 
 app.use('/report', createProxyMiddleware({

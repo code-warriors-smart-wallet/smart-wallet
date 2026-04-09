@@ -3,9 +3,11 @@ import bcrypt from 'bcrypt';
 import User from '../models/user';
 import OTP from '../models/otp';
 import jwt from 'jsonwebtoken';
-import { CreateAccountRequest, VerifyOTPRequest, CreateSpaceRequest } from '../interfaces/requests';
+import { CreateAccountRequest, VerifyOTPRequest, CreateSpaceRequest, FacebookLoginRequest } from '../interfaces/requests';
 import { generateOTP } from '../utils/otp.util';
 import { sendRegisterOTPEmail } from '../services/email.service';
+import { createWelcomeNotification } from '../services/notification.service';
+import { initializeUserNotificationPreferences } from '../services/notification-preference.service';
 import Plan, { PlanType } from '../models/plan';
 import Subscription, { SubscriptionStatus } from '../models/subscription';
 import { LoginStatus } from '../interfaces/responses';
@@ -54,6 +56,9 @@ authRouter.post('/register', async (req: Request, res: Response) => {
             enabled: false,
             blockedUntil: null
         });
+
+        // Initialize notification preferences
+        await initializeUserNotificationPreferences(newUser._id);
 
         // Subscribe starter plan by default
         const plan = await Plan.findOne({ name: PlanType.STARTER })
@@ -174,6 +179,9 @@ authRouter.post('/verify-otp', async (req: Request, res: Response) => {
             data: { message: 'OTP verified successfully', object: savedUser },
             error: null
         });
+
+        // Create welcome notification (sends both in-app and email)
+        await createWelcomeNotification(savedUser?._id?.toString() || '', savedUser?.username || 'User');
 
     } catch (error) {
         const errorMessage = error instanceof Error ? error.message : 'Unknown error';
@@ -352,6 +360,9 @@ authRouter.post("/google", async (req: Request, res: Response) => {
             blockedUntil: null,
         });
 
+        // Initialize notification preferences
+        await initializeUserNotificationPreferences(existingUser._id);
+
         // Subscribe starter plan by default
         const plan = await Plan.findOne({ name: PlanType.STARTER })
         const now = Date.now();
@@ -415,8 +426,8 @@ authRouter.post("/google", async (req: Request, res: Response) => {
     if (plan!.name !== PlanType.STARTER && subscription!.endDate < new Date()) {
         plan = await Plan.findOne({ name: PlanType.STARTER })
     }
-    const accessToken = generateAccessToken({ id: existingUser.toString(), role: existingUser.role })
-    const refreshToken = generateRefreshToken({ id: existingUser.toString(), role: existingUser.role })
+    const accessToken = generateAccessToken({ id: existingUser._id.toString(), role: existingUser.role })
+    const refreshToken = generateRefreshToken({ id: existingUser._id.toString(), role: existingUser.role })
     existingUser.refreshToken = refreshToken
     const updatedUser = await User.findByIdAndUpdate(
         existingUser._id,
@@ -439,6 +450,7 @@ authRouter.post("/google", async (req: Request, res: Response) => {
         success: true,
         data: {
             object: {
+                _id: existingUser._id,
                 username: existingUser.username,
                 email: existingUser.email,
                 currency: existingUser.currency,
@@ -452,8 +464,159 @@ authRouter.post("/google", async (req: Request, res: Response) => {
         },
         error: null
     });
+
+    if (isNewUser) {
+        // Create welcome notification (sends both in-app and email)
+        await createWelcomeNotification(existingUser._id.toString(), existingUser.username);
+    }
     return;
 })
+
+authRouter.post("/facebook", async (req: Request, res: Response) => {
+    const { token, currency } = req.body;
+
+    const facebookRes = await fetch(`https://graph.facebook.com/me?fields=id,name,email&access_token=${token}`);
+    const facebookUser = await facebookRes.json();
+    
+    if (facebookUser.error) {
+        res.status(401).json({
+            success: false,
+            error: { message: 'Facebook authentication failed' },
+            data: null
+        });
+        return;
+    }
+
+    const { email, name } = facebookUser;
+    
+    // Check if user already exists
+    let existingUser = await User.findOne({ email });
+    let isNewUser = false;
+
+    if (!existingUser) {
+        existingUser = await User.create({
+            email,
+            username: name,
+            password: null, // Social logins don't have passwords
+            currency: currency || null,
+            enabled: true,
+            blockedUntil: null,
+        });
+
+        // Initialize notification preferences
+        await initializeUserNotificationPreferences(existingUser._id);
+
+        // Default plan and subscription logic
+        const plan = await Plan.findOne({ name: PlanType.STARTER });
+        const now = Date.now();
+        await Subscription.create({
+            userId: existingUser._id,
+            planId: plan!._id,
+            paymentId: null,
+            startDate: now,
+            endDate: now,
+            lastBillingDate: now,
+            nextBillingDate: now,
+            status: SubscriptionStatus.ACTIVE,
+            autoRenew: false
+        });
+
+        await Space.create({
+            ownerId: existingUser._id,
+            type: SpaceType.CASH,
+            isDefault: true,
+            name: "cash in hand"
+        });
+
+        isNewUser = true;
+    }
+
+    if (existingUser.blockedUntil && existingUser.blockedUntil > new Date()) {
+        const remainingTime = existingUser.blockedUntil.getTime() - Date.now();
+        const minutesRemaining = Math.ceil(remainingTime / (1000 * 60));
+        res.status(429).json({
+            success: false,
+            error: null,
+            data: {
+                message: `Maximum login attempts reached. Please try again after ${minutesRemaining} minutes`,
+                object: {
+                    username: existingUser.username,
+                    email: existingUser.email,
+                    status: LoginStatus.BLOCKED
+                }
+            }
+        });
+        return;
+    }
+
+    // Automatically enable account for social login if previously unverified
+    if (!existingUser.enabled) {
+        existingUser.enabled = true;
+        await existingUser.save();
+        
+        // Ensure default space is created (usually done during OTP verification)
+        const existingSpace = await Space.findOne({ ownerId: existingUser._id });
+        if (!existingSpace) {
+            await Space.create({
+                ownerId: existingUser._id,
+                type: SpaceType.CASH,
+                isDefault: true,
+                name: "cash in hand"
+            });
+        }
+        
+        isNewUser = true; 
+    }
+
+    const subscription = await Subscription.findOne({ userId: existingUser._id, status: SubscriptionStatus.ACTIVE });
+    let plan = await Plan.findOne({ _id: subscription!.planId });
+    if (plan!.name !== PlanType.STARTER && subscription!.endDate < new Date()) {
+        plan = await Plan.findOne({ name: PlanType.STARTER });
+    }
+
+    const accessToken = generateAccessToken({ id: existingUser._id.toString(), role: existingUser.role });
+    const refreshToken = generateRefreshToken({ id: existingUser._id.toString(), role: existingUser.role });
+    
+    existingUser.refreshToken = refreshToken;
+    const updatedUser = await User.findByIdAndUpdate(
+        existingUser._id,
+        { refreshToken },
+        { new: true }
+    ).select('-password');
+
+    res.cookie('refreshToken', updatedUser!.refreshToken, {
+        httpOnly: true,
+        secure: false, // Set to true in production
+        sameSite: 'strict',
+        path: '/user/auth/',
+    });
+
+    const spaces = await getSpacesByUser(existingUser._id.toString());
+
+    res.status(200).json({
+        success: true,
+        data: {
+            object: {
+                _id: existingUser._id,
+                username: existingUser.username,
+                email: existingUser.email,
+                currency: existingUser.currency,
+                plan: plan!.name,
+                accessToken: accessToken,
+                role: existingUser.role,
+                spaces: spaces
+            },
+            message: isNewUser ? 'Select your currency' : 'Login successful'
+        },
+        error: null
+    });
+
+    if (isNewUser) {
+        // Create welcome notification (sends both in-app and email)
+        await createWelcomeNotification(existingUser._id.toString(), existingUser.username);
+    }
+    return;
+});
 
 authRouter.post("/login", async (req: Request, res: Response) => {
     try {
@@ -535,6 +698,7 @@ authRouter.post("/login", async (req: Request, res: Response) => {
                 success: true,
                 data: {
                     object: {
+                        _id: user._id,
                         username: user.username,
                         email: user.email,
                         currency: user.currency,
@@ -578,23 +742,25 @@ authRouter.post('/refresh_token', async (req: Request, res: Response) => {
     const token = req.cookies?.refreshToken;
     // console.log("req.cookies: ", req.cookies)
     if (!token) {
-        // console.log("Refresh token not found in cookie!")
+        console.log("[AUTH] Refresh token not found in cookies!");
         res.sendStatus(401);
         return;
     };
+    
+    console.log("[AUTH] Attempting refresh with token snippet:", token.substring(0, 10) + "...");
     const storedToken = await User.findOne({ refreshToken: token });
     if (!storedToken) {
-        // console.log("Refresh token not found in db!")
+        console.log("[AUTH] Refresh token not found in database for this value!");
         res.sendStatus(401);
         return;
     }
 
     jwt.verify(token, REFRESH_TOKEN_SECRET, async (err: any, user: any) => {
         if (err) {
-            // console.log("Refresh token expired!")
+            console.log("[AUTH] Refresh token verification failed:", err.message);
             return res.sendStatus(401)
         };
-        // console.log("Refresh token valid. user id: ", user.id)
+        console.log("[AUTH] Refresh token valid for user ID:", user.id);
         const storedUser = await User.findOne({ _id: user.id });
         if (!storedUser || !storedUser.enabled) {
             return res.status(401).send("no user found or disbaled")
@@ -613,6 +779,7 @@ authRouter.post('/refresh_token', async (req: Request, res: Response) => {
             success: true,
             data: {
                 object: {
+                    _id: storedUser._id,
                     username: storedUser.username,
                     email: storedUser.email,
                     currency: storedUser.currency,

@@ -587,12 +587,12 @@ reportRouter.post('/income-vs-expense', authenticate, async (req: Request, res: 
     };
 
     if (format === "PDF") {
-      const html = generateIncomeVsExpenseHTML(reportData, fromDate, toDate, Array.from(spacesNames));
+      const html = generateIncomeVsExpenseHTML(reportData, fromDate, toDate, new Set(Array.from(spacesNames)));
       const pdfBuffer = await getPdfFromHTML(html);
       res.set({ 'Content-Type': 'application/pdf', 'Content-Length': pdfBuffer.length.toString(), "Content-Disposition": `attachment; filename="Income_vs_Expense_${fromDate}_${toDate}.pdf"` });
       res.status(200).send(Buffer.from(pdfBuffer));
     } else if (format === "EXCEL") {
-      const workbook = createIncomeVsExpenseSheet(reportData, fromDate, toDate, Array.from(spacesNames));
+      const workbook = createIncomeVsExpenseSheet(reportData, fromDate, toDate, new Set(Array.from(spacesNames)));
       const buffer = await workbook.xlsx.writeBuffer();
       res.set({ 'Content-Type': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', "Content-Disposition": `attachment; filename="Income_vs_Expense_${fromDate}_${toDate}.xlsx"` });
       res.status(200).send(buffer);
@@ -650,12 +650,12 @@ reportRouter.post('/budget-utilization', authenticate, async (req: Request, res:
     });
 
     if (format === "PDF") {
-      const html = generateBudgetUtilizationHTML(budgets, fromDate, toDate, Array.from(spacesNames));
+      const html = generateBudgetUtilizationHTML(budgets, fromDate, toDate, new Set(Array.from(spacesNames)));
       const pdfBuffer = await getPdfFromHTML(html);
       res.set({ 'Content-Type': 'application/pdf', 'Content-Length': pdfBuffer.length.toString(), "Content-Disposition": `attachment; filename="Budget_Utilization.pdf"` });
       res.status(200).send(Buffer.from(pdfBuffer));
     } else if (format === "EXCEL") {
-      const workbook = createBudgetUtilizationSheet(budgets, fromDate, toDate, Array.from(spacesNames));
+      const workbook = createBudgetUtilizationSheet(budgets, fromDate, toDate, new Set(Array.from(spacesNames)));
       const buffer = await workbook.xlsx.writeBuffer();
       res.set({ 'Content-Type': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', "Content-Disposition": `attachment; filename="Budget_Utilization.xlsx"` });
       res.status(200).send(buffer);
@@ -697,12 +697,12 @@ reportRouter.post('/loan-repayment-summary', authenticate, async (req: Request, 
     });
 
     if (format === "PDF") {
-      const html = generateLoanRepaymentSummaryHTML(summaryData, toDate, Array.from(spacesNames));
+      const html = generateLoanRepaymentSummaryHTML(summaryData, toDate, new Set(Array.from(spacesNames)));
       const pdfBuffer = await getPdfFromHTML(html);
       res.set({ 'Content-Type': 'application/pdf', 'Content-Length': pdfBuffer.length.toString(), "Content-Disposition": `attachment; filename="Loan_Repayment_Summary.pdf"` });
       res.status(200).send(Buffer.from(pdfBuffer));
     } else if (format === "EXCEL") {
-      const workbook = createLoanRepaymentSummarySheet(summaryData, toDate, Array.from(spacesNames));
+      const workbook = createLoanRepaymentSummarySheet(summaryData, toDate, new Set(Array.from(spacesNames)));
       const buffer = await workbook.xlsx.writeBuffer();
       res.set({ 'Content-Type': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', "Content-Disposition": `attachment; filename="Loan_Repayment_Summary.xlsx"` });
       res.status(200).send(buffer);

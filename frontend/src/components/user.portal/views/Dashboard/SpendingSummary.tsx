@@ -63,11 +63,11 @@ function SpendingSummary({
     return (
         <section className="rounded my-3 py-2 px-3 border border-border-light-primary dark:border-border-dark-primary *:text-text-light-primary *:dark:text-text-dark-primary">
             {/* title */}
-            <div className="rounded flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2">
+            <div className="rounded flex justify-between items-center">
                 <span className="flex gap-3 items-center text-xl font-bold"><FaChartPie />Spending summary</span>
-                <div className="flex flex-wrap items-center gap-x-2 gap-y-2">
+                <div className="flex items-center">
                     <select
-                        className="py-2 px-3 border-2 border-border-light-primary dark:border-border-dark-primary rounded-md bg-bg-light-primary dark:bg-bg-dark-primary text-text-light-primary dark:text-text-dark-primary focus:border-primary text-sm"
+                        className="w-full mr-3 py-2 px-3 border-2 border-border-light-primary dark:border-border-dark-primary rounded-md bg-bg-light-primary dark:bg-bg-dark-primary text-text-light-primary dark:text-text-dark-primary focus:border-primary text-sm"
                         name="type"
                         value={filterType}
                         onChange={(e) => setFilterType(e.target.value as SpendingSummaryFilterOptions)}
@@ -78,16 +78,16 @@ function SpendingSummary({
                             })
                         }
                     </select>
-                    <label className="text-text-light-primary dark:text-text-dark-primary">From:</label>
+                    <label className="text-text-light-primary dark:text-text-dark-primary mr-2">From:</label>
                     <Input
                         name="date"
                         type="date"
                         placeholder="Enter amount"
                         value={startDate}
                         onChange={(e) => setstartDate(e.target.value)}
-                        className={`pt-2 pb-2 py-1 mt-0 mb-0 ${filterType != SpendingSummaryFilterOptions.CUSTOM ? "opacity-70 pointer-events-none" : "opacity-100 pointer-events-auto"}`}
+                        className={`pt-2 pb-2 py-1 mt-0 mb-0 mr-3 ${filterType != SpendingSummaryFilterOptions.CUSTOM ? "opacity-70 pointer-events-none" : "opacity-100 pointer-events-auto"}`}
                     />
-                    <label className="text-text-light-primary dark:text-text-dark-primary">To:</label>
+                    <label className="text-text-light-primary dark:text-text-dark-primary mr-2">To:</label>
                     <Input
                         name="date"
                         type="date"
@@ -95,7 +95,7 @@ function SpendingSummary({
                         value={endDate}
                         id="toDate"
                         onChange={(e) => setendDate(e.target.value)}
-                        className={`pt-2 pb-2 py-1 mt-0 mb-0 ${filterType != SpendingSummaryFilterOptions.CUSTOM ? "opacity-70 pointer-events-none" : "opacity-100 pointer-events-auto"}`}
+                        className={`pt-2 pb-2 py-1 mt-0 mb-0 mr-3 ${filterType != SpendingSummaryFilterOptions.CUSTOM ? "opacity-70 pointer-events-none" : "opacity-100 pointer-events-auto"}`}
                     />
                     <Button
                         text="Apply"

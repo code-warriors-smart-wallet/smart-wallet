@@ -1,6 +1,6 @@
 import Button from "../../Button";
 import Input from "../../Input";
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { CategoryInfo, PlanType, TransactionInfo } from "../../../interfaces/modals"
 import { toast } from 'react-toastify';
 import { toStrdSpaceType } from "../../../utils/utils";
@@ -9,9 +9,10 @@ import { useParams } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import { RootState } from "../../../redux/store/store";
 import { CategoryService } from "../../../services/category.service";
-import { TransactionService } from "../../../services/transaction.service";
-import { FaArrowAltCircleDown, FaArrowAltCircleUp, FaCreditCard, FaEdit, FaMoneyBillWave, FaTimes, FaTrash, FaUniversity, FaBullseye, FaInfoCircle } from "react-icons/fa"
+import { ImportRow, TransactionService } from "../../../services/transaction.service";
+import { FaArrowAltCircleDown, FaArrowAltCircleUp, FaCreditCard, FaDownload, FaEdit, FaFileImport, FaMoneyBillWave, FaTimes, FaTrash, FaUniversity, FaBullseye, FaInfoCircle } from "react-icons/fa"
 import TransactionList from "./Transactions/TransactionList";
+import ImportModal from "./Transactions/ImportModal";
 import { setLoading, setPage } from "../../../redux/features/transaction";
 import Loading from "../../../components/Loading";
 
@@ -192,8 +193,10 @@ function Transactions() {
    const [editId, setEditId] = useState<string | null>(null)
    const [categories, setCategories] = useState<CategoryInfo[]>([])
    const spaceInfo = transactionTypesInfo.find(info => toStrdSpaceType(activeSpaceType) === info.spaceType) || null
-   const { pageLimit, createTransaction, editTransaction, deleteTransaction, getTransactionsByUser } = TransactionService();
+   const { pageLimit, createTransaction, editTransaction, deleteTransaction, getTransactionsByUser, importTransactions } = TransactionService();
    const { transactions, loading, page, total } = useSelector((state: RootState) => state.transaction)
+   const fileInputRef = useRef<HTMLInputElement>(null)
+   const [importRows, setImportRows] = useState<ImportRow[] | null>(null)
 
    const { getCategoriesBySpace, getCategories } = CategoryService();
    const dispatch = useDispatch();
@@ -389,6 +392,82 @@ function Transactions() {
 
    console.log(inputs)
 
+   const parseCSV = (text: string): ImportRow[] => {
+      // Normalise line endings
+      const lines = text.replace(/\r\n/g, '\n').replace(/\r/g, '\n').split('\n').filter(l => l.trim() !== '');
+      if (lines.length < 2) {
+         toast.error('CSV must have a header row and at least one data row');
+         return [];
+      }
+
+      // Parse a single CSV line respecting quoted fields
+      const parseLine = (line: string): string[] => {
+         const fields: string[] = [];
+         let current = '';
+         let inQuotes = false;
+         for (let i = 0; i < line.length; i++) {
+            const ch = line[i];
+            if (ch === '"') {
+               if (inQuotes && line[i + 1] === '"') { current += '"'; i++; }
+               else { inQuotes = !inQuotes; }
+            } else if (ch === ',' && !inQuotes) {
+               fields.push(current.trim());
+               current = '';
+            } else {
+               current += ch;
+            }
+         }
+         fields.push(current.trim());
+         return fields;
+      };
+
+      const headers = parseLine(lines[0]).map(h => h.toLowerCase().trim());
+      const required = ['type', 'amount', 'space', 'pcategory', 'scategory', 'date'];
+      const missing = required.filter(r => !headers.includes(r));
+      if (missing.length > 0) {
+         toast.error(`CSV is missing required columns: ${missing.join(', ')}`);
+         return [];
+      }
+
+      const idx = (col: string) => headers.indexOf(col);
+
+      return lines.slice(1).map(line => {
+         const vals = parseLine(line);
+         const get = (col: string) => vals[idx(col)] ?? '';
+         return {
+            type: get('type'),
+            amount: get('amount'),
+            spaceName: get('space'),
+            fromSpaceName: get('from_space'),
+            toSpaceName: get('to_space'),
+            pcategoryName: get('pcategory'),
+            scategoryName: get('scategory'),
+            date: get('date'),
+            note: get('note'),
+         } satisfies ImportRow;
+      });
+   };
+
+   const onFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+      const file = e.target.files?.[0];
+      if (!file) return;
+      // Reset so the same file can be re-selected after closing the modal
+      e.target.value = '';
+
+      if (!file.name.endsWith('.csv')) {
+         toast.error('Please select a .csv file');
+         return;
+      }
+
+      const reader = new FileReader();
+      reader.onload = (evt) => {
+         const text = evt.target?.result as string;
+         const parsed = parseCSV(text);
+         if (parsed.length > 0) setImportRows(parsed);
+      };
+      reader.readAsText(file);
+   };
+
    if (loading) return <Loading/>
 
    return (
@@ -431,6 +510,41 @@ function Transactions() {
                   )
                }
 
+               {/* Hidden file input for CSV import */}
+               <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept=".csv"
+                  className="hidden"
+                  onChange={onFileSelect}
+               />
+               <div className="flex flex-col items-center gap-0.5">
+                  <Button
+                     text={<span className="flex items-center gap-1.5"><FaFileImport size={13} /> Import CSV</span>}
+                     className="max-w-fit bg-transparent border border-border-light-primary dark:border-border-dark-primary"
+                     onClick={() => fileInputRef.current?.click()}
+                  />
+                  <button
+                     className="flex items-center gap-1 text-[11px] text-primary hover:underline"
+                     onClick={() => {
+                        const csv = [
+                           'type,amount,space,from_space,to_space,pcategory,scategory,date,note',
+                           'EXPENSE,1250.00,My Cash,My Cash,,Food & Drinks,Groceries,2025-01-15,Weekly groceries',
+                           'INCOME,5000.00,My Bank,,My Bank,Income,Salary,2025-01-16,January salary',
+                           'INTERNAL_TRANSFER,500.00,My Cash,My Cash,My Savings,Miscellaneous,transfer,2025-01-17,Transfer',
+                        ].join('\n');
+                        const blob = new Blob([csv], { type: 'text/csv' });
+                        const url = URL.createObjectURL(blob);
+                        const a = document.createElement('a');
+                        a.href = url;
+                        a.download = 'transaction_import_template.csv';
+                        a.click();
+                        URL.revokeObjectURL(url);
+                     }}
+                  >
+                     <FaDownload size={9} /> template
+                  </button>
+               </div>
                {
                   (toStrdSpaceType(spacetype).startsWith("LOAN") &&
                   transactions?.filter(t => t.loanRepaymentPlanId != null)?.length == 0) ? <></> :
@@ -966,6 +1080,22 @@ function Transactions() {
             categories={categories}
             onClick={onView}
          />
+
+         {/* CSV import modal */}
+         {importRows !== null && (
+            <ImportModal
+               rows={importRows}
+               spaces={spaces}
+               categories={categories}
+               onClose={() => setImportRows(null)}
+               onImportComplete={() => {
+                  dispatch(setLoading({ loading: true }));
+                  getTransactionsByUser(spaceid || "", pageLimit, (page - 1) * pageLimit)
+                     .finally(() => dispatch(setLoading({ loading: false })));
+               }}
+               importTransactions={importTransactions}
+            />
+         )}
       </>
    )
 }

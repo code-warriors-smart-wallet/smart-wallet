@@ -8,6 +8,24 @@ import { useState } from 'react';
 import { getSuccess } from '../redux/features/transaction';
 import { BudgetService } from './budget.service';
 
+export interface ImportRow {
+    type: string;
+    amount: string;
+    spaceName: string;
+    fromSpaceName: string;
+    toSpaceName: string;
+    pcategoryName: string;
+    scategoryName: string;
+    date: string;
+    note: string;
+}
+
+export interface ImportResult {
+    imported: number;
+    failed: { row: number; reason: string; data: ImportRow }[];
+    total: number;
+}
+
 export function TransactionService() {
     const token = useSelector((state: RootState) => state.auth.token)
     const dispatch = useDispatch();
@@ -457,7 +475,22 @@ export function TransactionService() {
         }
     }
 
-    return { pageLimit, createTransaction, editTransaction, deleteTransaction, getTransactionsByUser, getTransactionById, searchTransactions };
+    async function importTransactions(rows: ImportRow[]): Promise<ImportResult | null> {
+        try {
+            const response = await api.post('finops/transaction/import', { rows }, {
+                headers: { "authorization": `Bearer ${token}` }
+            });
+            if (response.data.success) {
+                return response.data.data.object as ImportResult;
+            }
+            return null;
+        } catch (error) {
+            processError(error);
+            return null;
+        }
+    }
+
+    return { pageLimit, createTransaction, editTransaction, deleteTransaction, getTransactionsByUser, getTransactionById, searchTransactions, importTransactions };
 }
 
 function processError(error: unknown): void {

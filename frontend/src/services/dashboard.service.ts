@@ -18,6 +18,13 @@ export function DashboardService() {
                     }
                 });
             }
+            else if (spacetype == SpaceType.CREDIT_CARD) {
+                response = await api.get(`report/dashboard/credit-card/${spaceid}/${from}/${to}`, {
+                    headers: {
+                        "authorization": `Bearer ${token}`
+                    }
+                });
+            }
             console.log("dash", response?.data)
             if (response?.data.success) {
                 return response?.data.data.object

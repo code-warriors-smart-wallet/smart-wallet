@@ -195,7 +195,7 @@ function Transactions() {
    const { pageLimit, createTransaction, editTransaction, deleteTransaction, getTransactionsByUser } = TransactionService();
    const { transactions, loading, page, total } = useSelector((state: RootState) => state.transaction)
 
-   const { getCategories } = CategoryService();
+   const { getCategoriesBySpace } = CategoryService();
    const dispatch = useDispatch();
 
    const [allowedParentCategories, setAllowedParentCategories] = useState<any[]>([])
@@ -359,7 +359,7 @@ function Transactions() {
       setActiveSpaceType(spacetype)
       dispatch(setLoading({ loading: true }))
 
-      getCategories(toStrdSpaceType(activeSpaceType))
+      getCategoriesBySpace(spaceid || "")
          .then((res) => setCategories(res))
          .catch((err) => setCategories([]))
 

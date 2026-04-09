@@ -831,12 +831,12 @@ dashboardRouter.get('/loan-borrowed/:spaceid', authenticate, async (req: Request
     }
 })
 
-dashboardRouter.get('/credit-card/:spaceid', authenticate, async (req: Request, res: Response) => {
+dashboardRouter.get('/credit-card/:spaceid/:from/:to', authenticate, async (req: Request, res: Response) => {
     try {
         const userId: string = (req as any).user.id;
-        const { spaceid } = req.params
+        const { spaceid, from, to } = req.params
 
-        if (Array.isArray(spaceid)) {
+        if (Array.isArray(spaceid) || Array.isArray(from) || Array.isArray(to)) {
             return res.status(400).json({ error: "Invalid parameters" });
         }
 
@@ -900,6 +900,118 @@ dashboardRouter.get('/credit-card/:spaceid', authenticate, async (req: Request, 
 
         ])
 
+        const spendingByPCategory = await Transaction.aggregate([
+            // Filter transactions first
+            {
+                $match: {
+                    $and: [
+                        { userId: { $eq: new ObjectId(userId) } },
+                        {
+                            $or: [
+                                { to: new ObjectId(spaceid) },
+                                { from: new ObjectId(spaceid) },
+                            ],
+                        },
+                        { type: { $eq: TransactionType.BALANCE_INCREASE } }
+                    ]
+                }
+            },
+            // Group by category IDs
+            {
+                $group: {
+                    _id: "$pcategory",
+                    totalAmount: { $sum: "$amount" },
+                },
+            },
+            // Lookup to get parent category names
+            {
+                $lookup: {
+                    from: "cats", // name of your categories collection
+                    localField: "_id", // the grouped pcategory ID
+                    foreignField: "_id", // match with categories _id
+                    as: "categoryData",
+                },
+            },
+            { $unwind: { path: "$categoryData", preserveNullAndEmptyArrays: true } },
+            // Project clean result
+            {
+                $project: {
+                    _id: 0,
+                    parentCategory: "$categoryData.parentCategory",
+                    color: "$categoryData.color",
+                    y: { $toDouble: "$totalAmount" }, // convert Decimal128 to number
+                },
+            },
+            {
+                $sort: { parentCategory: 1 }, // ascending by name
+            },
+        ])
+
+        const spendingByCategory = await Transaction.aggregate([
+            // Filter transactions first
+            {
+                $match: {
+                    $and: [
+                        { userId: { $eq: new ObjectId(userId) } },
+                        {
+                            $or: [
+                                { to: new ObjectId(spaceid) },
+                                { from: new ObjectId(spaceid) },
+                            ],
+                        },
+                        { type: { $eq: TransactionType.BALANCE_INCREASE } }
+                    ]
+                } },
+            // Group by category IDs
+            {
+                $group: {
+                    _id: { pcategory: "$pcategory", scategory: "$scategory" },
+                    totalAmount: { $sum: "$amount" }
+                }
+            },
+            // Lookup parent category
+            {
+                $lookup: {
+                    from: "cats",              // collection name
+                    localField: "_id.pcategory",     // ID in transactions
+                    foreignField: "_id",             // ID in categories collection
+                    as: "parentCategory"
+                }
+            },
+            {
+                $unwind: { path: "$parentCategory", preserveNullAndEmptyArrays: true }
+            },
+            // Lookup subcategory inside the parent
+            {
+                $addFields: {
+                    subCategoryName: {
+                        $arrayElemAt: [
+                            {
+                                $filter: {
+                                    input: "$parentCategory.subCategories",
+                                    cond: { $eq: ["$$this._id", "$_id.scategory"] }
+                                }
+                            },
+                            0
+                        ]
+                    }
+                }
+            },
+            // Project clean result
+            {
+                $project: {
+                    _id: 0,
+                    parentCategory: "$parentCategory.parentCategory",
+                    color: "$subCategoryName.color",
+                    subCategory: "$subCategoryName.name",
+                    y: { $toDouble: "$totalAmount" }
+                }
+            },
+            {
+                $sort: { parentCategory: 1 } // ascending by name
+            }
+        ])
+
         const recentTransactions = await Transaction.find({
             $and: [
                 { userId: userId },
@@ -921,6 +1033,10 @@ dashboardRouter.get('/credit-card/:spaceid', authenticate, async (req: Request, 
             data: {
                 object: {
                     spaceInfo: spaceInfo,
+                    spendingSummary: {
+                        spendingByPCategory: spendingByPCategory,
+                        spendingByCategory: spendingByCategory,
+                    },
                     totalBalance: totalBalance,
                     totalPayment: totalPayment,
                     recentTransactions: recentTransactions

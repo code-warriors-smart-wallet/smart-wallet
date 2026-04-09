@@ -78,16 +78,16 @@ function SpendingSummary({
                             })
                         }
                     </select>
-                    <label className="text-text-light-primary dark:text-text-dark-primary">From:</label>
+                    <label className="text-text-light-primary dark:text-text-dark-primary mr-2">From:</label>
                     <Input
                         name="date"
                         type="date"
                         placeholder="Enter amount"
                         value={startDate}
                         onChange={(e) => setstartDate(e.target.value)}
-                        className={`pt-2 pb-2 py-1 ml-2 mr-4 mt-0 mb-0 ${filterType != SpendingSummaryFilterOptions.CUSTOM ? "opacity-70 pointer-events-none" : "opacity-100 pointer-events-auto"}`}
+                        className={`pt-2 pb-2 py-1 mt-0 mb-0 mr-3 ${filterType != SpendingSummaryFilterOptions.CUSTOM ? "opacity-70 pointer-events-none" : "opacity-100 pointer-events-auto"}`}
                     />
-                    <label className="text-text-light-primary dark:text-text-dark-primary">To:</label>
+                    <label className="text-text-light-primary dark:text-text-dark-primary mr-2">To:</label>
                     <Input
                         name="date"
                         type="date"
@@ -95,11 +95,11 @@ function SpendingSummary({
                         value={endDate}
                         id="toDate"
                         onChange={(e) => setendDate(e.target.value)}
-                        className={`pt-2 pb-2 py-1 ml-2 mr-4 mt-0 mb-0  ${filterType != SpendingSummaryFilterOptions.CUSTOM ? "opacity-70 pointer-events-none" : "opacity-100 pointer-events-auto"}`}
+                        className={`pt-2 pb-2 py-1 mt-0 mb-0 mr-3 ${filterType != SpendingSummaryFilterOptions.CUSTOM ? "opacity-70 pointer-events-none" : "opacity-100 pointer-events-auto"}`}
                     />
                     <Button
                         text="Apply"
-                        className={`max-w-fit pt-2 pb-2 ml-2 ${filterType != SpendingSummaryFilterOptions.CUSTOM ? "opacity-70 pointer-events-none" : "opacity-100 pointer-events-auto"}`}
+                        className={`max-w-fit pt-2 pb-2 ${filterType != SpendingSummaryFilterOptions.CUSTOM ? "opacity-70 pointer-events-none" : "opacity-100 pointer-events-auto"}`}
                         onClick={() => onDateRangeChange(startDate, endDate)}
                     />
                 </div>
@@ -137,10 +137,10 @@ function SpendingSummary({
                     {
                         moneyOut == 0 && <div className="w-full h-full grid place-items-center text-sm text-text-light-secondary dark:text-text-dark-secondary">No records found.</div>
                     }
-                    <div className="flex items-center justify-center gap-3">
+                    <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
                         <svg
-                            width={200}
-                            height={300}
+                            viewBox="0 0 200 300"
+                            style={{ width: '100%', maxWidth: 200 }}
                             ref={chartRef}
                         >
                             <VictoryPie
@@ -189,10 +189,10 @@ function SpendingSummary({
                     {
                         moneyOut == 0 && <div className="w-full h-full grid place-items-center text-sm text-text-light-secondary dark:text-text-dark-secondary">No records found..</div>
                     }
-                    <div className="flex items-center justify-center gap-3">
+                    <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
                         <svg
-                            width={200}
-                            height={300}
+                            viewBox="0 0 200 300"
+                            style={{ width: '100%', maxWidth: 200 }}
                         >
                             <VictoryPie
                                 standalone={false}
@@ -232,10 +232,10 @@ function SpendingSummary({
                             {
                                 incomeByUser.length == 0 && <div className="w-full h-full grid place-items-center text-sm text-text-light-secondary dark:text-text-dark-secondary">No records found.</div>
                             }
-                            <div className="flex items-center justify-center gap-3">
+                            <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
                                 <svg
-                                    width={200}
-                                    height={300}
+                                    viewBox="0 0 200 300"
+                                    style={{ width: '100%', maxWidth: 200 }}
                                     ref={chartRef}
                                 >
                                     <VictoryPie
@@ -274,10 +274,10 @@ function SpendingSummary({
                             {
                                 spendingByUser.length == 0 && <div className="w-full h-full grid place-items-center text-sm text-text-light-secondary dark:text-text-dark-secondary">No records found.</div>
                             }
-                            <div className="flex items-center justify-center gap-3">
+                            <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
                                 <svg
-                                    width={200}
-                                    height={300}
+                                    viewBox="0 0 200 300"
+                                    style={{ width: '100%', maxWidth: 200 }}
                                     ref={chartRef}
                                 >
                                     <VictoryPie

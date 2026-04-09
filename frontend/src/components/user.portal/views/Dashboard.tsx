@@ -188,8 +188,8 @@ function DashBoard() {
       loading || !summary ? <Loading/> : (
          <>
             {/* sub header */}
-            <div className="flex justify-between items-center">
-               <h1 className="text-xl text-text-light-primary dark:text-text-dark-primary flex items-center">
+            <div className="flex flex-wrap justify-between items-center gap-2">
+               <h1 className="text-xl text-text-light-primary dark:text-text-dark-primary flex flex-wrap items-center gap-1">
                   Dashboard
                   <span
                            className="max-w-fit ml-3 pt-2 pb-1 pl-1 pr-1 uppercase bg-transparent border border-2 border-primary text-xs rounded cursor-pointer"

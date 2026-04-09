@@ -48,8 +48,11 @@ export const createNotificationHandler = async (req: Request, res: Response): Pr
 
 export const getUserNotificationsHandler = async (req: Request, res: Response): Promise<void> => {
     try {
-        const { userId } = req.params;
-        console.log(`[NOTIFICATION-SERVICE] Fetching notifications for user: ${userId}`);
+        // Now using req.user (populated by the authenticate middleware)
+        // instead of getting it from req.params.
+        const userId = (req as any).user.userId;
+        
+        console.log(`[NOTIFICATION-SERVICE] Fetching notifications for authenticated user: ${userId}`);
         const notifications = await Notification.find({ userId }).sort({ createdAt: -1 });
         console.log(`[NOTIFICATION-SERVICE] Found ${notifications.length} notifications for user ${userId}`);
 
@@ -73,8 +76,11 @@ export const getUserNotificationsHandler = async (req: Request, res: Response): 
 export const markNotificationAsReadHandler = async (req: Request, res: Response): Promise<void> => {
     try {
         const { id } = req.params;
-        const updatedNotification = await Notification.findByIdAndUpdate(
-            id,
+        const userId = (req as any).user.userId;
+
+        // Find the notification and ensure it belongs to the authenticated user
+        const updatedNotification = await Notification.findOneAndUpdate(
+            { _id: id, userId: userId }, // Both notification ID and User ID must match
             { isRead: true },
             { new: true }
         );
@@ -82,7 +88,7 @@ export const markNotificationAsReadHandler = async (req: Request, res: Response)
         if (!updatedNotification) {
             res.status(404).json({
                 success: false,
-                error: { message: 'Notification not found' },
+                error: { message: 'Notification not found or unauthorized' },
                 data: null
             });
             return;
@@ -109,13 +115,15 @@ export const markNotificationAsReadHandler = async (req: Request, res: Response)
 export const deleteNotificationHandler = async (req: Request, res: Response): Promise<void> => {
     try {
         const { id } = req.params;
+        const userId = (req as any).user.userId;
 
-        const deletedNotification = await Notification.findByIdAndDelete(id);
+        // Find the notification and ensure it belongs to the authenticated user before deleting
+        const deletedNotification = await Notification.findOneAndDelete({ _id: id, userId: userId });
 
         if (!deletedNotification) {
             res.status(404).json({
                 success: false,
-                error: { message: 'Notification not found' },
+                error: { message: 'Notification not found or unauthorized' },
                 data: null
             });
             return;

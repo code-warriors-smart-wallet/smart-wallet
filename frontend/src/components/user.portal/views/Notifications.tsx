@@ -21,26 +21,30 @@ export default function Notifications() {
     const [loading, setLoading] = useState<boolean>(true);
     const [filter, setFilter] = useState<"all" | "unread">("all");
 
+    // Automatically fetch notifications when the component is loaded
     useEffect(() => {
-        if (userId) {
-            fetchNotifications();
-        } else {
-            setLoading(false);
-        }
-    }, [userId]);
+        console.log("[NOTIFICATIONS] Component mounted. Starting fetch using token identification...");
+        fetchNotifications();
+    }, []);
 
     const fetchNotifications = async () => {
         setLoading(true);
-        console.log(`[FRONTEND] Fetching notifications for userId: ${userId}`);
+        console.log("[NOTIFICATIONS] Requesting data from API using 'Transaction Method' (Token identification)");
         try {
-            const response = await api.get(`notification/user/${userId}`);
+            // Making the API call to the notification service.
+            // We no longer pass the userId in the URL. The backend identifies us via the token.
+            const response = await api.get(`notification/user`);
+            
             if (response.data.success) {
-                setNotifications(response.data.data.object);
+                const data = response.data.data.object;
+                console.log(`[NOTIFICATIONS] Successfully received ${data?.length || 0} notifications:`, data);
+                setNotifications(data || []);
             } else {
+                console.error("[NOTIFICATIONS] API returned success=false:", response.data);
                 toast.error("Failed to load notifications.");
             }
         } catch (error) {
-            console.error("Error fetching notifications:", error);
+            console.error("[NOTIFICATIONS] API Error fetching notifications:", error);
             toast.error("Could not fetch notifications.");
         } finally {
             setLoading(false);

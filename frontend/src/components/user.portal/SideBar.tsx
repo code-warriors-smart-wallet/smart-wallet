@@ -52,7 +52,9 @@ function SideBar({ isSideBarOpen, view, spacetype, spaceid }: { isSideBarOpen: b
 
    const fetchUnreadCount = async () => {
       try {
-         const response = await api.get(`notification/user/${userId}`);
+         // Using the new "Transaction Method": identification via token
+         // The backend now identifies the user from the Authorization header.
+         const response = await api.get(`notification/user`);
          if (response.data.success) {
             const lastViewTimeStr = localStorage.getItem(`lastNotificationViewTime_${userId}`);
             const lastViewTime = lastViewTimeStr ? parseInt(lastViewTimeStr) : 0;
@@ -102,7 +104,8 @@ function SideBar({ isSideBarOpen, view, spacetype, spaceid }: { isSideBarOpen: b
                   )
                }
                {/* <SideBarItem name={UserPortalView.GOALS} isActive={view == UserPortalView.GOALS} onClick={onClickSideBarItem} Icon={GoalIcon} /> */}
-               {<SideBarItem name={UserPortalView.NOTIFICATIONS} isActive={view == UserPortalView.NOTIFICATIONS} pc={5} onClick={onClickSideBarItem} Icon={NotificationIcon} /> }
+               {/* Fix: Replaced hardcoded count '5' with dynamic unreadCount to show real notification stats */}
+               {<SideBarItem name={UserPortalView.NOTIFICATIONS} isActive={view == UserPortalView.NOTIFICATIONS} pc={unreadCount} onClick={onClickSideBarItem} Icon={NotificationIcon} /> }
                <SideBarItem name={UserPortalView.CATEGORIES} isActive={view == UserPortalView.CATEGORIES} onClick={onClickSideBarItem} Icon={CategoryIcon} />
                <SideBarItem name={UserPortalView.REPORTS} isActive={view == UserPortalView.REPORTS} onClick={onClickSideBarItem} Icon={ReportIcon} />
                <SideBarItem name={UserPortalView.AI_ASSISTANT} isActive={view == UserPortalView.AI_ASSISTANT} onClick={onClickSideBarItem} Icon={AIAssistantIcon} />

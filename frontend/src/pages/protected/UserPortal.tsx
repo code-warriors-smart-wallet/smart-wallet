@@ -13,6 +13,7 @@ import LoanRepaymentPlan from "../../components/user.portal/views/LoanRepaymentP
 import Profile from "../../components/user.portal/views/Profile";
 import Subscription from "../../components/user.portal/views/Subscription";
 import AIAssistant from "../../components/user.portal/views/AIAssistant";
+import Notifications from "../../components/user.portal/views/Notifications"; // Added missing Notifications import
 
 function UserPortal() {
 
@@ -48,7 +49,10 @@ function UserPortal() {
             return <Subscription />
          case UserPortalView.AI_ASSISTANT:
             return <AIAssistant />
+         case UserPortalView.NOTIFICATIONS: // Restored the Notifications view case
+            return <Notifications />
          default:
+            // Fallback for any unknown views
             return <h1 className="text-xl text-text-light-primary dark:text-text-dark-primary">Default</h1>
       }
    }

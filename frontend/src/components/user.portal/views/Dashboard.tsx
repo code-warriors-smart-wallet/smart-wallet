@@ -20,6 +20,8 @@ import SavingGoalSummary from "./Dashboard/SavingGoalSummary";
 import Button from "../../../components/Button";
 import { FaInfoCircle } from "react-icons/fa";
 import Loading from "../../../components/Loading";
+import { CreditCard } from "lucide-react";
+import CreditCardSpendingSummary from "./Dashboard/CreditCardSpendingSummary";
 
 enum SpaceAction {
    EDIT_DETAILS = "EDIT_DETAILS",
@@ -57,21 +59,27 @@ function DashBoard() {
       [SpaceAction.VIEW_DETAILS, SpaceAction.LEFT_SPACE]
 
    const getCashBankData = async (start: string, end: string) => {
-      console.log(startDate, endDate)
+      console.log(">>>>", startDate, endDate)
       setLoading(true)
       await getCashBankSummary(standardSpaceType, spaceid || "", start, end)
          .then(res => {
-            if (res.totalIncome.length > 0) {
-               settotalIncome(res.totalIncome[0].totalAmount.$numberDecimal)
-            }
-            if (res.totalExpense.length > 0) {
-               settotalExpense(res.totalExpense[0].totalAmount.$numberDecimal)
-            }
-            const summary = {
-               ...res.spendingSummary, spaceInfo: res.spaceInfo
-            }
+            console.log(" sdsds", res)
+            console.log("hello: ", res.spendingSummary)
             console.log("summary: ", summary)
-            setsummary(summary)
+            if (standardSpaceType === SpaceType.CREDIT_CARD) {
+               setsummary(res)
+            } else {
+               if (res.totalIncome.length > 0) {
+                  settotalIncome(res.totalIncome[0].totalAmount.$numberDecimal)
+               }
+               if (res.totalExpense.length > 0) {
+                  settotalExpense(res.totalExpense[0].totalAmount.$numberDecimal)
+               }
+               const summary = {
+                  ...res.spendingSummary, spaceInfo: res.spaceInfo
+               }
+               setsummary(summary)
+            }
          })
          .catch(err => {
             settotalIncome(0)
@@ -115,7 +123,8 @@ function DashBoard() {
       if (spacetype === "all") {
          getAllSpaceData()
       }
-      else if (standardSpaceType === SpaceType.CASH || standardSpaceType === SpaceType.BANK) {
+      else if (standardSpaceType === SpaceType.CASH || standardSpaceType === SpaceType.BANK || standardSpaceType === SpaceType.CREDIT_CARD) {
+         console.log("fetching cash bank data with: ", startDate, endDate)
          getCashBankData(startDate, endDate)
       } else {
          getOtherSpaceData()
@@ -184,16 +193,18 @@ function DashBoard() {
       }
    }, [selectedAction])
 
+   console.log(loading, summary)
+
    return (
-      loading || !summary ? <Loading/> : (
+      loading || !summary ? <Loading /> : (
          <>
             {/* sub header */}
             <div className="flex flex-wrap justify-between items-center gap-2">
                <h1 className="text-xl text-text-light-primary dark:text-text-dark-primary flex flex-wrap items-center gap-1">
                   Dashboard
                   <span
-                           className="max-w-fit ml-3 pt-2 pb-1 pl-1 pr-1 uppercase bg-transparent border border-2 border-primary text-xs rounded cursor-pointer"
-                        >{spacetype}</span>
+                     className="max-w-fit ml-3 pt-2 pb-1 pl-1 pr-1 uppercase bg-transparent border border-2 border-primary text-xs rounded cursor-pointer"
+                  >{spacetype}</span>
                   {
                      currentSpace?.isCollaborative ? (
                         <span
@@ -286,6 +297,18 @@ function DashBoard() {
                (standardSpaceType === SpaceType.CREDIT_CARD) && (
                   <>
                      <CreditCardSummary currency={currency || ""} creditCardSummary={summary} />
+                     <CreditCardSpendingSummary
+                        summary={summary}
+                        currency={currency || ""}
+                        startDate={startDate}
+                        endDate={endDate}
+                        setstartDate={setstartDate}
+                        setendDate={setendDate}
+                        onDateRangeChange={getCashBankData}
+                        filterType={filterType}
+                        setFilterType={setFilterType}
+                        username={username || ""}
+                     />
                      <RecentTransactions loanSummary={summary} />
                   </>
                )

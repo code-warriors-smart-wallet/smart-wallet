@@ -7,6 +7,8 @@ import { useDispatch, useSelector } from 'react-redux';
 import { loginSuccess, logout, setEmail, setOTPAttemptsRemaining } from '../../redux/features/auth';
 import { UserPortalView } from '../../components/user.portal/SideBar';
 import { RootState } from '@/redux/store/store';
+import store from '../../redux/store/store';
+import { refreshAccessToken } from '../../config/api.config';
 
 export function AuthService() {
     const navigate = useNavigate();
@@ -87,17 +89,50 @@ export function AuthService() {
 
     async function subscribePlan(body: SubscribeRequest, planName: string): Promise<void> {
         try {
-            const response = await api.post(`user/auth/subscriptions/subscribe`, body);
-            console.log(response.data)
+            console.log(">>>> Sending subscribe request:", body);
+            const response = await api.post(`user/subscription/subscribe`, body);
+            console.log(">>>> Subscribe response:", response.data);
+
             if (response.data.success) {
-                if (planName === PlanType.STARTER) {
-                    navigate('/currency', { state: { email:response.data.data.object.email } });
+                const subObject = response.data.data.object;
+                const subId = subObject.id || subObject._id;
+
+                if (planName.toLowerCase() === PlanType.STARTER.toLowerCase()) {
+                    // Only navigate to currency if user doesn't have one and isn't fully logged in yet
+                    const { currency, token } = store.getState().auth;
+                    if (!currency && !token) {
+                        navigate('/currency', { state: { email: subObject.email } });
+                    } else {
+                        toast.success(`Plan updated to ${planName} successfully!`);
+                        await refreshAccessToken();
+                    }
                 } else {
-                    navigate(`/subscriptions/${response.data.data.object._id}/payment`);
+                    console.log("Navigating to payment for subscription:", subId);
+                    navigate(`/subscriptions/${subId}/payment`);
                 }
             }
         } catch (error) {
+            if (axios.isAxiosError(error) && error.response) {
+                console.error(">>>> [AuthService] Subscription Error Response:", error.response.data);
+            }
             processError(error);
+        }
+    }
+
+    async function cancelSubscription(subscriptionId: string): Promise<boolean> {
+        try {
+            const { email } = store.getState().auth;
+            const response = await api.patch(`user/subscription/${subscriptionId}/cancel`, { email });
+            if (response.data.success) {
+                toast.success("Subscription cancelled successfully. You will revert to the Starter plan.");
+                // Refresh user data to update plan status
+                await refreshAccessToken();
+                return true;
+            }
+            return false;
+        } catch (error) {
+            processError(error);
+            return false;
         }
     }
 
@@ -119,20 +154,18 @@ export function AuthService() {
             const response = await api.post(`user/auth/login`, body, { withCredentials: true });
             console.log(response.data)
             if (response.data.success) {
-                // const spacesInfo: any[] = response.data.data.object.spaces
-                // const spaces: {id: string, name: string, type: String, isCollaborative: boolean}[] = []
-                // spacesInfo.forEach((s) => {
-                //     spaces.push({id: s._id, name: s.name, type: s.type, isCollaborative: s.isCollaborative})
-                // })
                 localStorage.setItem("smart-wallet-token", response.data.data.object.accessToken);
                 const userData = {
+                    id: response.data.data.object.id || response.data.data.object._id,
                     username: response.data.data.object.username,
                     email: response.data.data.object.email,
                     token: response.data.data.object.accessToken,
                     currency: response.data.data.object.currency,
                     plan: response.data.data.object.plan,
+                    subscriptionId: response.data.data.object.subscriptionId,
                     profileImgUrl: response.data.data.object.profileImgUrl,
                     role: response.data.data.object.role,
+                    theme: response.data.data.object.theme,
                     spaces: response.data.data.object.spaces
                 }
                 dispatch(loginSuccess(userData))
@@ -168,19 +201,17 @@ export function AuthService() {
             const response = await api.post(`user/auth/google`, body, { withCredentials: true });
             console.log(response.data)
             if (response.data.success) {
-                // const spacesInfo: any = response.data.data.object.spaces
-                // const spaces: {id: string, name: string, type: String, isCollaborative: boolean}[] = []
-                // spacesInfo.forEach((s: any) => {
-                //     spaces.push({id: s._id, name: s.name, type: s.type, isCollaborative: s.isCollaborative})
-                // })
                 const userData = {
+                    id: response.data.data.object.id || response.data.data.object._id,
                     username: response.data.data.object.username,
                     email: response.data.data.object.email,
                     token: response.data.data.object.accessToken,
                     currency: response.data.data.object.currency,
                     plan: response.data.data.object.plan,
+                    subscriptionId: response.data.data.object.subscriptionId,
                     profileImgUrl: response.data.data.object.profileImgUrl,
                     role: response.data.data.object.role,
+                    theme: response.data.data.object.theme,
                     spaces: response.data.data.object.spaces
                 }
                 dispatch(loginSuccess(userData))
@@ -222,12 +253,17 @@ export function AuthService() {
         }
     };
 
-    return { register, sendOTP, verifyOTP, getAllPlans, subscribePlan, updateCurrency, login, loginWithGoogle, protectedRoute, logOut };
+    return { register, sendOTP, verifyOTP, getAllPlans, subscribePlan, cancelSubscription, updateCurrency, login, loginWithGoogle, protectedRoute, logOut };
 }
 
 function processError(error: unknown): void {
     if (axios.isAxiosError(error) && error.response) {
-        const errorMessage = error.response.data?.error?.message || "An error occurred while processing your request.";
+        // Log deep error data for debugging
+        console.error(">>>> Detailed Error Data:", error.response.data);
+        
+        const errorMessage = error.response.data?.error?.message || 
+                           error.response.data?.data?.message || 
+                           "An error occurred while processing your request.";
         toast.error(errorMessage);
     } else {
         toast.error("An unexpected error occurred. Please try again later.");

@@ -3,6 +3,7 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 import cookieParser from 'cookie-parser';
 import emailRouter from "./routes/email";
+import notificationRouter from "./routes/notification";
 import { connectDatabase } from './config/database';
 import path from 'path';
 
@@ -24,6 +25,7 @@ connectDatabase()
     .then(() => {
         // Routes
         app.use("/email", emailRouter);
+        app.use("/notification", notificationRouter);
 
         // Cron jobs
 

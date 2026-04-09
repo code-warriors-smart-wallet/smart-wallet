@@ -3,7 +3,7 @@ import { logout, setIsAuthenticated, loginSuccess } from '../redux/features/auth
 import store from '../redux/store/store'; // Import your Redux store
 import { toast } from 'react-toastify';
 
-export const API_BASE_URL = import.meta.env.VITE_API_GATEWAY_BASE_URL || "http://localhost:8080/";
+export const API_BASE_URL = import.meta.env.VITE_API_GATEWAY_BASE_URL || "http://localhost:8085/";
 
 export const API_CONFIG = {
     baseURL: API_BASE_URL,
@@ -14,27 +14,82 @@ export const API_CONFIG = {
 
 export const api = axios.create(API_CONFIG);
 
+api.interceptors.request.use(
+    (config) => {
+        const token = store.getState().auth.token || localStorage.getItem("smart-wallet-token");
+        if (token) {
+            config.headers["Authorization"] = `Bearer ${token}`;
+        }
+        return config;
+    },
+    (error) => {
+        return Promise.reject(error);
+    }
+);
+
 export const INTERNAL_SERVER_ERROR = "Internal server error!"
+
+let isRefreshing = false;
+let refreshQueue: any[] = [];
+
+const processQueue = (error: any, token: string | null = null) => {
+    refreshQueue.forEach((prom: any) => {
+        if (error) {
+            prom.reject(error);
+        } else {
+            prom.resolve(token);
+        }
+    });
+    refreshQueue = [];
+};
 
 api.interceptors.response.use(
     response => response,
     async (error) => {
+        const originalRequest = error.config;
+        const dispatch = store.dispatch;
 
-        const dispatch = store.dispatch; 
-        if (error?.response?.status === 403) { // Token expired
-            console.log(">>> intercepter: Token expired or not found")
-            dispatch(setIsAuthenticated({ isAuthenticated: false }));
-            await refreshAccessToken(); // Attempt token refresh
-            const authState = store.getState().auth;
-            console.log(">>>> refresh token finished: ", authState)
-            if (authState.isAuthenticated) {
-                error.config.headers['Authorization'] = `Bearer ${authState.token}`;
-                return axios(error.config); // Retry the request
-            } else {
-                toast.error(INTERNAL_SERVER_ERROR)
-                console.log("Not authenticated. error while getting access token via refresh token....")
+        if (error?.response?.status === 403 && !originalRequest._retry) {
+            if (isRefreshing) {
+                return new Promise((resolve, reject) => {
+                    refreshQueue.push({ resolve, reject });
+                })
+                    .then((token) => {
+                        originalRequest._retry = true;
+                        originalRequest.headers['Authorization'] = `Bearer ${token}`;
+                        return api(originalRequest);
+                    })
+                    .catch((err) => {
+                        return Promise.reject(err);
+                    });
             }
-            return
+
+            originalRequest._retry = true;
+            isRefreshing = true;
+
+            return new Promise(async (resolve, reject) => {
+                try {
+                    console.log(">>> intercepter: Initializing single refresh token call");
+                    await refreshAccessToken();
+                    
+                    const updatedState = store.getState().auth;
+                    const newToken = updatedState.token;
+
+                    if (updatedState.isAuthenticated && newToken) {
+                        processQueue(null, newToken);
+                        originalRequest.headers['Authorization'] = `Bearer ${newToken}`;
+                        resolve(api(originalRequest));
+                    } else {
+                        throw new Error("Refresh failed to authenticate");
+                    }
+                } catch (refreshErr) {
+                    processQueue(refreshErr, null);
+                    dispatch(logout());
+                    reject(refreshErr);
+                } finally {
+                    isRefreshing = false;
+                }
+            });
         }
         return Promise.reject(error);
     }
@@ -42,35 +97,58 @@ api.interceptors.response.use(
 
 export const refreshAccessToken = async () => {
     const dispatch = store.dispatch;
-    try {
-        console.log(">>>> Requesting refresh token")
-        const response = await api.post(`user/auth/refresh_token`, {}, { withCredentials: true });
-        if (response.data.success) {
-            // const spacesInfo = response.data.data.object.spaces
-            // const spaces: {id: string, name: string, type: String, isCollaborative: boolean}[] = []
-            // spacesInfo.forEach((s: any) => {
-            //     spaces.push({id: s._id, name: s.name, type: s.type, isCollaborative: s.isCollaborative})
-            // })
-            const userData = {
-                username: response.data.data.object.username,
-                email: response.data.data.object.email,
-                token: response.data.data.object.accessToken,
-                currency: response.data.data.object.currency,
-                plan: response.data.data.object.plan,
-                profileImgUrl: response.data.data.object.profileImgUrl,
-                role: response.data.data.object.role,
-                spaces: response.data.data.object.spaces
-            }
-            
-            dispatch(loginSuccess(userData))
-        }
 
-        console.log(">>> Refresh token pass")
-    } catch (error) {
-        console.log(">>> Refresh token expired. navigate to login: ", error)
+    try {
+        console.log(">>>> Requesting refresh token");
+
+        // Send current theme to backend
+        const currentTheme = localStorage.getItem('theme') || 'dark';
+
+        const payload = {
+            theme: currentTheme
+        };
+
+        const response = await axios.post(
+            `${API_BASE_URL}user/auth/refresh_token`,
+            payload,
+            { withCredentials: true }
+        );
+
+        if (response.data.success) {
+            const userObject = response.data.data.object;   // ← Define it once here
+
+            const userData = {
+                id: userObject.id || userObject._id,
+                username: userObject.username,
+                email: userObject.email,
+                token: userObject.accessToken,
+                currency: userObject.currency,
+                plan: userObject.plan,
+                subscriptionId: userObject.subscriptionId,
+                profileImgUrl: userObject.profileImgUrl,
+                role: userObject.role,
+                spaces: userObject.spaces,
+                theme: userObject.theme || currentTheme   // Safe fallback
+            };
+
+            // Sync token and theme back to localStorage
+            if (userObject.accessToken) {
+                localStorage.setItem("smart-wallet-token", userObject.accessToken);
+            }
+            if (userObject.theme) {
+                localStorage.setItem('theme', userObject.theme);
+            }
+
+            // CRITICAL: Update Redux state so the interceptor retry uses the new token
+            dispatch(loginSuccess(userData));
+
+            console.log(">>> Refresh token successful with theme:", userObject.theme || currentTheme);
+        }
+    } catch (error: any) {
+        console.error(">>> Refresh token failed:", error);
         dispatch(logout());
-        window.location.href = '/login'; 
-        toast.info("Your session has expired. Please login.")
+        window.location.href = '/login';
+        toast.info("Your session has expired. Please login.");
     }
 };
 

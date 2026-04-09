@@ -145,6 +145,13 @@ function Spaces({ onCancel, editSpaceId, summary }: { onCancel: () => void, edit
          toast.error("Type is required!")
          return;
       }
+
+      // Enforce space limit for Starter plan
+      if (!editSpaceId && plan === PlanType.STARTER && spaces.length >= 5) {
+         setUpgradeMessage("Starter plan is limited to 5 spaces. Upgrade to Plus for unlimited spaces!");
+         return;
+      }
+
       console.log(inputs)
       if (editSpaceId) {
          await editSpace(editSpaceId, inputs)

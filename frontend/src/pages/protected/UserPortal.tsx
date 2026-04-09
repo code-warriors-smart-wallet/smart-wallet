@@ -59,7 +59,7 @@ function UserPortal() {
    }
 
    return (
-      <main className="font-main dark bg-bg-light-primary dark:bg-bg-dark-primary">
+      <main className="font-main bg-surface text-text-main transition-colors duration-300">
          <NavBar 
             isSideBarOpen={isSideBarOpen} 
             setSideBarOpen={setSideBarOpen} 

@@ -41,7 +41,7 @@ emailRouter.post('/send/', async (req: Request, res: Response) => {
         const errorMessage = error instanceof Error ? error.message : 'Unknown error';
         res.status(500).json({
             success: false,
-            error: { message: 'Error deleting space: ' + errorMessage },
+            error: { message: 'Error sending email: ' + errorMessage },
             data: null
         });
     }

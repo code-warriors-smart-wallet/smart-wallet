@@ -5,8 +5,11 @@ import cookieParser from 'cookie-parser';
 import authRouter from "./routes/auth";
 import spaceRouter from "./routes/space";
 import planRouter from "./routes/plan";
+import subscriptionRouter from "./routes/subscription";
+import settingsRouter from "./routes/settings";
 import { initSubscriptionJobs } from './jobs/subscription';
 import { connectDatabase } from './config/database';
+import { seedPlans } from './utils/seed';
 import path from 'path';
 
 // Load environment variables
@@ -19,16 +22,21 @@ app.use(cors({
     origin: process.env.FRONTEND_URL || 'http://localhost:5173',
     credentials: true, 
 }));
-app.use(express.json());
+app.use(express.json({ limit: '5mb' }));
+app.use(express.urlencoded({ limit: '5mb', extended: true }));
 app.use(cookieParser());
 
 // Connect to database
 connectDatabase()
-    .then(() => {
+    .then(async () => {
+        // Seed plans
+        await seedPlans();
         // Routes
         app.use("/auth", authRouter);
         app.use("/space", spaceRouter);
         app.use("/plan", planRouter);
+        app.use("/subscription", subscriptionRouter);
+        app.use("/settings", settingsRouter);
 
         // Cron jobs
         initSubscriptionJobs();
@@ -38,7 +46,7 @@ connectDatabase()
             console.log(`User service server is listening on port ${PORT}`);
         });
     })
-    .catch((error) => {
+    .catch((error: any) => {
         console.error('Failed to start user-service server:', error);
         process.exit(1);
     });

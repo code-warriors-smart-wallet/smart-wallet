@@ -4,6 +4,9 @@ import { BudgetType, BudgetInfo } from "../Budget";
 import { capitalize } from "../../../../utils/utils";
 import UpdateBudgetModal from "./UpdateBudgetModal";
 import { toast } from "react-toastify";
+import { useSelector } from "react-redux";
+import { RootState } from "../../../../redux/store/store";
+import { PlanType } from "../../../../interfaces/modals";
 
 interface BudgetModalProps {
   isOpen: boolean;
@@ -45,6 +48,7 @@ const BudgetModal: React.FC<BudgetModalProps> = ({
   selectedSpacesForAllSpaces,
   onUpdateAmount
 }) => {
+  const { plan } = useSelector((state: RootState) => state.auth);
   const [isUpdateBudgetModalOpen, setIsUpdateBudgetModalOpen] = useState(false);
   const [tempAmount, setTempAmount] = useState<string>("");
 
@@ -296,12 +300,11 @@ const BudgetModal: React.FC<BudgetModalProps> = ({
                     }`}
                   required
                 >
-                  {Object.values(BudgetType).map((type) => (
-                    <option key={type} value={type}>
-                      {capitalize(type.toLowerCase().replace('_', ' '))}
-                    </option>
-                  ))}
+                  <option value={BudgetType.ONE_TIME}>One Time</option>
+                  <option value={BudgetType.WEEKLY}>Weekly</option>
+                  <option value={BudgetType.MONTHLY}>Monthly</option>
                 </select>
+
               </div>
 
               <>

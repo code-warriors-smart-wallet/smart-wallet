@@ -4,6 +4,7 @@ import { toast } from "react-toastify";
 import { AuthService } from "../../services/auth/auth.service";
 import LoadingButton from "../../components/LoadingButton";
 import { useLocation } from "react-router-dom";
+import { UserPortalView } from "../../components/user.portal/SideBar";
 
 interface Currency {
    code: string;
@@ -24,7 +25,7 @@ function Currency() {
       // TODO: set loading tru until fetch currencies
       const fetchCurrencies = async () => {
          try {
-            const response = await fetch("https://restcountries.com/v3.1/all");
+            const response = await fetch("https://restcountries.com/v3.1/all?fields=name,currencies");
             const data = await response.json();
             const currencyList: Currency[] = [];
 
@@ -66,7 +67,7 @@ function Currency() {
          return;
       }
       setLoading(true);
-      await loginWithGoogle({ token: token, currency: selectedCurrency })
+      await loginWithGoogle({ token: token, currency: selectedCurrency }, `/user-portal/all/all/${UserPortalView.DASHBOARD}`)
       setLoading(false)
    };
 

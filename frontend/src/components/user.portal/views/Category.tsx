@@ -106,6 +106,10 @@ function Category() {
     console.log(upgradeMessage)
 
     const onEditMode = (category: any) => {
+        if (plan === PlanType.STARTER) {
+            setUpgradeMessage("Upgrade to Plus to edit custom categories!");
+            return;
+        }
         setInputs({
             type: CategoryType.SUB_CATEGORY,
             parentCategoryId: category.parentCategoryId,
@@ -367,13 +371,13 @@ function Category() {
                                                                 <Button
                                                                     text="Edit"
                                                                     className="max-w-fit pt-1 pb-1 px-2"
-                                                                    disabled={spacetype !== "all" ? cat?.user?.username !== username : false}
+                                                                    disabled={plan === PlanType.STARTER || (spacetype !== "all" ? cat?.user?.username !== username : false)}
                                                                     onClick={() => onEditMode(cat)}
                                                                 />
                                                                 <Button
                                                                     text="Delete"
                                                                     className="max-w-fit pt-1 pb-1 px-2 hover:!bg-red-600 !bg-red-500"
-                                                                    disabled={spacetype !== "all" ? cat?.user?.username !== username : false}
+                                                                    disabled={plan === PlanType.STARTER || (spacetype !== "all" ? cat?.user?.username !== username : false)}
                                                                     onClick={() => onDelete(cat.parentCategoryId, cat.subCategoryId)}
                                                                 />
                                                             </td>

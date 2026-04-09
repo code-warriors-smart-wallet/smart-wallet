@@ -1,20 +1,13 @@
 import axios from 'axios';
 import { api } from '../config/api.config';
 import { toast } from 'react-toastify';
-import { useSelector } from 'react-redux';
-import { RootState } from '../redux/store/store';
 import { CategoryInfo } from '../interfaces/modals';
 
 export function CategoryService() {
-    const token = useSelector((state: RootState) => state.auth.token)
 
     async function getCategories(spaceType?: string): Promise<any[]> {
         try {
-            const response = await api.get(`finops/category/`, {
-                headers: {
-                    "authorization": `Bearer ${token}`
-                }
-            });
+            const response = await api.get(`finops/category`);
             if (response.data.success) {
                 return response.data.data.object
             }
@@ -27,11 +20,7 @@ export function CategoryService() {
 
     async function getCategoriesBySpace(spaceid: string): Promise<any[]> {
         try {
-            const response = await api.get(`finops/category/space/${spaceid}`, {
-                headers: {
-                    "authorization": `Bearer ${token}`
-                }
-            });
+            const response = await api.get(`finops/category/space/${spaceid}`);
             console.log(response.data.data.object)
             if (response.data.success) {
                 return response.data.data.object
@@ -45,11 +34,7 @@ export function CategoryService() {
 
     async function createSubCategory(body: any): Promise<void> {
         try {
-            const response = await api.post(`finops/category/sub`, body, {
-                headers: {
-                    "authorization": `Bearer ${token}`
-                }
-            });
+            const response = await api.post(`finops/category/sub`, body);
             if (response.data.success) {
                 console.log(response.data)
                 toast.success(response.data.data.message)
@@ -61,11 +46,7 @@ export function CategoryService() {
 
     async function updateSubCategory(body: any): Promise<void> {
         try {
-            const response = await api.put(`finops/category/sub`, body, {
-                headers: {
-                    "authorization": `Bearer ${token}`
-                }
-            });
+            const response = await api.put(`finops/category/sub`, body);
             if (response.data.success) {
                 console.log(response.data)
                 toast.success(response.data.data.message)
@@ -77,11 +58,7 @@ export function CategoryService() {
 
     async function deleteSubCategory(pid: string, sid: string): Promise<void> {
         try {
-            const response = await api.delete(`finops/category/sub/${pid}/${sid}`, {
-                headers: {
-                    "authorization": `Bearer ${token}`
-                }
-            });
+            const response = await api.delete(`finops/category/sub/${pid}/${sid}`);
             if (response.data.success) {
                 console.log(response.data)
                 toast.success(response.data.data.message)
@@ -93,11 +70,7 @@ export function CategoryService() {
 
     async function createMainCategory(body: any): Promise<void> {
         try {
-            const response = await api.post(`finops/category/main`, body, {
-                headers: {
-                    "authorization": `Bearer ${token}`
-                }
-            });
+            const response = await api.post(`finops/category/main`, body);
             if (response.data.success) {
                 console.log(response.data)
                 toast.success(response.data.data.message)

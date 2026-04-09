@@ -410,13 +410,21 @@ authRouter.post("/google", async (req: Request, res: Response) => {
         });
         return;
     }
-    const subscription = await Subscription.findOne({ userId: existingUser._id, status: SubscriptionStatus.ACTIVE });
-    let plan = await Plan.findOne({ _id: subscription!.planId });
-    if (plan!.name !== PlanType.STARTER && subscription!.endDate < new Date()) {
-        plan = await Plan.findOne({ name: PlanType.STARTER })
+    const subscription = await Subscription.findOne({ 
+        userId: existingUser._id, 
+        status: SubscriptionStatus.ACTIVE 
+    }).sort({ createdAt: -1 }).populate('planId');
+
+    let planName = PlanType.STARTER;
+    if (subscription && subscription.planId) {
+        const planObj = subscription.planId as any;
+        planName = planObj.name;
+        if (planName !== PlanType.STARTER && subscription.endDate < new Date()) {
+            planName = PlanType.STARTER;
+        }
     }
-    const accessToken = generateAccessToken({ id: existingUser.toString(), role: existingUser.role })
-    const refreshToken = generateRefreshToken({ id: existingUser.toString(), role: existingUser.role })
+    const accessToken = generateAccessToken({ id: existingUser._id.toString(), role: existingUser.role })
+    const refreshToken = generateRefreshToken({ id: existingUser._id.toString(), role: existingUser.role })
     existingUser.refreshToken = refreshToken
     const updatedUser = await User.findByIdAndUpdate(
         existingUser._id,
@@ -439,10 +447,13 @@ authRouter.post("/google", async (req: Request, res: Response) => {
         success: true,
         data: {
             object: {
+                id: existingUser._id,
                 username: existingUser.username,
                 email: existingUser.email,
                 currency: existingUser.currency,
-                plan: plan!.name,
+                theme: existingUser.theme,
+                plan: planName,
+                subscriptionId: subscription?._id || "",
                 profileImgUrl: existingUser?.profileImgUrl,
                 accessToken: accessToken,
                 role: existingUser.role,
@@ -490,6 +501,22 @@ authRouter.post("/login", async (req: Request, res: Response) => {
             });
             return;
         }
+        if (!user.password) {
+            res.status(401).json({
+                success: false,
+                error: null,
+                data: {
+                    message: 'Account was registered using a social login. Please sign in with Google.',
+                    object: {
+                        username: user.username,
+                        email: user.email,
+                        status: LoginStatus.INVALID_CREDENTIALS
+                    }
+                }
+            });
+            return;
+        }
+
         if (bcrypt.compareSync(password, user.password)) {
             if (!user.enabled) {
                 res.status(401).json({
@@ -506,10 +533,18 @@ authRouter.post("/login", async (req: Request, res: Response) => {
                 });
                 return;
             }
-            const subscription = await Subscription.findOne({ userId: user._id, status: SubscriptionStatus.ACTIVE });
-            let plan = await Plan.findOne({ _id: subscription!.planId });
-            if (plan!.name !== PlanType.STARTER && subscription!.endDate < new Date()) {
-                plan = await Plan.findOne({ name: PlanType.STARTER })
+            const subscription = await Subscription.findOne({ 
+                userId: user._id, 
+                status: SubscriptionStatus.ACTIVE 
+            }).sort({ createdAt: -1 }).populate('planId');
+
+            let planName = PlanType.STARTER;
+            if (subscription && subscription.planId) {
+                const planObj = subscription.planId as any;
+                planName = planObj.name;
+                if (planName !== PlanType.STARTER && subscription.endDate < new Date()) {
+                    planName = PlanType.STARTER;
+                }
             }
             const accessToken = generateAccessToken({ id: user._id.toString(), role: user.role })
             const refreshToken = generateRefreshToken({ id: user._id.toString(), role: user.role })
@@ -535,10 +570,13 @@ authRouter.post("/login", async (req: Request, res: Response) => {
                 success: true,
                 data: {
                     object: {
+                        id: user._id,
                         username: user.username,
                         email: user.email,
                         currency: user.currency,
-                        plan: plan!.name,
+                        theme: user.theme,
+                        plan: planName,
+                        subscriptionId: subscription?._id || "",
                         profileImgUrl: user?.profileImgUrl,
                         accessToken: accessToken,
                         role: user.role,
@@ -600,10 +638,18 @@ authRouter.post('/refresh_token', async (req: Request, res: Response) => {
             return res.status(401).send("no user found or disbaled")
         }
         // console.log("stored user: ", storedUser)
-        const subscription = await Subscription.findOne({ userId: user.id, status: SubscriptionStatus.ACTIVE });
-        let plan = await Plan.findOne({ _id: subscription!.planId });
-        if (plan!.name !== PlanType.STARTER && subscription!.endDate < new Date()) {
-            plan = await Plan.findOne({ name: PlanType.STARTER })
+        const subscription = await Subscription.findOne({ 
+            userId: storedUser._id, 
+            status: SubscriptionStatus.ACTIVE 
+        }).sort({ createdAt: -1 }).populate('planId');
+
+        let planName = PlanType.STARTER;
+        if (subscription && subscription.planId) {
+            const planObj = subscription.planId as any;
+            planName = planObj.name;
+            if (planName !== PlanType.STARTER && subscription.endDate < new Date()) {
+                planName = PlanType.STARTER;
+            }
         }
         const newAccessToken = generateAccessToken({ id: storedUser._id.toString(), role: user.role });
 
@@ -616,7 +662,9 @@ authRouter.post('/refresh_token', async (req: Request, res: Response) => {
                     username: storedUser.username,
                     email: storedUser.email,
                     currency: storedUser.currency,
-                    plan: plan!.name,
+                    theme: storedUser.theme,
+                    plan: planName,
+                    subscriptionId: subscription?._id || "",
                     profileImgUrl: storedUser?.profileImgUrl,
                     accessToken: newAccessToken,
                     role: storedUser.role,

@@ -8,9 +8,13 @@ import { SpaceType } from "./views/Spaces";
 import { toStrdSpaceType } from "./../../utils/utils";
 import { RootState } from "@/redux/store/store";
 import { useSelector } from "react-redux";
-import { PlanType } from "../../interfaces/modals";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Upgrade from "./views/Subscription/Upgrade";
+import { useDispatch } from "react-redux";
+import { NotificationService } from "../../services/notification.service";
+import { setNotifications, setLastPlan } from "../../redux/features/notification";
+import { toast } from "react-toastify";
+import { PlanType } from "../../interfaces/modals";
 
 export enum UserPortalView {
    DASHBOARD = "dashboard",
@@ -34,16 +38,60 @@ function SideBar({ isSideBarOpen, view, spacetype, spaceid }: { isSideBarOpen: b
    const sideBarStyleSM = isSideBarOpen ? "" : "-translate-x-full"
 
    const navigate = useNavigate()
-   const {logOut} = AuthService();
-   const { plan } = useSelector((state: RootState) => state.auth)
+   const dispatch = useDispatch()
+   const { logOut } = AuthService();
+   const { id, plan, email } = useSelector((state: RootState) => state.auth)
+   const { unreadCount, lastPlan } = useSelector((state: RootState) => state.notification)
    const [upgradeMessage, setUpgradeMessage] = useState("");
 
+   // Fetch notifications and detect plan changes
+   useEffect(() => {
+      const fetchNotifications = async () => {
+         if (id) {
+            try {
+               const res = await NotificationService.getNotifications(id);
+               if (res.success) {
+                  dispatch(setNotifications({
+                     notifications: res.data.notifications,
+                     unreadCount: res.data.unreadCount
+                  }));
+               }
+            } catch (err) {
+               console.error("Failed to fetch notifications:", err);
+            }
+         }
+      };
+
+      fetchNotifications();
+      const interval = setInterval(fetchNotifications, 30000); // 30s poll
+
+      return () => clearInterval(interval);
+   }, [id, dispatch]);
+
+   // Plan change detection for Pop-up (Toast)
+   useEffect(() => {
+      if (plan && lastPlan && plan !== lastPlan) {
+         toast.info(`Your plan has changed to ${plan}!`, {
+            position: "top-right",
+            autoClose: 5000,
+         });
+      }
+      if (plan) {
+         dispatch(setLastPlan(plan));
+      }
+   }, [plan, lastPlan, dispatch]);
+
    const onClickSideBarItem = (newView: string) => {
-      if (plan === PlanType.STARTER && [UserPortalView.LOAN_REPAYMENT_PLAN, UserPortalView.REPORTS, UserPortalView.AI_ASSISTANT].includes(newView as UserPortalView)) {
-         setUpgradeMessage(`Upgrade to unlock ${newView}!`);
+      const restrictedViews = [UserPortalView.LOAN_REPAYMENT_PLAN, UserPortalView.REPORTS, UserPortalView.AI_ASSISTANT];
+      if (plan === PlanType.STARTER && restrictedViews.includes(newView as UserPortalView)) {
+         setUpgradeMessage(`Upgrade to Plus to unlock ${newView}!`);
          return;
       }
       navigate(`/user-portal/${spacetype}/${spaceid}/${newView}`);
+   }
+
+   const isLocked = (viewName: UserPortalView) => {
+      return plan === PlanType.STARTER && [UserPortalView.LOAN_REPAYMENT_PLAN, UserPortalView.REPORTS, UserPortalView.AI_ASSISTANT].includes(viewName);
    }
 
    return (
@@ -53,7 +101,6 @@ function SideBar({ isSideBarOpen, view, spacetype, spaceid }: { isSideBarOpen: b
             <ul className="space-y-2 font-medium">
                <SideBarItem name={UserPortalView.DASHBOARD} isActive={view == UserPortalView.DASHBOARD} onClick={onClickSideBarItem} Icon={DashBoardIcon} />
                <SideBarItem name={UserPortalView.TRANSACTIONS} isActive={view == UserPortalView.TRANSACTIONS} onClick={onClickSideBarItem} Icon={TransactionIcon} />
-               {/* <SideBarItem name={UserPortalView.SCHEDULES} isActive={view == UserPortalView.SCHEDULES} onClick={onClickSideBarItem} Icon={ScheduleIcon} /> */}
                {
                   ![SpaceType.LOAN_BORROWED, SpaceType.LOAN_LENT].includes(toStrdSpaceType(spacetype) as SpaceType) && (
                      <SideBarItem name={UserPortalView.SCHEDULES} isActive={view == UserPortalView.SCHEDULES} onClick={onClickSideBarItem} Icon={ScheduleIcon} />

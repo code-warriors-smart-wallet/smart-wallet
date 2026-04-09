@@ -12,8 +12,10 @@ import { RootState } from "@/redux/store/store";
 import BudgetList from "./Budgets/BudgetList";
 import BudgetModal from "./Budgets/BudgetModal";
 import UpdateBudgetModal from "./Budgets/UpdateBudgetModal";
-import { PieChart, Calendar, TrendingUp, Donut } from "lucide-react";
+import { PieChart, Calendar, TrendingUp, Donut, X } from "lucide-react";
 import Loading from "../../../components/Loading";
+import Upgrade from "./Subscription/Upgrade";
+import { PlanType } from "../../../interfaces/modals";
 
 export enum BudgetType {
   ONE_TIME = "ONE_TIME",
@@ -530,6 +532,29 @@ const PieChartComponent: React.FC<PieChartComponentProps> = ({
   );
 };
 
+// Transaction Detail Modal Component
+interface TransactionDetail {
+  id: string;
+  amount: number;
+  date: Date;
+  note?: string;
+  category: {
+    id: string;
+    name: string;
+    color: string;
+    mainCategory: {
+      id: string;
+      name: string;
+      color: string;
+    };
+  };
+  space: {
+    id: string;
+    name: string;
+    type: string;
+  };
+}
+
 // Budget Detail Modal Component
 interface BudgetDetailModalProps {
   budget: BudgetItem;
@@ -555,6 +580,8 @@ const BudgetDetailModal: React.FC<BudgetDetailModalProps> = ({
   getSpaceName
 }) => {
   const [showUpdateBudgetModal, setShowUpdateBudgetModal] = useState(false);
+
+  const [expandedTransactionsPeriod, setExpandedTransactionsPeriod] = useState<number | null>(null);
 
   const currentEntry = budget.currentEntry || spendingData?.currentEntry;
 
@@ -608,6 +635,11 @@ const BudgetDetailModal: React.FC<BudgetDetailModalProps> = ({
 
   const trendEntries = spendingData?.trendData || budget.entries || [];
 
+  // Get transaction details for each period
+  const getTransactionDetailsForPeriod = (periodData: any): TransactionDetail[] => {
+    return periodData.transactionDetails || [];
+  };
+  
   // Get category color for the progress bar
   const getProgressBarColor = (percentage: number) => {
     if (percentage >= 90) return "bg-red-500";
@@ -763,6 +795,9 @@ const BudgetDetailModal: React.FC<BudgetDetailModalProps> = ({
           periodLabel = `Entry ${index + 1}`;
       }
 
+      // Get transaction details for this period
+      const transactionDetails = getTransactionDetailsForPeriod(entry);
+
       return {
         ...entry,
         entryAmount,
@@ -771,7 +806,8 @@ const BudgetDetailModal: React.FC<BudgetDetailModalProps> = ({
         periodLabel,
         periodDates,
         startDate: startDate.toISOString(),
-        endDate: endDate.toISOString()
+        endDate: endDate.toISOString(),
+        transactionDetails
       };
     });
 
@@ -842,6 +878,36 @@ const BudgetDetailModal: React.FC<BudgetDetailModalProps> = ({
   // Format period label for X-axis
   const formatEntryLabel = (data: any, index: number) => {
     return data.periodLabel || `Entry ${index + 1}`;
+  };
+
+  // Toggle expanded period
+  const togglePeriodExpanded = (index: number) => {
+    // If clicking on the same index that's already expanded, collapse it
+    if (expandedTransactionsPeriod === index) {
+      setExpandedTransactionsPeriod(null);
+    } else {
+      // Otherwise, expand the new one and collapse any previously expanded
+      setExpandedTransactionsPeriod(index);
+    }
+  };
+
+  const closeExpandedTransactions = () => {
+    setExpandedTransactionsPeriod(null);
+  };
+
+  // Format currency for display
+  const formatCurrency = (amount: number) => {
+    return `${currency} ${amount.toFixed(2)}`;
+  };
+
+  // Format date for display
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('en-US', {
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric'
+    });
   };
 
   const getPieChartData = () => {
@@ -1171,9 +1237,32 @@ const BudgetDetailModal: React.FC<BudgetDetailModalProps> = ({
                   {displayData.map((data: any, index: number) => {
                     const label = formatEntryLabel(data, index);
 
-                    // Calculate heights for bars (0-100% of chart height)
-                    const budgetHeight = (data.entryAmount / maxAmount) * 100;
-                    const spentHeight = (data.entrySpent / maxAmount) * 100;
+                    // Calculate heights using percentage of maxAmount for accurate scaling
+                    const budgetHeightPercentage = (data.entryAmount / maxAmount) * 100;
+                    const budgetHeightPx = (budgetHeightPercentage / 100) * 160;
+
+                    const spentHeightPercentage = (data.entrySpent / maxAmount) * 100;
+                    const spentHeightPx = Math.min(spentHeightPercentage, 100) / 100 * 160;
+
+                    // Prepare transaction segments for stacked bar
+                    const transactionDetails = data.transactionDetails || [];
+                    const sortedTransactions = [...transactionDetails].sort((a, b) => b.amount - a.amount);
+
+                    // Calculate cumulative height for stacking
+                    let cumulativePercentage = 0;
+                    const transactionSegments = sortedTransactions.map((transaction, txIndex) => {
+                      const transactionPercentageOfMax = (transaction.amount / maxAmount) * 100;
+                      const transactionHeightPx = Math.min(transactionPercentageOfMax, 100) / 100 * 160;
+                      const startPercentage = cumulativePercentage;
+                      cumulativePercentage += (transaction.amount / data.entrySpent) * 100;
+
+                      return {
+                        ...transaction,
+                        heightPx: transactionHeightPx,
+                        startPercentage,
+                        color: transaction.category?.color || `hsl(${txIndex * 40 % 360}, 70%, 60%)`
+                      };
+                    });
 
                     return (
                       <div key={index} className="flex flex-col items-center flex-1 h-full group">
@@ -1201,7 +1290,7 @@ const BudgetDetailModal: React.FC<BudgetDetailModalProps> = ({
                           <div
                             className="absolute w-3/4 rounded-t-sm bg-blue-100 dark:bg-blue-900/30 transition-all duration-300"
                             style={{
-                              height: `${budgetHeight}%`,
+                              height: `${budgetHeightPx}px`,
                               maxHeight: '160px'
                             }}
                           >
@@ -1217,16 +1306,52 @@ const BudgetDetailModal: React.FC<BudgetDetailModalProps> = ({
                             </div>
                           </div>
 
-                          {/* Spent Bar (Foreground) */}
+                          {/* Spent Stacked Bar */}
                           <div
-                            className={`relative w-3/4 rounded-t-sm transition-all duration-300 ${data.spentPercentage > 100 ? 'bg-red-500' :
-                              data.spentPercentage > 80 ? 'bg-orange-500' : 'bg-green-500'
-                              }`}
+                            className="relative w-3/4 rounded-t-sm overflow-hidden cursor-pointer transition-all duration-300"
                             style={{
-                              height: `${Math.min(spentHeight, 100)}%`,
+                              height: `${spentHeightPx}px`,
                               maxHeight: '160px'
                             }}
+                            onClick={() => togglePeriodExpanded(index)}
+                            title="Click to see transaction details"
                           >
+                            {/* Transaction segments */}
+                            {transactionSegments.length > 0 ? (
+                              transactionSegments.map((segment, txIndex) => {
+                                // Calculate segment height as percentage of total spent bar
+                                const segmentHeightPercentage = (segment.amount / data.entrySpent) * 100;
+                                const segmentHeightPx = (segmentHeightPercentage / 100) * spentHeightPx;
+
+                                // Calculate bottom position based on cumulative sum
+                                const previousTotal = transactionSegments
+                                  .slice(0, txIndex)
+                                  .reduce((sum, s) => sum + s.amount, 0);
+                                const previousPercentage = (previousTotal / data.entrySpent) * 100;
+                                const bottomPosition = (previousPercentage / 100) * spentHeightPx;
+
+                                return (
+                                  <div
+                                    key={txIndex}
+                                    className="absolute w-full transition-all duration-200 hover:brightness-110"
+                                    style={{
+                                      height: `${segmentHeightPx}px`,
+                                      bottom: `${bottomPosition}px`,
+                                      backgroundColor: segment.color,
+                                      zIndex: transactionSegments.length - txIndex
+                                    }}
+                                    title={`${segment.category?.name || 'Transaction'}: ${currency} ${segment.amount.toFixed(2)}`}
+                                  />
+                                );
+                              })
+                            ) : (
+                              // Fallback solid color if no transaction details
+                              <div
+                                className={`absolute w-full h-full ${data.spentPercentage > 100 ? 'bg-red-500' :
+                                    data.spentPercentage > 80 ? 'bg-orange-500' : 'bg-green-500'
+                                  }`}
+                              />
+                            )}
                             {/* Spent Percentage Badge */}
                             <div className="absolute -top-6 left-1/2 transform -translate-x-1/2 whitespace-nowrap">
                               <span className={`text-xs font-bold px-2 py-1 rounded-full ${data.spentPercentage > 100 ? 'bg-red-100 text-red-700 dark:bg-red-900 dark:text-red-300' :
@@ -1238,34 +1363,103 @@ const BudgetDetailModal: React.FC<BudgetDetailModalProps> = ({
                             </div>
                           </div>
                         </div>
+                        {/* Period Label */}
                         <div className="mt-4 text-center min-h-[50px]">
                           <div className="text-sm font-medium text-text-light-primary dark:text-text-dark-primary">
                             {label}
                           </div>
+                          {/* Optional date range for one-time budgets */}
+                          {budget.type === BudgetType.ONE_TIME && data.periodDates && data.periodDates !== label && (
+                            <div className="text-xs text-text-light-secondary dark:text-text-dark-secondary mt-1">
+                              {data.periodDates}
+                            </div>
+                          )}
                         </div>
+
+                        {/* Expanded transaction details section */}
+                        {expandedTransactionsPeriod === index && (
+                          <div className="w-full mt-4 p-4 bg-bg-light-secondary dark:bg-bg-dark-secondary rounded-lg animate-fadeIn relative">
+                            {/* Close button for expanded section */}
+                            <button
+                              onClick={closeExpandedTransactions}
+                              className="absolute top-2 right-2 p-1 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
+                              title="Close"
+                            >
+                              <X size={16} className="text-text-light-secondary dark:text-text-dark-secondary cursor-pointer" />
+                            </button>
+                            <div className="w-full mt-4 p-4 bg-bg-light-secondary dark:bg-bg-dark-secondary rounded-lg animate-fadeIn">
+                              <div className="flex justify-between items-center mb-3">
+                                <h4 className="font-semibold text-text-light-primary dark:text-text-dark-primary">
+                                  Transaction Details - {label}
+                                </h4>
+                                <span className="text-sm text-text-light-secondary dark:text-text-dark-secondary">
+                                  {transactionDetails.length} transaction{transactionDetails.length !== 1 ? 's' : ''}
+                                </span>
+                              </div>
+
+                              <div className="space-y-2 max-h-60 overflow-y-auto pr-2">
+                                {transactionDetails.length > 0 ? (
+                                  transactionDetails.map((transaction: any, txIndex: number) => (
+                                    <div
+                                      key={txIndex}
+                                      className="flex items-center justify-between p-3 bg-bg-light-primary dark:bg-bg-dark-primary rounded-lg hover:shadow-sm transition-shadow"
+                                    >
+                                      <div className="flex items-center gap-3 flex-1">
+                                        <div
+                                          className="w-3 h-3 rounded-full"
+                                          style={{ backgroundColor: transaction.category?.color || '#6B7280' }}
+                                        />
+                                        <div className="flex-1">
+                                          <div className="flex items-center gap-2">
+                                            <span className="font-medium text-text-light-primary dark:text-text-dark-primary">
+                                              {transaction.category?.name || 'Unknown Category'}
+                                            </span>
+                                            <span className="text-xs px-2 py-0.5 rounded-full bg-gray-100 dark:bg-gray-800 text-text-light-secondary dark:text-text-dark-secondary">
+                                              {transaction.space?.name || 'Unknown Space'}
+                                            </span>
+                                          </div>
+                                          <div className="flex items-center gap-3 text-xs text-text-light-secondary dark:text-text-dark-secondary mt-1">
+                                            <span>{formatDate(transaction.date)}</span>
+                                            {transaction.note && (
+                                              <span className="truncate max-w-[200px]">{transaction.note}</span>
+                                            )}
+                                          </div>
+                                        </div>
+                                      </div>
+                                      <div className="text-right">
+                                        <span className={`font-semibold ${transaction.amount > 0 ? 'text-red-500' : 'text-green-500'}`}>
+                                          {formatCurrency(transaction.amount)}
+                                        </span>
+                                        <div className="text-xs text-text-light-secondary dark:text-text-dark-secondary mt-1">
+                                          {((transaction.amount / data.entrySpent) * 100).toFixed(1)}% of period
+                                        </div>
+                                      </div>
+                                    </div>
+                                  ))
+                                ) : (
+                                  <p className="text-center text-text-light-secondary dark:text-text-dark-secondary py-4">
+                                    No transaction details available for this period
+                                  </p>
+                                )}
+                              </div>
+
+                              {/* Summary for this period */}
+                              {transactionDetails.length > 0 && (
+                                <div className="mt-3 pt-3 border-t border-border-light-primary dark:border-border-dark-primary flex justify-between items-center text-sm">
+                                  <span className="text-text-light-secondary dark:text-text-dark-secondary">
+                                    Total for period:
+                                  </span>
+                                  <span className="font-bold text-red-500">
+                                    {formatCurrency(data.entrySpent)}
+                                  </span>
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        )}
                       </div>
                     );
                   })}
-                </div>
-
-                {/* Legend */}
-                <div className="flex items-center justify-center gap-6 mt-8 pt-6 border-t border-border-light-primary dark:border-border-dark-primary">
-                  <div className="flex items-center gap-2">
-                    <div className="w-4 h-4 rounded-sm bg-blue-500"></div>
-                    <span className="text-sm text-text-light-primary dark:text-text-dark-primary">Budget Amount</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <div className="w-4 h-4 rounded-sm bg-green-500"></div>
-                    <span className="text-sm text-text-light-primary dark:text-text-dark-primary">Below 80% spent</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <div className="w-4 h-4 rounded-sm bg-orange-500"></div>
-                    <span className="text-sm text-text-light-primary dark:text-text-dark-primary">80-100% spent</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <div className="w-4 h-4 rounded-sm bg-red-500"></div>
-                    <span className="text-sm text-text-light-primary dark:text-text-dark-primary">Over budget</span>
-                  </div>
                 </div>
               </div>
 
@@ -1381,6 +1575,9 @@ function Budget() {
 
   const [spaceSelectionPhase, setSpaceSelectionPhase] = useState<boolean>(false);
   const [selectedSpacesForAllSpaces, setSelectedSpacesForAllSpaces] = useState<string[]>([]);
+  const { plan } = useSelector((state: RootState) => state.auth)
+  const [upgradeMessage, setUpgradeMessage] = useState("");
+
 
   // Budget detail modal state
   const [detailModal, setDetailModal] = useState<{
@@ -1403,7 +1600,7 @@ function Budget() {
   const [inputs, setInputs] = useState<BudgetInfo>({
     name: "",
     amount: 0,
-    type: BudgetType.MONTHLY,
+    type: BudgetType.ONE_TIME,
     mainCategoryId: "",
     subCategoryIds: [],
     spaceIds: spaceid === "all" ? [] : spaceid ? [spaceid] : [],
@@ -1467,79 +1664,91 @@ function Budget() {
       );
 
       const budgetsByType = await Promise.all(allBudgetsPromises);
-      const allBudgets = budgetsByType.flat();
+      const allBudgets = budgetsByType.flat().filter((budget, index, self) =>
+        index === self.findIndex(b => b._id === budget._id)
+      );
 
-      // Process each budget and create separate entries for each space
+      // For each budget, get spending data that aggregates ALL spaces
       const budgetsWithEntriesPromises = allBudgets.map(async (budget: BudgetItem) => {
-        // For multi-space budgets, we need to create separate budget entries for each space
-        const budgetSpaces = budget.spaceIds || [];
-        const budgetEntries = [];
+        try {
+          // Get spending data without specifying spaceId (aggregates all spaces in budget)
+          const spendingData = await getBudgetSpending(budget._id);
 
-        for (const spaceId of budgetSpaces) {
-          try {
-            const spendingData = await getBudgetSpending(budget._id, undefined, spaceId.toString());
+          if (!spendingData || !spendingData.currentEntry) {
+            console.warn(`No current entry for budget ${budget._id} - budget may not have started yet`);
 
-            if (!spendingData || !spendingData.currentEntry) {
-              console.warn(`No current entry for budget ${budget._id} in space ${spaceId}`);
-              continue;
-            }
-
-            const currentEntry = spendingData.currentEntry;
-            const budgetAmount = currentEntry.amount;
-            const spent = currentEntry.spent || 0;
-            const percentage = budgetAmount > 0 ? Math.min((spent / budgetAmount) * 100, 100) : 0;
-
+            // Check if this is a future ONE_TIME budget
             const today = new Date();
-            const entryStartDate = new Date(currentEntry.start_date);
-            const entryEndDate = new Date(currentEntry.end_date);
+            const budgetStartDate = new Date(budget.startDate);
 
-            if (today < entryStartDate || today > entryEndDate) {
-              continue;
+            if (budget.type === BudgetType.ONE_TIME && today < budgetStartDate) {
+              console.log(`Skipping future ONE_TIME budget ${budget._id} (starts on ${budgetStartDate.toISOString()})`);
+              return null;
             }
 
-            // Create a separate budget entry for this space
-            budgetEntries.push({
+            const budgetAmount = getBudgetAmount(budget.amount);
+            return {
               ...budget,
-              // Clone budget but with space-specific data
-              _id: `${budget._id}_${spaceId}`,
-              spaceIds: [spaceId],
-              spaceTypes: [budget.spaceTypes[budget.spaceIds.indexOf(spaceId)] || 'UNKNOWN'], // Corresponding space type
-              isMultiSpace: false,
-              spent,
-              percentage,
-              remaining: Math.max(0, budgetAmount - spent),
-              isOverBudget: spent > budgetAmount,
-              overBudgetAmount: Math.max(0, spent - budgetAmount),
-              spendingData: spendingData,
-              currentEntry: currentEntry,
-              entries: spendingData.trendData || [],
-              // Add space-specific identifier
-              originalBudgetId: budget._id,
-              spaceId: spaceId
-            } as BudgetWithSpending);
-          } catch (error) {
-            console.error(`Error processing budget ${budget._id} for space ${spaceId}:`, error);
+              spent: 0,
+              percentage: 0,
+              remaining: budgetAmount,
+              isOverBudget: false,
+              overBudgetAmount: 0,
+              spendingData: null,
+              currentEntry: null,
+              entries: []
+            } as BudgetWithSpending;
           }
-        }
 
-        return budgetEntries;
+          const currentEntry = spendingData.currentEntry;
+          const budgetAmount = currentEntry.amount;
+          const spent = currentEntry.spent || 0;
+          const percentage = budgetAmount > 0 ? Math.min((spent / budgetAmount) * 100, 100) : 0;
+
+          // Check if current date falls within entry period
+          const today = new Date();
+          const entryStartDate = new Date(currentEntry.start_date);
+          const entryEndDate = new Date(currentEntry.end_date);
+
+          if (today < entryStartDate || today > entryEndDate) {
+            console.log(`Budget ${budget._id} skipped: current date outside entry period`);
+            return null;
+          }
+
+          return {
+            ...budget,
+            spent,
+            percentage,
+            remaining: Math.max(0, budgetAmount - spent),
+            isOverBudget: spent > budgetAmount,
+            overBudgetAmount: Math.max(0, spent - budgetAmount),
+            spendingData,
+            currentEntry,
+            entries: spendingData.trendData || []
+          } as BudgetWithSpending;
+        } catch (error) {
+          console.error(`Error fetching spending for budget ${budget._id}:`, error);
+          return null;
+        }
       });
 
       const budgetsWithEntriesResults = await Promise.all(budgetsWithEntriesPromises);
 
-      // Flatten the array of arrays
-      const allBudgetEntries = budgetsWithEntriesResults.flat();
+      // Filter out null values and remove any remaining duplicates
+      const validBudgets = budgetsWithEntriesResults
+        .filter(b => b !== null) as BudgetWithSpending[];
 
       setBudgets(allBudgets);
-      setBudgetsWithSpending(allBudgetEntries);
+      setBudgetsWithSpending(validBudgets);
 
       // Log summary
-      const totalBudgetAmount = allBudgetEntries.reduce((sum, b) => sum + (b.currentEntry?.amount || getBudgetAmount(b.amount)), 0);
-      const totalSpent = allBudgetEntries.reduce((sum, b) => sum + (b.spent || 0), 0);
+      const totalBudgetAmount = validBudgets.reduce((sum, b) =>
+        sum + (b.currentEntry?.amount || getBudgetAmount(b.amount)), 0);
+      const totalSpent = validBudgets.reduce((sum, b) => sum + (b.spent || 0), 0);
 
       console.log('All Spaces Budget Summary:', {
         totalBudgets: allBudgets.length,
-        activeBudgetEntries: allBudgetEntries.length,
+        activeBudgets: validBudgets.length,
         totalBudgetAmount,
         totalSpent,
         overallPercentage: totalBudgetAmount > 0 ? (totalSpent / totalBudgetAmount) * 100 : 0
@@ -1601,39 +1810,13 @@ function Budget() {
       const budgetsData = await getBudgetsBySpace(spaceid);
       const budgetsList = budgetsData || [];
 
-      // Fetch spending for each budget with timeout to prevent hanging
+      // Fetch spending for each budget
       const budgetsWithEntriesPromises = budgetsList.map(async (budget: BudgetItem) => {
         try {
-          // Get spending data for current period
+          // Get spending data for current period (aggregates across all spaces in budget)
           const spendingData = await getBudgetSpending(budget._id, undefined, spaceid);
 
-          if (!spendingData) {
-            console.warn(`No spending data for budget ${budget._id} - budget may not have started yet`);
-            const budgetAmount = getBudgetAmount(budget.amount);
-
-            // Check if this is a future ONE_TIME budget
-            const today = new Date();
-            const budgetStartDate = new Date(budget.startDate);
-
-            // If it's a future budget, exclude it from display
-            if (budget.type === BudgetType.ONE_TIME && today < budgetStartDate) {
-              console.log(`Skipping future ONE_TIME budget ${budget._id} (starts on ${budgetStartDate.toISOString()})`);
-              return null;
-            }
-
-            return {
-              ...budget,
-              spent: 0,
-              percentage: 0,
-              remaining: budgetAmount,
-              isOverBudget: false,
-              overBudgetAmount: 0,
-              currentEntry: null,
-              entries: []
-            } as BudgetWithSpending;
-          }
-
-          if (!spendingData.currentEntry) {
+          if (!spendingData || !spendingData.currentEntry) {
             console.warn(`No current entry for budget ${budget._id} - budget may not have started yet`);
             const budgetAmount = getBudgetAmount(budget.amount);
 
@@ -1641,7 +1824,6 @@ function Budget() {
             const today = new Date();
             const budgetStartDate = new Date(budget.startDate);
 
-            // If it's a future budget, exclude it from display
             if (budget.type === BudgetType.ONE_TIME && today < budgetStartDate) {
               console.log(`Skipping future ONE_TIME budget ${budget._id} (starts on ${budgetStartDate.toISOString()})`);
               return null;
@@ -1654,9 +1836,9 @@ function Budget() {
               remaining: budgetAmount,
               isOverBudget: false,
               overBudgetAmount: 0,
-              spendingData: spendingData,
+              spendingData: null,
               currentEntry: null,
-              entries: spendingData.trendData || []
+              entries: []
             } as BudgetWithSpending;
           }
 
@@ -1675,11 +1857,6 @@ function Budget() {
             return null;
           }
 
-          // Filter entries to only include those for the current space
-          const allEntries = (spendingData.trendData || []).filter((entry: any) => {
-            return entry.spaceId === spaceid || spaceid === "all";
-          });
-
           return {
             ...budget,
             spent,
@@ -1687,29 +1864,13 @@ function Budget() {
             remaining: Math.max(0, budgetAmount - spent),
             isOverBudget: spent > budgetAmount,
             overBudgetAmount: Math.max(0, spent - budgetAmount),
-            spendingData: {
-              ...spendingData,
-              trendData: allEntries
-            },
-            currentEntry: currentEntry,
-            entries: allEntries
+            spendingData,
+            currentEntry,
+            entries: spendingData.trendData || []
           } as BudgetWithSpending;
         } catch (error) {
           console.error(`Error fetching spending for budget ${budget._id}:`, error);
-          if (axios.isAxiosError(error) && error.response?.status === 404) {
-            console.log(`Budget ${budget._id} not found for current period - likely hasn't started yet`);
-            return null;
-          }
-          const budgetAmount = getBudgetAmount(budget.amount);
-          return {
-            ...budget,
-            spent: 0,
-            percentage: 0,
-            remaining: budgetAmount,
-            isOverBudget: false,
-            overBudgetAmount: 0,
-            spendingData: null
-          } as BudgetWithSpending;
+          return null;
         }
       });
 
@@ -1745,18 +1906,7 @@ function Budget() {
 
   const fetchBudgetDetail = async (budgetId: string) => {
     try {
-      // Determine which space to use for fetching spending data
-      let targetSpaceId: string | undefined;
-
-      if (spaceid && spaceid !== "all") {
-        // Use the current space from navbar
-        targetSpaceId = spaceid;
-      } else if (detailModal.budget?.spaceIds && detailModal.budget.spaceIds.length > 0) {
-        // Use the first space from the budget
-        targetSpaceId = detailModal.budget.spaceIds[0].toString();
-      }
-
-      const spendingData = await getBudgetSpending(budgetId, undefined, targetSpaceId);
+      const spendingData = await getBudgetSpending(budgetId);
       const budget = budgets.find(b => b._id === budgetId);
 
       if (budget) {
@@ -1786,6 +1936,11 @@ function Budget() {
     } else if (name === "type") {
       // When budget type changes, recalculate end date if start date exists
       const newType = value as BudgetType;
+      if (plan === PlanType.STARTER && newType !== BudgetType.ONE_TIME) {
+        setUpgradeMessage("Upgrade to unlock recurring budgets!");
+        return;
+      }
+
       const { startDate, endDate } = calculateBudgetDates(newType);
 
       setInputs(prev => ({
@@ -2006,11 +2161,11 @@ function Budget() {
       setNewOrEditMode(true);
       setEditId(null);
 
-      const { startDate, endDate } = calculateBudgetDates(BudgetType.MONTHLY);
+      const { startDate, endDate } = calculateBudgetDates(BudgetType.ONE_TIME);
       setInputs({
         name: "",
         amount: 0,
-        type: BudgetType.MONTHLY,
+        type: BudgetType.ONE_TIME,
         mainCategoryId: "",
         subCategoryIds: [],
         spaceIds: [],
@@ -2027,7 +2182,7 @@ function Budget() {
       setNewOrEditMode(true);
       setEditId(null);
 
-      const { startDate, endDate } = calculateBudgetDates(BudgetType.MONTHLY);
+      const { startDate, endDate } = calculateBudgetDates(BudgetType.ONE_TIME);
 
       // Get current space info
       const currentSpace = spaces.find(s => s.id === spaceid);
@@ -2036,7 +2191,7 @@ function Budget() {
       setInputs({
         name: "",
         amount: 0,
-        type: BudgetType.MONTHLY,
+        type: BudgetType.ONE_TIME,
         mainCategoryId: "",
         subCategoryIds: [],
         spaceIds: spaceid ? [spaceid] : [],
@@ -2167,18 +2322,8 @@ function Budget() {
 
   const handleUpdateBudgetAmount = async (budgetId: string, amount: number, scope: 'current' | 'future' | 'all') => {
     try {
-      // Extract original budget ID if it's a space-specific budget
-      let originalBudgetId = budgetId;
-      let spaceId = '';
 
-      // Check if this is a space-specific budget from "All spaces" view
-      if (budgetId.includes('_') && budgetId.split('_').length > 1) {
-        const parts = budgetId.split('_');
-        originalBudgetId = parts[0];
-        spaceId = parts[1];
-      }
-
-      await updateBudgetAmount(originalBudgetId, amount, scope);
+      await updateBudgetAmount(budgetId, amount, scope);
 
       if (spaceid === "all") {
         await fetchAllSpacesBudgets();
@@ -2198,7 +2343,7 @@ function Budget() {
     setInputs({
       name: "",
       amount: 0,
-      type: BudgetType.MONTHLY,
+      type: BudgetType.ONE_TIME,
       mainCategoryId: "",
       subCategoryIds: [],
       spaceIds: spaceid === "all" ? [] : spaceid ? [spaceid] : [],
@@ -2338,62 +2483,19 @@ function Budget() {
     }));
   };
 
-  // In the openBudgetDetail function
   const openBudgetDetail = (budget: BudgetItem | BudgetWithSpending) => {
-    // Check if this is a space-specific budget entry from "All spaces" view
-    const isSpaceSpecific = budget._id.includes('_') && budget._id.split('_').length > 1;
+    // Find the budget with spending data from budgetsWithSpending
+    const budgetWithSpending = budgetsWithSpending.find(b => b._id === budget._id);
 
-    if (isSpaceSpecific) {
-      // Extract original budget ID and space ID
-      const parts = budget._id.split('_');
-      const originalBudgetId = parts[0];
-      const spaceId = parts[1];
-
-      // Find the original budget
-      const originalBudget = budgets.find(b => b._id === originalBudgetId);
-      if (originalBudget) {
-        // Use the space-specific spending data that's already in the budget object
-        const budgetWithSpending = budget as BudgetWithSpending;
-
-        // Create a BudgetWithSpending object for the detail modal
-        const budgetForDetail: BudgetWithSpending = {
-          ...originalBudget,
-          // Override with space-specific data
-          _id: budget._id,
-          spaceIds: [spaceId],
-          spaceTypes: [budget.spaceTypes[0] || 'UNKNOWN'],
-          isMultiSpace: false,
-          spent: budgetWithSpending.spent,
-          percentage: budgetWithSpending.percentage,
-          currentEntry: budgetWithSpending.currentEntry,
-          entries: budgetWithSpending.entries,
-          // required properties from BudgetWithSpending interface
-          remaining: budgetWithSpending.remaining || 0,
-          isOverBudget: budgetWithSpending.isOverBudget || false,
-          overBudgetAmount: budgetWithSpending.overBudgetAmount || 0,
-          spendingData: budgetWithSpending.spendingData || null
-        };
-
-        setDetailModal({
-          isOpen: true,
-          budget: budgetForDetail,
-          spendingData: budgetWithSpending.spendingData || null
-        });
-      }
+    if (budgetWithSpending) {
+      setDetailModal({
+        isOpen: true,
+        budget: budgetWithSpending,
+        spendingData: budgetWithSpending.spendingData || null
+      });
     } else {
-      // Find the budget with spending data from budgetsWithSpending
-      const budgetWithSpending = budgetsWithSpending.find(b => b._id === budget._id);
-
-      if (budgetWithSpending) {
-        setDetailModal({
-          isOpen: true,
-          budget: budgetWithSpending,
-          spendingData: budgetWithSpending.spendingData || null
-        });
-      } else {
-        // Fallback: fetch the data if not found
-        fetchBudgetDetail(budget._id);
-      }
+      // Fallback: fetch the data if not found
+      fetchBudgetDetail(budget._id);
     }
   };
 
@@ -2581,10 +2683,10 @@ function Budget() {
 
       {/* Loading State */}
       {loading && budgets.length === 0 && (
-          <Loading/>
+        <Loading />
       )}
 
-      {/* CHANGED: Updated Space Selection Modal for multi-space support */}
+      {/* Space Selection Modal for multi-space support */}
       {newOrEditMode && spaceSelectionPhase && (
         <div className="fixed top-0 left-0 w-screen h-screen z-[999] grid place-items-center bg-black/50 overflow-auto p-4 pt-10">
           <div className="relative w-full max-w-2xl rounded-lg bg-bg-light-secondary dark:bg-bg-dark-secondary shadow-xl p-6">
@@ -2742,6 +2844,10 @@ function Budget() {
         confirmText="Delete Budget"
         cancelText="Cancel"
       />
+
+      {
+        upgradeMessage != "" && <Upgrade setUpgradeMode={setUpgradeMessage} message={upgradeMessage} />
+      }
     </>
   );
 }

@@ -5,8 +5,6 @@ import React, { useEffect, useState, useMemo, useCallback } from "react";
 import { ChevronDown, ChevronUp } from "lucide-react";
 import { FaCreditCard, FaEdit, FaMoneyBillWave, FaTrash, FaUniversity } from "react-icons/fa"
 
-const Eye = (props: any) => <span {...props}>👁️</span>;
-
 interface BudgetListProps {
   title: string;
   type: BudgetType;

@@ -10,10 +10,8 @@ const app = express();
 
 // Middleware
 app.use(
-   cors({
-      origin: "http://localhost:5173",
-      methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
-      allowedHeaders: ["Content-Type", "Authorization", "X-Requested-With"],
+    cors({
+      origin: process.env.FRONTEND_URL || "http://localhost:5173",
       credentials: true,
    })
 );
@@ -43,7 +41,13 @@ app.use('/notification', createProxyMiddleware({
 app.use('/report', createProxyMiddleware({
    target: process.env.REPORT_SERVICE_URL || "http://localhost:8084",
    changeOrigin: true,
-   pathRewrite: { '^/report': '' }
+   pathRewrite: {'^/report': ''}
+}))
+
+app.use('/ai', createProxyMiddleware({
+   target: process.env.AI_SERVICE_URL || "http://localhost:8085",
+   changeOrigin: true,
+   pathRewrite: {'^/ai': ''}
 }))
 
 app.listen(port, () => {

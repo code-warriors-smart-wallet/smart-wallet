@@ -6,7 +6,7 @@ import { VictoryLine, VictoryPie, VictoryTheme, VictoryChart, VictoryAxis } from
 import { generateRandomColor } from "../../../../utils/utils";
 
 interface SpendingSummaryProps {
-    spendingSummary: any,
+    summary: any,
     currency: string,
     startDate: string,
     endDate: string,
@@ -22,8 +22,8 @@ export enum SpendingSummaryFilterOptions {
     THIS_MONTH = "THIS_MONTH", TODAY = "TODAY", YESTERDAY = "YESTERDAY", THIS_WEEK = "THIS_WEEK", THIS_YEAR = "THIS_YEAR", CUSTOM = "CUSTOM"
 }
 
-function SpendingSummary({
-    spendingSummary,
+function CreditCardSpendingSummary({
+    summary,
     currency,
     startDate,
     endDate,
@@ -34,18 +34,13 @@ function SpendingSummary({
     setFilterType,
     username }: SpendingSummaryProps) {
 
-    const moneyIn = spendingSummary.moneyIn?.length > 0 ? spendingSummary?.moneyIn[0].totalAmount.$numberDecimal : 0.0;
-    const moneyOut = spendingSummary.moneyOut?.length > 0 ? spendingSummary?.moneyOut[0].totalAmount.$numberDecimal : 0.0;
     const [selectedPCategory, setselectedPCategory] = useState("");
     const chartRef = useRef<HTMLDivElement>(null)
 
-    const incomeByCategory = spendingSummary.incomeByCategory;
-    const spendingByPCategory = spendingSummary.spendingByPCategory;
-    const spendingbySCategory = spendingSummary.spendingByCategory?.filter((cat: any) => {
+    const spendingByPCategory = summary?.spendingSummary?.spendingByPCategory;
+    const spendingbySCategory = summary?.spendingSummary?.spendingByCategory?.filter((cat: any) => {
         return cat.parentCategory?.includes(selectedPCategory)
     });
-    const spendingByUser = spendingSummary?.spendingByUser?.map((rec: any, index: any) => ({ ...rec, color: `hsl(${(index / spendingSummary.spendingByUser.length) * 360}, 70%, 50%)` }));
-    const incomeByUser = spendingSummary?.incomeByUser?.map((rec: any, index: any) => ({ ...rec, color: `hsl(${(index / spendingSummary.incomeByUser.length) * 360}, 70%, 50%)` }));
 
     useEffect(() => {
         const handleClickOutside = (event: MouseEvent) => {
@@ -105,38 +100,10 @@ function SpendingSummary({
                 </div>
             </div>
 
-            {/* cash flow */}
-            <div className="flex gap-3 *:flex-1 flex-wrap mt-2">
-
-                <div className="pb-2 border-border-light-primary dark:border-border-dark-primary mt-3">
-                    <h1 className="font-semibold">Money in</h1>
-                    <h2 className="text-xl font-semibold text-text-light-secondary dark:text-text-dark-secondary">{moneyIn} {currency}</h2>
-                </div>
-                <div className="pb-2 border-border-light-primary dark:border-border-dark-primary mt-3">
-                    <h1 className="font-semibold">Money out</h1>
-                    <h2 className="text-xl font-semibold text-text-light-secondary dark:text-text-dark-secondary">{moneyOut} {currency}</h2>
-                </div>
-                <div className="pb-2 border-border-light-primary dark:border-border-dark-primary mt-3">
-                    <h1 className="font-semibold">Net change</h1>
-                    <h2 className="text-xl font-semibold text-text-light-secondary dark:text-text-dark-secondary">{moneyIn - moneyOut} {currency}</h2>
-                </div>
-                <div className="pb-2 border-border-light-primary dark:border-border-dark-primary mt-3">
-                    <h1 className="font-semibold">Saving Rate</h1>
-                    <h2 className="text-xl font-semibold text-text-light-secondary dark:text-text-dark-secondary">{
-                        moneyIn > 0 ? ((moneyIn - moneyOut) / moneyIn * 100).toFixed(2) : 0
-                    }%</h2>
-                </div>
-
-
-            </div>
-
             {/* expense charts */}
             <div className="flex gap-3 *:flex-1 flex-wrap">
                 <div className="p-2 border border-border-light-primary dark:border-border-dark-primary mt-3">
                     <h1>Spending by main category</h1>
-                    {
-                        moneyOut == 0 && <div className="w-full h-full grid place-items-center text-sm text-text-light-secondary dark:text-text-dark-secondary">No records found.</div>
-                    }
                     <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
                         <svg
                             viewBox="0 0 200 300"
@@ -186,9 +153,6 @@ function SpendingSummary({
                 </div>
                 <div className="p-2 border border-border-light-primary dark:border-border-dark-primary mt-3">
                     <h1>Spending by sub Category</h1>
-                    {
-                        moneyOut == 0 && <div className="w-full h-full grid place-items-center text-sm text-text-light-secondary dark:text-text-dark-secondary">No records found..</div>
-                    }
                     <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
                         <svg
                             viewBox="0 0 200 300"
@@ -222,99 +186,6 @@ function SpendingSummary({
                     </div>
                 </div>
             </div>
-
-            {/* Member contribution */}
-            {
-                spendingByUser && spendingByUser.length > 0 && incomeByUser && incomeByUser.length > 0 && (
-                    <div className="flex gap-3 *:flex-1 flex-wrap">
-                        <div className="p-2 border border-border-light-primary dark:border-border-dark-primary mt-3">
-                            <h1>Income by members</h1>
-                            {
-                                incomeByUser.length == 0 && <div className="w-full h-full grid place-items-center text-sm text-text-light-secondary dark:text-text-dark-secondary">No records found.</div>
-                            }
-                            <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
-                                <svg
-                                    viewBox="0 0 200 300"
-                                    style={{ width: '100%', maxWidth: 200 }}
-                                    ref={chartRef}
-                                >
-                                    <VictoryPie
-                                        standalone={false}
-                                        width={200}
-                                        height={300}
-                                        innerRadius={60}
-                                        colorScale={incomeByUser?.map((c: any) => c.color)}
-                                        labels={() => null}
-                                        data={incomeByUser}
-                                        theme={VictoryTheme.clean}
-                                        radius={90}
-                                    />
-                                </svg>
-                                <div>
-                                    {
-                                        incomeByUser?.map((cat: any) => {
-                                            return (
-                                                <div className="flex gap-2 items-center">
-                                                    <span style={{ backgroundColor: cat.color }} className="w-3 h-3">
-                                                    </span>
-                                                    <span className="capitalize">
-                                                        {username === cat.username ? "You" : cat.username}
-                                                        <span className="text-xs text-text-light-secondary dark:text-text-dark-secondary">
-                                                            - {currency}. {cat.y}
-                                                        </span></span>
-                                                </div>
-                                            )
-                                        })
-                                    }
-                                </div>
-                            </div>
-                        </div>
-                        <div className="p-2 border border-border-light-primary dark:border-border-dark-primary mt-3">
-                            <h1>Spending by members</h1>
-                            {
-                                spendingByUser.length == 0 && <div className="w-full h-full grid place-items-center text-sm text-text-light-secondary dark:text-text-dark-secondary">No records found.</div>
-                            }
-                            <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
-                                <svg
-                                    viewBox="0 0 200 300"
-                                    style={{ width: '100%', maxWidth: 200 }}
-                                    ref={chartRef}
-                                >
-                                    <VictoryPie
-                                        standalone={false}
-                                        width={200}
-                                        height={300}
-                                        innerRadius={60}
-                                        colorScale={spendingByUser?.map((c: any) => c.color)}
-                                        labels={() => null}
-                                        data={spendingByUser}
-                                        theme={VictoryTheme.clean}
-                                        radius={90}
-                                    />
-                                </svg>
-                                <div>
-                                    {
-                                        spendingByUser?.map((cat: any) => {
-                                            return (
-                                                <div className="flex gap-2 items-center">
-                                                    <span style={{ backgroundColor: cat.color }} className="w-3 h-3">
-                                                    </span>
-                                                    <span className="capitalize">
-                                                        {username === cat.username ? "You" : cat.username}
-                                                        <span className="text-xs text-text-light-secondary dark:text-text-dark-secondary">
-                                                            - {currency}. {cat.y}
-                                                        </span></span>
-                                                </div>
-                                            )
-                                        })
-                                    }
-                                </div>
-                            </div>
-                        </div>
-
-                    </div>
-                )
-            }
 
             {/* income charts */}
             {/* <div className="flex gap-3 *:flex-1 flex-wrap">
@@ -407,4 +278,4 @@ function SpendingSummary({
     )
 }
 
-export default SpendingSummary;
+export default CreditCardSpendingSummary;

@@ -301,18 +301,10 @@ const BudgetModal: React.FC<BudgetModalProps> = ({
                   required
                 >
                   <option value={BudgetType.ONE_TIME}>One Time</option>
-                  {plan !== PlanType.STARTER && (
-                    <>
-                      <option value={BudgetType.WEEKLY}>Weekly</option>
-                      <option value={BudgetType.MONTHLY}>Monthly</option>
-                    </>
-                  )}
+                  <option value={BudgetType.WEEKLY}>Weekly</option>
+                  <option value={BudgetType.MONTHLY}>Monthly</option>
                 </select>
-                {plan === PlanType.STARTER && (
-                  <p className="text-xs text-secondary mt-1">
-                    Upgrade to Plus to enable Weekly and Monthly recurring budgets.
-                  </p>
-                )}
+
               </div>
 
               <>

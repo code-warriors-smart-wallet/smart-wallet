@@ -56,7 +56,7 @@ function NavBar({ setSideBarOpen, isSideBarOpen, view, spaceId, setSpaceFormTogg
 
       // --- Filter spaces for Budget view ---
       let filteredSpaces = (spaces || []);
-      if (view === UserPortalView.DASHBOARD || view === UserPortalView.TRANSACTIONS || view === UserPortalView.BUDGETS || view === UserPortalView.CATEGORIES) {
+      if (view === UserPortalView.BUDGETS) {
          const allowedTypes = [SpaceType.BANK, SpaceType.CASH, SpaceType.CREDIT_CARD];
          filteredSpaces = (spaces || []).filter((space) =>
             allowedTypes.includes(space.type as SpaceType)

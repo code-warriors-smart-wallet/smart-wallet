@@ -76,11 +76,8 @@ function SpaceForm({ inputs, onInputChange, spaces, onSubmit, onAddOrEdit, onCan
                             </option>
                             {
                                 Object.values(SpaceType).map((st) => {
-                                    const isRestricted = plan === PlanType.STARTER && ![SpaceType.CASH, SpaceType.BANK].includes(st);
                                     
-                                    if (isRestricted) return null;
 
-                                    return (
                                         <option key={st} value={st}>
                                             {st.split("_").join(" ")}
                                         </option>

@@ -67,7 +67,16 @@ function Reports() {
         isCollaborative: false,
     });
     const [showSelectSpacesModal, setShowSelectSpacesModal] = useState(false);
-    const { getTransactionLedger, getLoanLedger, getCreditCardLedger, loading } = ReportService();
+    const { 
+        getTransactionLedger, 
+        getLoanLedger, 
+        getCreditCardLedger, 
+        getIncomeVsExpenseReport,
+        getBudgetUtilizationReport,
+        getLoanRepaymentSummary,
+        getFinancialPositionReport,
+        loading 
+    } = ReportService();
 
     const openSelectSpacesModal = () => {
         if (!inputs.type) {
@@ -158,7 +167,7 @@ function Reports() {
 
                     {/* from date */}
                     {
-                        [REPORT.ACCOUNT_LEDGER, REPORT.CREDIT_CARD_LEDGER].includes(inputs.type as any) && (
+                        [REPORT.ACCOUNT_LEDGER, REPORT.CREDIT_CARD_LEDGER, REPORT.INCOME_VS_EXPENSE_BY_CATEGORY, REPORT.BUDGET_UTILIZATION].includes(inputs.type as any) && (
                             <div className={`my-3`}>
                                 <label className="text-text-light-primary dark:text-text-dark-primary">From date:</label>
                                 <Input
@@ -175,7 +184,7 @@ function Reports() {
 
                     {/* to date */}
                     {
-                        [REPORT.ACCOUNT_LEDGER, REPORT.LOAN_LEDGER, REPORT.CREDIT_CARD_LEDGER].includes(inputs.type as any) && (
+                        [REPORT.ACCOUNT_LEDGER, REPORT.LOAN_LEDGER, REPORT.CREDIT_CARD_LEDGER, REPORT.INCOME_VS_EXPENSE_BY_CATEGORY, REPORT.BUDGET_UTILIZATION, REPORT.LOAN_REPAYMENT_SUMMARY, REPORT.STATEMENT_OF_FINANCIAL_POSITION].includes(inputs.type as any) && (
                             <div className={`my-3`}>
                                 <label className="text-text-light-primary dark:text-text-dark-primary">To date:</label>
                                 <Input
@@ -255,7 +264,11 @@ function Reports() {
                                 inputs.type === "" ||
                                 inputs.type === REPORT.ACCOUNT_LEDGER && (inputs.spaces.length === 0 || inputs.fromdate === "" || inputs.todate === "") ||
                                 inputs.type === REPORT.LOAN_LEDGER && (inputs.spaces.length === 0 || inputs.todate === "") ||
-                                inputs.type === REPORT.CREDIT_CARD_LEDGER && (inputs.spaces.length === 0 || inputs.fromdate === "" || inputs.todate === "")
+                                inputs.type === REPORT.CREDIT_CARD_LEDGER && (inputs.spaces.length === 0 || inputs.fromdate === "" || inputs.todate === "") ||
+                                inputs.type === REPORT.INCOME_VS_EXPENSE_BY_CATEGORY && (inputs.spaces.length === 0 || inputs.fromdate === "" || inputs.todate === "") ||
+                                inputs.type === REPORT.BUDGET_UTILIZATION && (inputs.spaces.length === 0 || inputs.fromdate === "" || inputs.todate === "") ||
+                                inputs.type === REPORT.LOAN_REPAYMENT_SUMMARY && (inputs.spaces.length === 0 || inputs.todate === "") ||
+                                inputs.type === REPORT.STATEMENT_OF_FINANCIAL_POSITION && (inputs.todate === "")
                             }
                             onClick={() => {
                                 console.log("inputs", inputs)
@@ -265,6 +278,14 @@ function Reports() {
                                     getLoanLedger(inputs.format, inputs.spaces.length > 0 ? inputs.spaces[0] : "", inputs.todate)
                                 } else if (inputs.type === REPORT.CREDIT_CARD_LEDGER) {
                                     getCreditCardLedger(inputs.format, inputs.spaces.length > 0 ? inputs.spaces[0] : "", inputs.fromdate, inputs.todate)
+                                } else if (inputs.type === REPORT.INCOME_VS_EXPENSE_BY_CATEGORY) {
+                                    getIncomeVsExpenseReport(inputs.format, inputs.spaces, inputs.fromdate, inputs.todate, inputs.isCollaborative)
+                                } else if (inputs.type === REPORT.BUDGET_UTILIZATION) {
+                                    getBudgetUtilizationReport(inputs.format, inputs.spaces, inputs.fromdate, inputs.todate, inputs.isCollaborative)
+                                } else if (inputs.type === REPORT.LOAN_REPAYMENT_SUMMARY) {
+                                    getLoanRepaymentSummary(inputs.format, inputs.spaces, inputs.todate)
+                                } else if (inputs.type === REPORT.STATEMENT_OF_FINANCIAL_POSITION) {
+                                    getFinancialPositionReport(inputs.format, inputs.todate)
                                 } else {
                                     alert("Coming soon!")
                                 }

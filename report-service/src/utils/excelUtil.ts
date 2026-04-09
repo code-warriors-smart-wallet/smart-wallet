@@ -461,5 +461,287 @@ export function createCreditCardLedgerSheet(
     worksheet.views = [{ state: "frozen", ySplit: 11 }];
 
     return workbook;
+}
 
+export function createIncomeVsExpenseSheet(
+    reportData: any,
+    fromDate: string,
+    toDate: string,
+    spacesNames: Set<string>
+) {
+    const workbook = new ExcelJS.Workbook();
+    const worksheet = workbook.addWorksheet("Income vs Expense");
+    let currentRow = 1;
+
+    // TITLE
+    worksheet.mergeCells(`A${currentRow}:B${currentRow}`);
+    const titleCell = worksheet.getCell(`A${currentRow}`);
+    titleCell.value = "Income vs Expense Report";
+    titleCell.font = { size: 16, bold: true };
+    currentRow += 2;
+
+    // INFO SECTION
+    const infoRows = [
+        `From: ${fromDate}`,
+        `To: ${toDate}`,
+        `Spaces: ${Array.from(spacesNames).join(", ")}`,
+        `Generated on: ${new Date().toLocaleString()}`
+    ];
+    infoRows.forEach(text => {
+        worksheet.mergeCells(`A${currentRow}:B${currentRow}`);
+        worksheet.getCell(`A${currentRow}`).value = text;
+        currentRow++;
+    });
+    currentRow += 2;
+
+    // SUMMARY AREA
+    worksheet.getCell(`A${currentRow}`).value = "Summary";
+    worksheet.getCell(`A${currentRow}`).font = { bold: true, size: 14 };
+    currentRow++;
+
+    const summaryHeaders = ["Metric", "Amount"];
+    worksheet.getRow(currentRow).values = summaryHeaders;
+    worksheet.getRow(currentRow).font = { bold: true };
+    currentRow++;
+
+    worksheet.addRow(["Total Income", reportData.totalIncome]);
+    worksheet.getCell(`B${currentRow}`).numFmt = "#,##0.00";
+    currentRow++;
+    worksheet.addRow(["Total Expense", reportData.totalExpense]);
+    worksheet.getCell(`B${currentRow}`).numFmt = "#,##0.00";
+    currentRow++;
+    const netIncomeRow = worksheet.addRow(["Net Income", reportData.netIncome]);
+    netIncomeRow.font = { bold: true };
+    worksheet.getCell(`B${currentRow}`).numFmt = "#,##0.00";
+    currentRow += 2;
+
+    // INCOME DETAILS
+    worksheet.getCell(`A${currentRow}`).value = "Income Details";
+    worksheet.getCell(`A${currentRow}`).font = { bold: true, size: 14 };
+    currentRow++;
+    
+    worksheet.getRow(currentRow).values = ["Category", "Amount"];
+    worksheet.getRow(currentRow).font = { bold: true };
+    currentRow++;
+    
+    reportData.incomeByCategory.forEach((row: any) => {
+        worksheet.addRow([row.category, row.amount]);
+        worksheet.getCell(`B${currentRow}`).numFmt = "#,##0.00";
+        currentRow++;
+    });
+    currentRow++;
+
+    // EXPENSE DETAILS
+    worksheet.getCell(`A${currentRow}`).value = "Expense Details";
+    worksheet.getCell(`A${currentRow}`).font = { bold: true, size: 14 };
+    currentRow++;
+    
+    worksheet.getRow(currentRow).values = ["Category", "Amount"];
+    worksheet.getRow(currentRow).font = { bold: true };
+    currentRow++;
+    
+    reportData.expenseByCategory.forEach((row: any) => {
+        worksheet.addRow([row.category, row.amount]);
+        worksheet.getCell(`B${currentRow}`).numFmt = "#,##0.00";
+        currentRow++;
+    });
+
+    worksheet.columns.forEach(col => { col.width = 30; });
+    return workbook;
+}
+
+export function createBudgetUtilizationSheet(
+    budgets: any[],
+    fromDate: string,
+    toDate: string,
+    spacesNames: Set<string>
+) {
+    const workbook = new ExcelJS.Workbook();
+    const worksheet = workbook.addWorksheet("Budget Utilization");
+    let currentRow = 1;
+
+    worksheet.mergeCells(`A${currentRow}:G${currentRow}`);
+    const titleCell = worksheet.getCell(`A${currentRow}`);
+    titleCell.value = "Budget Utilization Report";
+    titleCell.font = { size: 16, bold: true };
+    currentRow += 2;
+
+    const infoRows = [
+        `From: ${fromDate}`,
+        `To: ${toDate}`,
+        `Spaces: ${Array.from(spacesNames).join(", ")}`,
+        `Generated on: ${new Date().toLocaleString()}`
+    ];
+    infoRows.forEach(text => {
+        worksheet.mergeCells(`A${currentRow}:G${currentRow}`);
+        worksheet.getCell(`A${currentRow}`).value = text;
+        currentRow++;
+    });
+    currentRow += 2;
+
+    const headers = ["Space", "Category", "Sub Category", "Allocated", "Spent", "Remaining", "Utilization (%)"];
+    const headerRow = worksheet.getRow(currentRow);
+    headerRow.values = headers;
+    headerRow.font = { bold: true };
+    currentRow++;
+
+    budgets.forEach((row: any) => {
+        worksheet.addRow([
+            row.spaceName,
+            row.category,
+            row.subCategory || "All",
+            row.allocated,
+            row.spent,
+            row.remaining,
+            row.utilizationPercentage
+        ]);
+        worksheet.getCell(currentRow, 4).numFmt = "#,##0.00";
+        worksheet.getCell(currentRow, 5).numFmt = "#,##0.00";
+        worksheet.getCell(currentRow, 6).numFmt = "#,##0.00";
+        worksheet.getCell(currentRow, 7).numFmt = "0.00";
+        currentRow++;
+    });
+
+    worksheet.columns.forEach(col => { col.width = 18; });
+    return workbook;
+}
+
+export function createLoanRepaymentSummarySheet(
+    summaryData: any[],
+    toDate: string,
+    spacesNames: Set<string>
+) {
+    const workbook = new ExcelJS.Workbook();
+    const worksheet = workbook.addWorksheet("Loan Repayment Summary");
+    let currentRow = 1;
+
+    worksheet.mergeCells(`A${currentRow}:G${currentRow}`);
+    const titleCell = worksheet.getCell(`A${currentRow}`);
+    titleCell.value = "Loan Repayment Summary";
+    titleCell.font = { size: 16, bold: true };
+    currentRow += 2;
+
+    const infoRows = [
+        `As of: ${toDate}`,
+        `Spaces: ${Array.from(spacesNames).join(", ")}`,
+        `Generated on: ${new Date().toLocaleString()}`
+    ];
+    infoRows.forEach(text => {
+        worksheet.mergeCells(`A${currentRow}:G${currentRow}`);
+        worksheet.getCell(`A${currentRow}`).value = text;
+        currentRow++;
+    });
+    currentRow += 2;
+
+    const headers = [
+        "Space", "Total Loan Amount", "Total Paid Base", 
+        "Remaining Principal", "Total Interest Paid", 
+        "Total Charges Paid", "Monthly Interest Rate (%)"
+    ];
+    const headerRow = worksheet.getRow(currentRow);
+    headerRow.values = headers;
+    headerRow.font = { bold: true };
+    currentRow++;
+
+    summaryData.forEach((row: any) => {
+        worksheet.addRow([
+            row.spaceName,
+            row.totalLoanAmount,
+            row.totalPaidBase,
+            row.remainingPrincipal,
+            row.totalInterestPaid,
+            row.totalChargesPaid,
+            row.monthlyInterestRate || "N/A"
+        ]);
+        worksheet.getCell(currentRow, 2).numFmt = "#,##0.00";
+        worksheet.getCell(currentRow, 3).numFmt = "#,##0.00";
+        worksheet.getCell(currentRow, 4).numFmt = "#,##0.00";
+        worksheet.getCell(currentRow, 5).numFmt = "#,##0.00";
+        worksheet.getCell(currentRow, 6).numFmt = "#,##0.00";
+        currentRow++;
+    });
+
+    worksheet.columns.forEach(col => { col.width = 22; });
+    return workbook;
+}
+
+export function createFinancialPositionSheet(
+    reportData: any,
+    toDate: string
+) {
+    const workbook = new ExcelJS.Workbook();
+    const worksheet = workbook.addWorksheet("Financial Position");
+    let currentRow = 1;
+
+    worksheet.mergeCells(`A${currentRow}:C${currentRow}`);
+    const titleCell = worksheet.getCell(`A${currentRow}`);
+    titleCell.value = "Statement of Financial Position";
+    titleCell.font = { size: 16, bold: true };
+    currentRow += 2;
+
+    const infoRows = [
+        `As of: ${toDate}`,
+        `Generated on: ${new Date().toLocaleString()}`
+    ];
+    infoRows.forEach(text => {
+        worksheet.mergeCells(`A${currentRow}:C${currentRow}`);
+        worksheet.getCell(`A${currentRow}`).value = text;
+        currentRow++;
+    });
+    currentRow += 2;
+
+    // SUMMARY AREA
+    worksheet.getCell(`A${currentRow}`).value = "Summary";
+    worksheet.getCell(`A${currentRow}`).font = { bold: true, size: 14 };
+    currentRow++;
+
+    const summaryHeaders = ["Metric", "Amount"];
+    worksheet.getRow(currentRow).values = summaryHeaders;
+    worksheet.getRow(currentRow).font = { bold: true };
+    currentRow++;
+
+    worksheet.addRow(["Total Assets", reportData.totalAssets]);
+    worksheet.getCell(`B${currentRow}`).numFmt = "#,##0.00";
+    currentRow++;
+    worksheet.addRow(["Total Liabilities", reportData.totalLiabilities]);
+    worksheet.getCell(`B${currentRow}`).numFmt = "#,##0.00";
+    currentRow++;
+    const netRow = worksheet.addRow(["Net Worth", reportData.netWorth]);
+    netRow.font = { bold: true };
+    worksheet.getCell(`B${currentRow}`).numFmt = "#,##0.00";
+    currentRow += 2;
+
+    // ASSETS
+    worksheet.getCell(`A${currentRow}`).value = "Assets Breakdown";
+    worksheet.getCell(`A${currentRow}`).font = { bold: true, size: 14 };
+    currentRow++;
+    
+    worksheet.getRow(currentRow).values = ["Space", "Type", "Balance"];
+    worksheet.getRow(currentRow).font = { bold: true };
+    currentRow++;
+    
+    reportData.assets.forEach((row: any) => {
+        worksheet.addRow([row.spaceName, row.type, row.balance]);
+        worksheet.getCell(`C${currentRow}`).numFmt = "#,##0.00";
+        currentRow++;
+    });
+    currentRow++;
+
+    // LIABILITIES
+    worksheet.getCell(`A${currentRow}`).value = "Liabilities Breakdown";
+    worksheet.getCell(`A${currentRow}`).font = { bold: true, size: 14 };
+    currentRow++;
+    
+    worksheet.getRow(currentRow).values = ["Space", "Type", "Balance (Outstanding)"];
+    worksheet.getRow(currentRow).font = { bold: true };
+    currentRow++;
+    
+    reportData.liabilities.forEach((row: any) => {
+        worksheet.addRow([row.spaceName, row.type, row.balance]);
+        worksheet.getCell(`C${currentRow}`).numFmt = "#,##0.00";
+        currentRow++;
+    });
+
+    worksheet.columns.forEach(col => { col.width = 30; });
+    return workbook;
 }

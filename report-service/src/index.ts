@@ -9,6 +9,9 @@ import './models/space';
 import './models/category';
 import './models/schedule';
 import './models/transaction';
+import './models/loan-repayment-plan';
+import './models/budget';
+import './models/budget-entry';
 
 import { connectDatabase } from './config/database';
 import dashboardRouter from "./routes/dashboard";

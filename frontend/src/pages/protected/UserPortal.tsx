@@ -76,7 +76,7 @@ function UserPortal() {
          />
 
          <div className="p-4 sm:ml-64 mt-5">
-            <div className="p-4 mt-14 min-h-screen h-fit">
+            <div className="p-4 mt-14 min-h-screen h-fit border-1 border-border-light-primary rounded-lg dark:border-border-dark-primary">
                <>{ViewComponent()}</>
             </div>
          </div>

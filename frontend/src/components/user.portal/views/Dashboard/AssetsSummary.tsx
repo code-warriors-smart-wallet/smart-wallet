@@ -33,7 +33,7 @@ function AssetsSummary({ currency, summary }: { currency: string, summary: any }
     }, [space, summary])
 
     return (
-        <section className="app-card *:text-text-light-primary *:dark:text-text-dark-primary">
+        <section className="rounded my-3 py-2 px-3 border border-border-light-primary dark:border-border-dark-primary *:text-text-light-primary *:dark:text-text-dark-primary">
             {/* title */}
             <div className="rounded flex justify-between items-center">
                 <span className="flex gap-3 items-center text-xl font-bold"><MdSavings />Assets summary</span>

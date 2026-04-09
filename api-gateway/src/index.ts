@@ -10,7 +10,7 @@ const app = express();
 
 app.use(
     cors({
-      origin: process.env.FRONTEND_URL || "http://localhostt:5173",
+      origin: process.env.FRONTEND_URL || "http://localhost:5173",
       credentials: true,
     })
 );
@@ -37,6 +37,12 @@ app.use('/report', createProxyMiddleware({
    target: process.env.REPORT_SERVICE_URL || "http://localhost:8084",
    changeOrigin: true,
    pathRewrite: {'^/report': ''}
+}))
+
+app.use('/ai', createProxyMiddleware({
+   target: process.env.AI_SERVICE_URL || "http://localhost:8085",
+   changeOrigin: true,
+   pathRewrite: {'^/ai': ''}
 }))
 
 app.listen(port, () => {

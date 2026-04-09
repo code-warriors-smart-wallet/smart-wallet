@@ -115,7 +115,7 @@ function NavBar({ setSideBarOpen, isSideBarOpen, view, spaceId, setSpaceFormTogg
 
    return (
       <>
-         <nav className="fixed top-0 z-50 w-full bg-bg-light-primary dark:bg-bg-dark-primary border-b border-border-light-primary dark:border-border-dark-primary h-20">
+         <nav className="fixed top-0 z-50 w-full bg-bg-light-primary dark:bg-bg-dark-primary app-nav border-b border-border-light-primary dark:border-border-dark-primary h-20">
             <div className="px-3 py-3 lg:px-5 lg:pl-3 h-full">
                <div className="flex items-center justify-between h-full">
                   <div className="flex items-center justify-start rtl:justify-end w-65">
@@ -194,6 +194,7 @@ function NavBar({ setSideBarOpen, isSideBarOpen, view, spaceId, setSpaceFormTogg
                      </div>
                   </div>
                </div>
+            </div>
             </div>
          </nav>
          {

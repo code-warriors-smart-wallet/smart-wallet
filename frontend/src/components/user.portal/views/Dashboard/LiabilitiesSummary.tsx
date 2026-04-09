@@ -20,13 +20,13 @@ function LiabilitiesSummary({ currency, summary }: { currency: string, summary: 
             spaces = [SpaceType.CREDIT_CARD]
             setTotal(summary.totalCreditcardLiabilityAmount)
         }
-        let assetsInfo = summary.liabilitiesInfo?.filter((info: any) => spaces.includes(info.spaceType))
-        assetsInfo = assetsInfo?.map((rec: any, index: any) => ({ ...rec, color: `hsl(${(index / assetsInfo.length) * 360}, 80%, 50%)` }));
+        let assetsInfo = summary?.liabilitiesInfo?.filter((info: any) => spaces.includes(info.spaceType)) ?? []
+        assetsInfo = assetsInfo.map((rec: any, index: any) => ({ ...rec, color: `hsl(${(index / assetsInfo.length) * 360}, 80%, 50%)` }));
         setAssetsInfo(assetsInfo)
     }, [space, summary])
 
     return (
-        <section className="rounded my-3 py-2 px-3 border border-border-light-primary dark:border-border-dark-primary *:text-text-light-primary *:dark:text-text-dark-primary">
+        <section className="app-card *:text-text-light-primary *:dark:text-text-dark-primary">
             {/* title */}
             <div className="rounded flex justify-between items-center">
                 <span className="flex gap-3 items-center text-xl font-bold"><MdOutlineRequestQuote />Liabilities summary</span>
@@ -34,10 +34,10 @@ function LiabilitiesSummary({ currency, summary }: { currency: string, summary: 
 
             {/* Assets classificaion across spaces chart */}
             <div className="flex gap-3 flex-wrap *:flex-1">
-                <div className="flex flex-col *:flex-1 gap-3 min-w-1/3 max-w-1/3 mt-3">
+                <div className="flex flex-col *:flex-1 gap-3 w-full sm:min-w-1/3 sm:max-w-1/3 mt-3">
                     <div className={`p-3 border hover:bg-hover-light-primary hover:dark:bg-hover-dark-primary cursor-pointer ${space === "" ? "border-primary bg-hover-light-primary dark:bg-hover-dark-primary" : "border-border-light-primary dark:border-border-dark-primary"}`} onClick={() => setSpace("")}>
                         <h1 className="font-semibold">Total Liabilities:</h1>
-                        <h2 className="text-xl font-semibold text-text-light-secondary dark:text-text-dark-secondary">{summary.totalLoanBorrowedLiabilityAmount + summary.totalCreditcardLiabilityAmount} {currency}</h2>
+                        <h2 className="text-xl font-semibold text-text-light-secondary dark:text-text-dark-secondary">{(summary?.totalLoanBorrowedLiabilityAmount ?? 0) + (summary?.totalCreditcardLiabilityAmount ?? 0)} {currency}</h2>
                     </div>
                     <div className={`p-3 border hover:bg-hover-light-primary hover:dark:bg-hover-dark-primary cursor-pointer ${space === SpaceType.CREDIT_CARD ? "border-primary bg-hover-light-primary dark:bg-hover-dark-primary" : "border-border-light-primary dark:border-border-dark-primary"}`} onClick={() => setSpace(SpaceType.CREDIT_CARD)}>
                         <h1 className="font-semibold">Credit card balance:</h1>
@@ -51,11 +51,10 @@ function LiabilitiesSummary({ currency, summary }: { currency: string, summary: 
                 <div className="p-2 border border-border-light-primary dark:border-border-dark-primary mt-3">
                     {
                         liabilitiesInfo.length > 0 ? (
-                            <div className="flex items-center justify-center gap-3">
+                            <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
                                 <svg
-                                    width={400}
-                                    height={300}
-                                // ref={chartRef}
+                                    viewBox="0 0 400 300"
+                                    style={{ width: '100%', maxWidth: 400 }}
                                 >
                                     <VictoryPie
                                         standalone={false}

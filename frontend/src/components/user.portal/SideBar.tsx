@@ -1,7 +1,7 @@
 import SideBarItem from "./SideBarItem";
 import { useNavigate } from "react-router-dom";
 import SidebarDropdownItem from "./SideBarDropDownItem";
-import { BudgetIcon, CategoryIcon, DashBoardIcon, GoalIcon, LogoutIcon, NotificationIcon, ReportIcon, ScheduleIcon, SettingsIcon, SpaceIcon, TransactionIcon } from "../icons";
+import { BudgetIcon, CategoryIcon, DashBoardIcon, GoalIcon, LogoutIcon, NotificationIcon, ReportIcon, ScheduleIcon, SettingsIcon, SpaceIcon, TransactionIcon, AIAssistantIcon } from "../icons";
 import { AuthService } from "../../services/auth/auth.service";
 import { MdFileDownload } from "react-icons/md";
 import { SpaceType } from "./views/Spaces";
@@ -48,8 +48,8 @@ function SideBar({ isSideBarOpen, view, spacetype, spaceid }: { isSideBarOpen: b
 
    return (
       <>
-      <aside id="logo-sidebar" className={`fixed top-5 left-0 z-40 w-64 h-screen pt-20 transition-transform ${sideBarStyleSM} bg-bg-light-primary border-r border-border-light-primary dark:bg-bg-dark-primary dark:border-border-dark-primary sm:translate-x-0`} aria-label="Sidebar">
-         <div className="h-full px-3 pb-4 overflow-y-auto bg-bg-light-primary dark:bg-bg-dark-primary">
+      <aside id="logo-sidebar" className={`fixed top-5 left-0 z-40 w-64 h-screen pt-20 transition-transform ${sideBarStyleSM} bg-bg-light-primary border-r border-border-light-primary dark:bg-bg-dark-primary dark:border-border-dark-primary app-sidebar sm:translate-x-0`} aria-label="Sidebar">
+         <div className="h-full px-3 pb-4 overflow-y-auto bg-bg-light-primary dark:bg-transparent">
             <ul className="space-y-2 font-medium">
                <SideBarItem name={UserPortalView.DASHBOARD} isActive={view == UserPortalView.DASHBOARD} onClick={onClickSideBarItem} Icon={DashBoardIcon} />
                <SideBarItem name={UserPortalView.TRANSACTIONS} isActive={view == UserPortalView.TRANSACTIONS} onClick={onClickSideBarItem} Icon={TransactionIcon} />
@@ -73,6 +73,7 @@ function SideBar({ isSideBarOpen, view, spacetype, spaceid }: { isSideBarOpen: b
                {/* <SideBarItem name={UserPortalView.NOTIFICATIONS} isActive={view == UserPortalView.NOTIFICATIONS} pc={5} onClick={onClickSideBarItem} Icon={NotificationIcon} /> */}
                <SideBarItem name={UserPortalView.CATEGORIES} isActive={view == UserPortalView.CATEGORIES} onClick={onClickSideBarItem} Icon={CategoryIcon} />
                <SideBarItem name={UserPortalView.REPORTS} isActive={view == UserPortalView.REPORTS} onClick={onClickSideBarItem} Icon={ReportIcon} />
+               <SideBarItem name={UserPortalView.AI_ASSISTANT} isActive={view == UserPortalView.AI_ASSISTANT} onClick={onClickSideBarItem} Icon={AIAssistantIcon} />
                {/* <SideBarItem name={UserPortalView.MANAGE_SPACE} isActive={view == UserPortalView.MANAGE_SPACE} onClick={onClickSideBarItem} Icon={SpaceIcon} /> */}
                <SidebarDropdownItem name={UserPortalView.SETTINGS} onClick={() => {}} Icon={SettingsIcon}>
                   <SideBarItem name={UserPortalView.SETTINGS_PROFILE} onClick={onClickSideBarItem} isActive={view == UserPortalView.SETTINGS_PROFILE} />

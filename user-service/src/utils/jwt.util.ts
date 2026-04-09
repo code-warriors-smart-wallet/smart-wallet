@@ -10,7 +10,7 @@ const REFRESH_TOKEN_SECRET = process.env.REFRESH_TOKEN_SECRET!;
 let refreshTokens: string[] = [];
 
 export const generateAccessToken = (user: { id: string, role: UserRole }) => {
-  return jwt.sign(user, ACCESS_TOKEN_SECRET, { expiresIn: '15m' });
+  return jwt.sign(user, ACCESS_TOKEN_SECRET, { expiresIn: '120m' });
 };
 
 export const generateRefreshToken = (user: { id: string, role: UserRole }) => {

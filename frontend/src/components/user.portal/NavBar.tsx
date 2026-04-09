@@ -195,7 +195,6 @@ function NavBar({ setSideBarOpen, isSideBarOpen, view, spaceId, setSpaceFormTogg
                   </div>
                </div>
             </div>
-            </div>
          </nav>
          {
             upgradeMessage != "" && <Upgrade setUpgradeMode={setUpgradeMessage} message={upgradeMessage} />

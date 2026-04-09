@@ -8,7 +8,7 @@ import { capitalize, toLocalSpaceType } from "../../utils/utils";
 import { useNavigate, useParams } from "react-router-dom";
 import DropDown from "../Dropdown";
 import { transactionTypesInfo } from "./views/Transactions";
-import { FaGlobe, FaPlus, FaUser, FaUserAlt, FaUserAltSlash } from "react-icons/fa";
+import { FaGem, FaGlobe, FaPlus, FaStar, FaUser, FaUserAlt, FaUserAltSlash } from "react-icons/fa";
 import SearchInput from "./SearchInput";
 import { SpaceType } from "./views/Spaces";
 import { PlanType } from "../../interfaces/modals";
@@ -23,6 +23,7 @@ function NavBar({ setSideBarOpen, isSideBarOpen, view, spaceId, setSpaceFormTogg
    const [activeDropdownIcon, setActiveDropdownIcon] = useState<React.ReactNode>([])
    const [activeDropdownText, setActiveDropdownText] = useState<string>("")
    const [upgradeMessage, setUpgradeMessage] = useState("");
+   const { spacetype, spaceid } = useParams()
    const navigate = useNavigate();
 
    console.log(spaces)
@@ -130,6 +131,17 @@ function NavBar({ setSideBarOpen, isSideBarOpen, view, spaceId, setSpaceFormTogg
                   <SearchInput
                      view={view}
                   />
+                  {
+                     plan === PlanType.STARTER && (
+                        <button 
+                           className="bg-yellow-600 hover:bg-yellow-500 text-white font-bold py-2 px-4 rounded cursor-pointer"
+                           onClick={() => navigate(`/user-portal/${spacetype}/${spaceid}/${UserPortalView.SETTINGS_BILLING}`)}
+                        >
+                           Upgrade Plan
+                        </button>
+                     )
+                  }
+
                   <div className="max-w-sm ml-3">
                      <DropDown
                         title={activeDropdownText}
@@ -144,18 +156,27 @@ function NavBar({ setSideBarOpen, isSideBarOpen, view, spaceId, setSpaceFormTogg
                   <div className="flex items-center relative">
                      <div className="flex items-center ms-3">
                         <div onClick={() => { setUserMenuOpen(!isUserMenuOpen) }}>
-                           <button type="button" className="flex text-sm bg-gray-800 rounded-full focus:ring-4 focus:ring-gray-300 dark:focus:ring-gray-600" aria-expanded="false" data-dropdown-toggle="dropdown-user">
+                           <button type="button" className="flex text-sm bg-gray-800 rounded-full focus:ring-4 focus:ring-gray-300 dark:focus:ring-gray-600 border-1 border-border-light-primary dark:border-border-light-primary outline-2 outline-yellow-600" aria-expanded="false" data-dropdown-toggle="dropdown-user">
                               <span className="sr-only">Open user menu</span>
                               
                               {
                                  profileImgUrl && profileImgUrl !== "" ? (
                                     <img className="w-8 h-8 rounded-full" src={profileImgUrl} alt="user photo" />
                                  ) : (
-                                    <FaUser size={40} className="rounded-full border border-border-light-primary dark:border-border-dark-primary text-text-light-primary dark:text-text-dark-primary"/> 
+                                    <FaUser size={40} className="rounded-full border border-border-light-primary dark:border-border-dark-primary text-gray-500"/> 
                                  )
                               }
                            </button>
                         </div>
+
+                        {
+                           plan === PlanType.PLUS && (
+                              <div className="absolute top-1/2 left-7 z-50">
+                                 <FaGem size={25} className="text-yellow-500  ms-2" title="Plus Plan" />
+                              </div>
+                           )
+                        }
+                        
                         {
                            isUserMenuOpen && (
                               <div className="absolute top-1/2 right-0 z-50 my-4 text-base list-none bg-bg-light-primary divide-y divide-gray-100 rounded-sm shadow-sm dark:bg-bg-dark-primary dark:divide-gray-600" id="dropdown-user">

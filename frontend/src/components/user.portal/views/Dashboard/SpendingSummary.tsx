@@ -118,7 +118,7 @@ function SpendingSummary({
                 </div>
                 <div className="pb-2 border-border-light-primary dark:border-border-dark-primary mt-3">
                     <h1 className="font-semibold">Net change</h1>
-                    <h2 className="text-xl font-semibold text-text-light-secondary dark:text-text-dark-secondary">{moneyIn - moneyOut} {currency}</h2>
+                    <h2 className="text-xl font-semibold text-text-light-secondary dark:text-text-dark-secondary">{(moneyIn - moneyOut).toFixed(2)} {currency}</h2>
                 </div>
                 <div className="pb-2 border-border-light-primary dark:border-border-dark-primary mt-3">
                     <h1 className="font-semibold">Saving Rate</h1>
